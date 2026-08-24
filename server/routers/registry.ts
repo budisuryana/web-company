@@ -17,6 +17,15 @@ async function logAdminActivity(ctx: { user: { openId: string; name: string | nu
   await recordActivity({ actorOpenId: ctx.user.openId, actorName: ctx.user.name, ...input });
 }
 
+/** Turn duplicate-slug failures into a friendly CONFLICT for the editor UI. */
+function mapSlugConflict(error: unknown): unknown {
+  const pgCode = (error as { code?: string })?.code;
+  if ((error instanceof Error && error.message === "SLUG_TAKEN") || pgCode === "23505") {
+    return new TRPCError({ code: "CONFLICT", message: "That slug is already used by another product. Choose a different URL slug." });
+  }
+  return error;
+}
+
 export const registryRouter = router({
   public: router({
     list: publicProcedure.query(() => listRegistryProducts(true)),
@@ -27,8 +36,8 @@ export const registryRouter = router({
     list: adminProcedure.query(() => listRegistryProducts(false)),
     byId: adminProcedure.input(z.object({ id: z.string().min(1) })).query(({ input }) => getRegistryProductById(input.id)),
     dashboard: adminProcedure.query(() => getCmsDashboard()),
-    create: adminProcedure.input(productInput).mutation(async ({ ctx, input }) => { const product = await createRegistryProduct({ ...input, demoUrl: input.demoUrl || null }); if (product) await logAdminActivity(ctx, { eventType: "product.created", resourceType: "product", resourceId: product.id, summary: `Created ${product.name}`, detail: { slug: product.slug, publicationStatus: product.publicationStatus } }); return product; }),
-    update: adminProcedure.input(z.object({ id: z.string().min(1), product: productInput })).mutation(async ({ ctx, input }) => { const product = await updateRegistryProduct(input.id, { ...input.product, demoUrl: input.product.demoUrl || null }); if (product) await logAdminActivity(ctx, { eventType: "product.updated", resourceType: "product", resourceId: product.id, summary: `Updated ${product.name}`, detail: { publicationStatus: product.publicationStatus, featured: product.featured } }); return product; }),
+    create: adminProcedure.input(productInput).mutation(async ({ ctx, input }) => { let product; try { product = await createRegistryProduct({ ...input, demoUrl: input.demoUrl || null }); } catch (error) { throw mapSlugConflict(error); } if (product) await logAdminActivity(ctx, { eventType: "product.created", resourceType: "product", resourceId: product.id, summary: `Created ${product.name}`, detail: { slug: product.slug, publicationStatus: product.publicationStatus } }); return product; }),
+    update: adminProcedure.input(z.object({ id: z.string().min(1), product: productInput })).mutation(async ({ ctx, input }) => { let product; try { product = await updateRegistryProduct(input.id, { ...input.product, demoUrl: input.product.demoUrl || null }); } catch (error) { throw mapSlugConflict(error); } if (product) await logAdminActivity(ctx, { eventType: "product.updated", resourceType: "product", resourceId: product.id, summary: `Updated ${product.name}`, detail: { publicationStatus: product.publicationStatus, featured: product.featured } }); return product; }),
     remove: adminProcedure.input(z.object({ id: z.string().min(1) })).mutation(async ({ ctx, input }) => { const product = await getRegistryProductById(input.id); const result = await deleteRegistryProduct(input.id); if (product) await logAdminActivity(ctx, { eventType: "product.deleted", resourceType: "product", resourceId: product.id, summary: `Deleted ${product.name}`, detail: { slug: product.slug } }); return result; }),
     reorder: adminProcedure.input(z.object({ ids: z.array(z.string().min(1)).min(1) })).mutation(async ({ ctx, input }) => { const result = await reorderRegistryProducts(input.ids); await logAdminActivity(ctx, { eventType: "product.reordered", resourceType: "product", summary: `Reordered ${input.ids.length} products`, detail: { ids: input.ids } }); return result; }),
     siteContent: adminProcedure.query(() => listSiteContent()),

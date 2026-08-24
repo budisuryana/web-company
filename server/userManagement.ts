@@ -37,7 +37,7 @@ export async function setManagedUserRole(input: { actorOpenId: string; targetOpe
   const adminRows = input.role === "user" && target.role === "admin" ? await db.select({ openId: users.openId }).from(users).where(eq(users.role, "admin")) : [];
   const block = getRoleChangeBlock({ actorOpenId: input.actorOpenId, targetOpenId: input.targetOpenId, targetRole: target.role, nextRole: input.role, ownerOpenId: ENV.ownerOpenId, adminCount: adminRows.length });
   if (block) throw new Error(block);
-  await db.update(users).set({ role: input.role }).where(eq(users.openId, input.targetOpenId));
+  await db.update(users).set({ role: input.role, updatedAt: new Date() }).where(eq(users.openId, input.targetOpenId));
   const [updated] = await db.select().from(users).where(eq(users.openId, input.targetOpenId)).limit(1);
   if (!updated) throw new Error("User role update could not be completed.");
   return asManagedUser(updated);

@@ -4,7 +4,7 @@
 // When Forge is not configured (local development), files are written to a
 // local directory and served back through the same /manus-storage paths.
 
-import { mkdir, writeFile } from "node:fs/promises";
+import { mkdir, unlink, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { ENV } from "./_core/env";
 
@@ -109,6 +109,28 @@ export async function storagePut(
 export async function storageGet(relKey: string): Promise<{ key: string; url: string }> {
   const key = normalizeKey(relKey);
   return { key, url: `/manus-storage/${key}` };
+}
+
+/** Best-effort deletion of a stored object. The Forge API exposes presigned
+ * put/get only, so remote deletions are reported as skipped instead of failing. */
+export async function storageRemove(relKey: string): Promise<{ removed: boolean; skipped?: boolean }> {
+  const key = normalizeKey(relKey);
+  if (!key) return { removed: false };
+
+  if (!isForgeStorageConfigured()) {
+    const target = resolveLocalStoragePath(key);
+    if (!target) return { removed: false };
+    try {
+      await unlink(target);
+      return { removed: true };
+    } catch (error) {
+      if ((error as NodeJS.ErrnoException)?.code === "ENOENT") return { removed: false };
+      throw error;
+    }
+  }
+
+  console.warn(`[Storage] Deletion skipped for ${key}: the Forge storage API has no delete operation.`);
+  return { removed: false, skipped: true };
 }
 
 export async function storageGetSignedUrl(relKey: string): Promise<string> {

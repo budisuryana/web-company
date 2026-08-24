@@ -1,9 +1,10 @@
 /** Product Registry service: a single data layer for product records, attached media, ordering, publishing, and site copy. */
-import { and, asc, count, eq, inArray } from "drizzle-orm";
+import { and, asc, count, eq, inArray, ne } from "drizzle-orm";
 import { nanoid } from "nanoid";
 import { productMedia, products, siteContent, type InsertProduct, type Product, type ProductMedia } from "../drizzle/schema";
 import { getDb } from "./db";
 import { registryProductSeed, siteContentSeed } from "./registrySeed";
+import { storageRemove } from "./storage";
 
 export type WorkflowStepInput = { title: string; copy: string };
 export type RegistryProductInput = {
@@ -42,6 +43,18 @@ function requireDb() {
 
 function asRegistryProduct(product: Product, media: RegistryMedia[]): RegistryProduct {
   return { ...product, featured: product.featured === 1, screenshots: media };
+}
+
+export async function isSlugTaken(slug: string, excludeId?: string) {
+  const db = await requireDb();
+  const condition = excludeId ? and(eq(products.slug, slug), ne(products.id, excludeId)) : eq(products.slug, slug);
+  const [row] = await db.select({ id: products.id }).from(products).where(condition).limit(1);
+  return Boolean(row);
+}
+
+async function removeStorageKeys(keys: Array<string | null | undefined>) {
+  const usable = keys.filter((key): key is string => Boolean(key));
+  await Promise.all(usable.map((key) => storageRemove(key)));
 }
 
 function productValues(input: RegistryProductInput): Omit<InsertProduct, "id" | "createdAt" | "updatedAt"> {
@@ -115,6 +128,7 @@ export async function getRegistryProductById(id: string) {
 }
 
 export async function createRegistryProduct(input: RegistryProductInput) {
+  if (await isSlugTaken(input.slug)) throw new Error("SLUG_TAKEN");
   const db = await requireDb();
   const id = `product_${nanoid(14)}`;
   await db.insert(products).values({ id, ...productValues(input) });
@@ -122,20 +136,24 @@ export async function createRegistryProduct(input: RegistryProductInput) {
 }
 
 export async function updateRegistryProduct(id: string, input: RegistryProductInput) {
+  if (await isSlugTaken(input.slug, id)) throw new Error("SLUG_TAKEN");
   const db = await requireDb();
-  await db.update(products).set(productValues(input)).where(eq(products.id, id));
+  await db.update(products).set({ ...productValues(input), updatedAt: new Date() }).where(eq(products.id, id));
   return getRegistryProductById(id);
 }
 
 export async function deleteRegistryProduct(id: string) {
   const db = await requireDb();
+  const existing = await getRegistryProductById(id);
   await db.delete(products).where(eq(products.id, id));
+  if (existing) await removeStorageKeys([existing.logoKey, existing.coverKey, ...existing.screenshots.map((item) => item.storageKey)]);
   return { success: true as const };
 }
 
 export async function reorderRegistryProducts(ids: string[]) {
   const db = await requireDb();
-  await Promise.all(ids.map((id, index) => db.update(products).set({ displayOrder: index + 1 }).where(eq(products.id, id))));
+  const now = new Date();
+  await Promise.all(ids.map((id, index) => db.update(products).set({ displayOrder: index + 1, updatedAt: now }).where(eq(products.id, id))));
   return listRegistryProducts(false);
 }
 
@@ -148,7 +166,9 @@ export async function addProductScreenshot(input: { productId: string; url: stri
 
 export async function deleteProductScreenshot(id: string) {
   const db = await requireDb();
+  const [existing] = await db.select().from(productMedia).where(eq(productMedia.id, id)).limit(1);
   await db.delete(productMedia).where(eq(productMedia.id, id));
+  if (existing?.storageKey) await storageRemove(existing.storageKey);
   return { success: true as const };
 }
 
@@ -160,8 +180,11 @@ export async function reorderProductScreenshots(productId: string, ids: string[]
 
 export async function updateProductAsset(productId: string, asset: "logo" | "cover", url: string, storageKey: string) {
   const db = await requireDb();
+  const [existing] = await db.select({ logoKey: products.logoKey, coverKey: products.coverKey }).from(products).where(eq(products.id, productId)).limit(1);
+  const previousKey = asset === "logo" ? existing?.logoKey : existing?.coverKey;
   const patch = asset === "logo" ? { logoUrl: url, logoKey: storageKey } : { coverUrl: url, coverKey: storageKey };
-  await db.update(products).set(patch).where(eq(products.id, productId));
+  await db.update(products).set({ ...patch, updatedAt: new Date() }).where(eq(products.id, productId));
+  if (previousKey && previousKey !== storageKey) await storageRemove(previousKey);
   return getRegistryProductById(productId);
 }
 
@@ -173,7 +196,7 @@ export async function listSiteContent() {
 
 export async function updateSiteContent(key: string, value: string) {
   const db = await requireDb();
-  await db.update(siteContent).set({ value }).where(eq(siteContent.key, key));
+  await db.update(siteContent).set({ value, updatedAt: new Date() }).where(eq(siteContent.key, key));
   const [updated] = await db.select().from(siteContent).where(eq(siteContent.key, key)).limit(1);
   return updated ?? null;
 }
