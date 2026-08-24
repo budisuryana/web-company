@@ -246,11 +246,13 @@ pnpm install && pnpm check && pnpm test
   - URL `/admin` otomatis mengembalikan halaman **404 Not Found** sehingga tersembunyi dari pemindaian bot otomatis.
   - Seluruh tautan navigasi internal CMS dikelola terpusat melalui objek konstanta `CMS_ROUTES` di [const.ts](file:///Users/budi/Data/projects/new-web-company/client/src/const.ts).
   - Menyesuaikan *fallback* deteksi IP jaringan lokal (`127.0.0.1` / `localhost`) di [analytics.ts](file:///Users/budi/Data/projects/new-web-company/server/analytics.ts) menjadi **Kota Bandung, Jawa Barat**.
-- **2026-08-24** — Lokalisasi Penuh Bahasa Indonesia & Integrasi Dinamis CMS pada Situs Publik:
-  - Mengubah seluruh teks statis/hardcoded di halaman publik ([Home.tsx](file:///Users/budi/Data/projects/new-web-company/client/src/pages/Home.tsx), [Products.tsx](file:///Users/budi/Data/projects/new-web-company/client/src/pages/Products.tsx), [About.tsx](file:///Users/budi/Data/projects/new-web-company/client/src/pages/About.tsx), [Contact.tsx](file:///Users/budi/Data/projects/new-web-company/client/src/pages/Contact.tsx), [ProductDetail.tsx](file:///Users/budi/Data/projects/new-web-company/client/src/pages/ProductDetail.tsx)) ke dalam Bahasa Indonesia yang alami dan profesional.
-  - Memperluas variabel konten situs di database PostgreSQL (`site_content`) dengan 17 field teks utama (headline, deskripsi, filosofi, metodologi, dan kontak) yang dapat diedit langsung secara batch di CMS `/studio/content`.
-  - Memperbarui lokasi kantor di seluruh halaman kontak dan footer menjadi **Bandung, Jawa Barat · Indonesia**.
+- **2026-08-24** — Modul Pengaturan & Profil Perusahaan (*Company Settings*) di CMS:
+  - Menambahkan tab khusus **🏢 Profil Perusahaan** di menu CMS `/studio/content` ([AdminContent.tsx](file:///Users/budi/Data/projects/new-web-company/client/src/pages/AdminContent.tsx)).
+  - Menyediakan field dinamis: Nama Perusahaan (`company.name`), Logo Teks Wordmark (`company.wordmarkPart1` & `company.wordmarkPart2`), Tagline (`company.tagline`), Motto Footer (`company.footerMotto`), Hak Cipta (`company.copyrightText`), Alamat Bandung (`company.address`), Email Resmi (`company.email`), Nomor Telepon/WA (`company.phone`), dan Akun Sosial Media (`company.linkedinUrl`, `company.githubUrl`, `company.instagramUrl`).
+  - Menghubungkan komponen navbar, logo header, dan footer di [SiteShell.tsx](file:///Users/budi/Data/projects/new-web-company/client/src/components/SiteShell.tsx) serta [Contact.tsx](file:///Users/budi/Data/projects/new-web-company/client/src/pages/Contact.tsx) ke konfigurasi profil perusahaan dinamis di database.
+  - Memperbarui label menu sidebar CMS ([DashboardLayout.tsx](file:///Users/budi/Data/projects/new-web-company/client/src/components/DashboardLayout.tsx)) ke Bahasa Indonesia (*Ringkasan, Katalog Produk, Profil & Konten, Manajemen Pengguna, Lihat Situs Publik*).
   - Verifikasi: `pnpm check` bersih, 27/27 test pass, `pnpm build` sukses.
+
 
 
 

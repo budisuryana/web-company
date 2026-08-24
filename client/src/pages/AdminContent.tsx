@@ -169,13 +169,13 @@ export default function AdminContent() {
               <Loader2 className="h-4 w-4 animate-spin" /> Memuat daftar konten yang dapat diedit…
             </div>
           ) : filteredItems.length === 0 ? (
-            <div className="max-w-3xl border border-slate-900/15 bg-white p-12 text-center text-slate-500">
+            <div className="max-w-5xl border border-slate-900/15 bg-white p-12 text-center text-slate-500">
               <FileText className="mx-auto mb-3 h-8 w-8 text-slate-400" />
               <p className="text-sm font-semibold text-[#102239]">Tidak ada konten yang sesuai dengan filter.</p>
               {search && <p className="mt-1 text-xs">Coba kata kunci pencarian yang lain.</p>}
             </div>
           ) : (
-            <div className="max-w-3xl">
+            <div className="max-w-5xl">
               <form
                 onSubmit={(e) => {
                   e.preventDefault();
@@ -189,39 +189,74 @@ export default function AdminContent() {
                   <p className="mt-1 text-xs text-slate-500">{currentMeta.desc}</p>
                 </div>
 
-                {/* Form Body - All Fields in One Form Container */}
-                <div className="divide-y divide-slate-900/10 px-6 py-2">
+                {/* Form Body - Responsive 2-Column Side-by-Side Grid */}
+                <div className="grid grid-cols-1 gap-x-6 gap-y-5 p-6 md:grid-cols-2">
                   {filteredItems.map((item) => {
                     const isModified = values[item.key] !== undefined && values[item.key] !== originalValues[item.key];
+                    const isLong =
+                      item.key.toLowerCase().includes("description") ||
+                      item.key.toLowerCase().includes("statement") ||
+                      item.key.toLowerCase().includes("body") ||
+                      item.key.toLowerCase().includes("intro") ||
+                      item.key.toLowerCase().includes("herotitle") ||
+                      (item.value && item.value.length > 75);
+
                     return (
-                      <div className="py-5" key={item.key}>
-                        <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
+                      <div
+                        className={`flex flex-col justify-between rounded border p-4 transition-colors ${
+                          isLong ? "md:col-span-2" : "md:col-span-1"
+                        } ${
+                          isModified
+                            ? "border-[#f05a43]/50 bg-[#fffdfa]"
+                            : "border-slate-900/10 bg-[#faf8f5]/40 hover:border-slate-900/20"
+                        }`}
+                        key={item.key}
+                      >
+                        <div className="mb-2 flex items-center justify-between gap-2">
                           <label htmlFor={`field-${item.key}`} className="text-xs font-extrabold text-[#102239]">
                             {item.label}
                           </label>
-                          <div className="flex items-center gap-2">
+                          <div className="flex items-center gap-1.5">
                             {isModified && (
-                              <span className="rounded bg-[#fff0e9] px-2 py-0.5 text-[9px] font-extrabold uppercase tracking-wide text-[#c44735]">
+                              <span className="rounded bg-[#fff0e9] px-1.5 py-0.5 text-[9px] font-extrabold uppercase tracking-wide text-[#c44735]">
                                 Diedit
                               </span>
                             )}
-                            <code className="text-[10px] text-slate-400">{item.key}</code>
+                            <code className="hidden text-[10px] text-slate-400 sm:inline">{item.key}</code>
                           </div>
                         </div>
-                        <textarea
-                          id={`field-${item.key}`}
-                          rows={item.value.length > 120 ? 4 : 2}
-                          value={values[item.key] ?? ""}
-                          onChange={(event) =>
-                            setValues((current) => ({
-                              ...current,
-                              [item.key]: event.target.value,
-                            }))
-                          }
-                          className={`w-full resize-y border bg-[#fffdf8] p-3 text-sm leading-6 text-[#102239] outline-none transition-colors focus:border-[#f05a43] ${
-                            isModified ? "border-[#f05a43]/60 bg-[#fffdfa]" : "border-slate-900/20"
-                          }`}
-                        />
+
+                        {isLong ? (
+                          <textarea
+                            id={`field-${item.key}`}
+                            rows={3}
+                            value={values[item.key] ?? ""}
+                            onChange={(event) =>
+                              setValues((current) => ({
+                                ...current,
+                                [item.key]: event.target.value,
+                              }))
+                            }
+                            className={`w-full resize-y border bg-[#fffdf8] p-2.5 text-sm leading-6 text-[#102239] outline-none transition-colors focus:border-[#f05a43] ${
+                              isModified ? "border-[#f05a43]/60" : "border-slate-900/20"
+                            }`}
+                          />
+                        ) : (
+                          <input
+                            type="text"
+                            id={`field-${item.key}`}
+                            value={values[item.key] ?? ""}
+                            onChange={(event) =>
+                              setValues((current) => ({
+                                ...current,
+                                [item.key]: event.target.value,
+                              }))
+                            }
+                            className={`h-10 w-full border bg-[#fffdf8] px-3 text-sm text-[#102239] outline-none transition-colors focus:border-[#f05a43] ${
+                              isModified ? "border-[#f05a43]/60" : "border-slate-900/20"
+                            }`}
+                          />
+                        )}
                       </div>
                     );
                   })}
