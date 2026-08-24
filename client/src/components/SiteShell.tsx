@@ -41,7 +41,7 @@ export function Brand({
     return (
       <Link
         href="/"
-        className="inline-flex flex-col items-start gap-1 text-left transition-opacity hover:opacity-90"
+        className="inline-flex flex-col items-start justify-center gap-1 pt-2.5 pb-1 text-left transition-opacity hover:opacity-90"
         aria-label="Beranda"
       >
         <img
@@ -50,11 +50,11 @@ export function Brand({
           className={
             size === "large"
               ? "h-14 sm:h-16 max-h-20 w-auto max-w-[320px] object-contain"
-              : "h-11 sm:h-12 md:h-14 max-h-14 w-auto max-w-[280px] object-contain"
+              : "h-10 sm:h-11 md:h-12 max-h-12 w-auto max-w-[280px] object-contain"
           }
         />
         {showTagline && tagline && (
-          <span className="text-xs font-semibold tracking-tight text-slate-500">
+          <span className="mt-0.5 text-xs font-semibold tracking-tight text-slate-500">
             {tagline}
           </span>
         )}
