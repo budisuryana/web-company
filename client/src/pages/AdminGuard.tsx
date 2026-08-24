@@ -32,7 +32,7 @@ function AccessFrame({ eyebrow, title, body, children, denied = false }: { eyebr
             <span className="mb-5 inline-flex items-center gap-2 text-[10px] font-extrabold uppercase tracking-[.17em] text-[#ff826e]">
               <Sparkles size={13} /> Independent software, considered
             </span>
-            <p className="font-[DM_Serif_Display] text-4xl leading-[.95] sm:text-6xl">
+            <p className="font-[DM_Serif_Display] text-2xl sm:text-3xl leading-tight">
               The calm side<br />
               of <em className="text-[#ff826e]">keeping work</em><br />
               in motion.
@@ -57,7 +57,7 @@ function AccessFrame({ eyebrow, title, body, children, denied = false }: { eyebr
               {denied ? <ShieldAlert size={14} /> : <LockKeyhole size={14} />}
               {eyebrow}
             </span>
-            <h1 className="mt-4 font-[DM_Serif_Display] text-4xl leading-[.95] tracking-tight text-[#102239] sm:text-5xl">{title}</h1>
+            <h1 className="mt-4 font-[DM_Serif_Display] text-2xl sm:text-3xl leading-tight tracking-tight text-[#102239]">{title}</h1>
             <p className="mt-4 max-w-lg text-sm leading-6 text-slate-600">{body}</p>
             <div className="mt-7">{children}</div>
             <div className="mt-10 grid gap-3 border-t border-slate-900/15 pt-5 text-xs leading-5 text-slate-500 sm:grid-cols-2">

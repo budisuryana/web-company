@@ -133,7 +133,7 @@ export default function AdminUsers() {
             <span className="text-[10px] font-extrabold uppercase tracking-[.16em] text-[#f05a43]">
               Kontrol Akses
             </span>
-            <h1 className="mt-2 font-[DM_Serif_Display] text-5xl leading-[.9] tracking-tight text-[#102239]">
+            <h1 className="mt-2 font-[DM_Serif_Display] text-3xl sm:text-4xl leading-tight tracking-tight text-[#102239]">
               User &amp; <em className="text-[#f05a43]">Access Management.</em>
             </h1>
             <p className="mt-4 max-w-2xl text-sm leading-6 text-slate-600">

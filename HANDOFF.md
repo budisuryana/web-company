@@ -249,9 +249,11 @@ pnpm install && pnpm check && pnpm test
 - **2026-08-24** — Modul Pengaturan & Profil Perusahaan (*Company Settings*) & Upload Logo Gambar:
   - Menambahkan tab khusus **🏢 Profil Perusahaan** di menu CMS `/studio/content` ([AdminContent.tsx](file:///Users/budi/Data/projects/new-web-company/client/src/pages/AdminContent.tsx)).
   - Menyediakan fitur **Unggah Logo Gambar Perusahaan (*Company Logo Uploader*)** dengan live preview, dukungan file gambar (PNG, SVG, JPG, WebP), tombol *Unggah/Ganti Logo*, serta tombol *Hapus Logo*.
-  - Menambahkan fungsi pemangkas margin otomatis (*Client-Side Auto-Cropping Canvas Trim*): memotong kelebihan ruang kosong putih/transparan di sekitar logo secara otomatis saat file diunggah.
-  - Memberikan jarak vertikal (*Vertical Breathing Room*) pada header di [index.css](file:///Users/budi/Data/projects/new-web-company/client/src/index.css) (`min-height: 92px`, `padding: 14px 48px`) dan [SiteShell.tsx](file:///Users/budi/Data/projects/new-web-company/client/src/components/SiteShell.tsx) (`pt-2.5 pb-1`) sehingga logo tidak menempel rapat pada batas atas jendela browser.
+  - Menghilangkan input manual **Logo Teks Bagian 1 & 2** (`company.wordmarkPart1` & `company.wordmarkPart2`) dari CMS dan database. Teks logo cadangan (fallback jika tanpa gambar) kini otomatis diambil langsung dari **Nama Perusahaan** (`company.name`).
+  - Memperbaiki validasi schema tRPC `updateSiteContent` di [server/routers/registry.ts](file:///Users/budi/Data/projects/new-web-company/server/routers/registry.ts) agar mengizinkan nilai string kosong (`""`), mencegah error 400 *Too small* saat pengguna mengosongkan input form.
+  - Memberikan jarak vertikal (*Vertical Breathing Room*) pada header di [index.css](file:///Users/budi/Data/projects/new-web-company/client/src/index.css) (`min-height: 92px`, `padding: 14px 48px`) dan [SiteShell.tsx](file:///Users/budi/Data/projects/new-web-company/client/src/components/SiteShell.tsx) (`pt-2.5 pb-1`).
   - Verifikasi: `pnpm check` bersih, 27/27 test pass, `pnpm build` sukses.
+
 
 
 

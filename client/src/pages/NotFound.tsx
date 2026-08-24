@@ -20,7 +20,7 @@ export default function NotFound() {
             <span className="text-[10px] font-extrabold uppercase tracking-[.18em] text-[#f05a43]">
               Workshop Collective
             </span>
-            <h1 className="mt-2 font-[DM_Serif_Display] text-5xl leading-[.92] tracking-tight text-[#102239] sm:text-6xl">
+            <h1 className="mt-2 font-[DM_Serif_Display] text-3xl sm:text-4xl leading-tight tracking-tight text-[#102239]">
               Halaman Tidak <br />
               <em className="text-[#f05a43]">Ditemukan.</em>
             </h1>
