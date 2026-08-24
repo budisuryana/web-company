@@ -249,9 +249,10 @@ pnpm install && pnpm check && pnpm test
 - **2026-08-24** — Modul Pengaturan & Profil Perusahaan (*Company Settings*) di CMS:
   - Menambahkan tab khusus **🏢 Profil Perusahaan** di menu CMS `/studio/content` ([AdminContent.tsx](file:///Users/budi/Data/projects/new-web-company/client/src/pages/AdminContent.tsx)).
   - Menyediakan field dinamis: Nama Perusahaan (`company.name`), Logo Teks Wordmark (`company.wordmarkPart1` & `company.wordmarkPart2`), Tagline (`company.tagline`), Motto Footer (`company.footerMotto`), Hak Cipta (`company.copyrightText`), Alamat Bandung (`company.address`), Email Resmi (`company.email`), Nomor Telepon/WA (`company.phone`), dan Akun Sosial Media (`company.linkedinUrl`, `company.githubUrl`, `company.instagramUrl`).
+  - Merestrukturisasi tata letak form di seluruh tab CMS menjadi **Grid 2-Kolom Berdampingan (*Side-by-Side Responsive Grid*)**: field pendek (nama, email, phone, links, city) berjajar ke samping secara rapi menggunakan elemen `<input />`, sementara paragraf narasi panjang menggunakan `<textarea />` yang membentang 2 kolom.
   - Menghubungkan komponen navbar, logo header, dan footer di [SiteShell.tsx](file:///Users/budi/Data/projects/new-web-company/client/src/components/SiteShell.tsx) serta [Contact.tsx](file:///Users/budi/Data/projects/new-web-company/client/src/pages/Contact.tsx) ke konfigurasi profil perusahaan dinamis di database.
-  - Memperbarui label menu sidebar CMS ([DashboardLayout.tsx](file:///Users/budi/Data/projects/new-web-company/client/src/components/DashboardLayout.tsx)) ke Bahasa Indonesia (*Ringkasan, Katalog Produk, Profil & Konten, Manajemen Pengguna, Lihat Situs Publik*).
   - Verifikasi: `pnpm check` bersih, 27/27 test pass, `pnpm build` sukses.
+
 
 
 

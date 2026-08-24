@@ -169,19 +169,19 @@ export default function AdminContent() {
               <Loader2 className="h-4 w-4 animate-spin" /> Memuat daftar konten yang dapat diedit…
             </div>
           ) : filteredItems.length === 0 ? (
-            <div className="max-w-5xl border border-slate-900/15 bg-white p-12 text-center text-slate-500">
+            <div className="w-full border border-slate-900/15 bg-white p-12 text-center text-slate-500">
               <FileText className="mx-auto mb-3 h-8 w-8 text-slate-400" />
               <p className="text-sm font-semibold text-[#102239]">Tidak ada konten yang sesuai dengan filter.</p>
               {search && <p className="mt-1 text-xs">Coba kata kunci pencarian yang lain.</p>}
             </div>
           ) : (
-            <div className="max-w-5xl">
+            <div className="w-full">
               <form
                 onSubmit={(e) => {
                   e.preventDefault();
                   void handleSaveCurrentTab();
                 }}
-                className="overflow-hidden border border-slate-900/15 bg-white shadow-sm"
+                className="w-full overflow-hidden border border-slate-900/15 bg-white shadow-sm"
               >
                 {/* Form Header */}
                 <div className="border-b border-slate-900/10 px-6 py-5">
