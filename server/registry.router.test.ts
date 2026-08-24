@@ -1,6 +1,9 @@
 /** Product Registry tRPC integration: verifies the same admin mutation contracts used by the CMS, with cleanup restoring the live registry. */
 import assert from "node:assert/strict";
+import { eq } from "drizzle-orm";
 import { afterAll, describe, expect, it } from "vitest";
+import { activityLogs } from "../drizzle/schema";
+import { getDb } from "./db";
 import { appRouter } from "./routers";
 import type { TrpcContext } from "./_core/context";
 
@@ -18,13 +21,19 @@ const gifDataUrl = "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAA
 afterAll(async () => {
   if (temporaryId) await caller.registry.admin.remove({ id: temporaryId }).catch(() => undefined);
   if (originalOrder.length) await caller.registry.admin.reorder({ ids: originalOrder });
+  const db = await getDb();
+  if (db) await db.delete(activityLogs).where(eq(activityLogs.actorOpenId, adminCtx.user!.openId));
 });
 
 describe("registry admin tRPC mutations", () => {
   it("creates, publishes, orders, attaches media to, and deletes a product through the CMS contract", async () => {
+    const initialDashboard = await caller.registry.admin.dashboard();
+    expect(initialDashboard.metrics.products).toBeGreaterThan(0);
     const created = await caller.registry.admin.create({ name: "Registry tRPC verification", slug: `registry-trpc-${stamp}`, shortDescription: "Temporary integration record.", fullDescription: "A temporary record used only to verify the CMS tRPC contract.", heroHeadline: "Verify the registry contract.", problem: "The CMS needs dependable state changes.", solution: "This test calls the exact protected procedures used by the admin UI.", outcome: "The product is removed and the original registry ordering is restored.", category: "Verification", productStatus: "planned", publicationStatus: "draft", capabilities: ["tRPC mutations", "Clean state"], targetUsers: "Automated verification only.", demoUrl: "", workflowSteps: [{ title: "Create", copy: "Use the admin procedure." }], featured: false, displayOrder: 999 });
     assert.ok(created);
     temporaryId = created.id;
+    const dashboardAfterCreate = await caller.registry.admin.dashboard();
+    expect(dashboardAfterCreate.recentActivity.some((activity) => activity.eventType === "product.created" && activity.resourceId === temporaryId)).toBe(true);
 
     const draftPublic = await caller.registry.public.list();
     expect(draftPublic.some((product) => product.id === temporaryId)).toBe(false);

@@ -22,4 +22,11 @@
 - [x] Add an administrator user-management screen and CMS navigation entry.
 - [x] Test user-role controls, verify the interface, and push the completed changes to GitHub.
 - [x] Exercise the user-management tRPC role mutation end-to-end and push the final verification update to GitHub.
-- [ ] Save a checkpoint and deliver the user-management update.
+- [x] Save a checkpoint and deliver the user-management update.
+- [x] Define dashboard metrics, activity-log events, and enhanced user-management scope.
+- [x] Add activity-log persistence and dashboard summary APIs.
+- [x] Record product and user-management changes in the activity log.
+- [x] Build the CMS overview dashboard with statistics and recent activity.
+- [x] Add user-management CRUD actions, filters, and improved search controls.
+- [ ] Validate audit records and management workflows, then push the update to GitHub.
+- [ ] Save a checkpoint and deliver the dashboard and activity-log update.

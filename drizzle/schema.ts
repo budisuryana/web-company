@@ -60,9 +60,22 @@ export const siteContent = mysqlTable("site_content", {
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
 });
 
+export const activityLogs = mysqlTable("activity_logs", {
+  id: varchar("id", { length: 40 }).primaryKey(),
+  actorOpenId: varchar("actorOpenId", { length: 64 }).notNull(),
+  actorName: varchar("actorName", { length: 180 }),
+  eventType: varchar("eventType", { length: 80 }).notNull(),
+  resourceType: varchar("resourceType", { length: 64 }).notNull(),
+  resourceId: varchar("resourceId", { length: 190 }),
+  summary: varchar("summary", { length: 500 }).notNull(),
+  detail: json("detail").$type<Record<string, unknown> | null>(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+}, (table) => [index("activity_logs_created_idx").on(table.createdAt), index("activity_logs_resource_idx").on(table.resourceType, table.resourceId)]);
+
 export type User = typeof users.$inferSelect;
 export type InsertUser = typeof users.$inferInsert;
 export type Product = typeof products.$inferSelect;
 export type InsertProduct = typeof products.$inferInsert;
 export type ProductMedia = typeof productMedia.$inferSelect;
 export type SiteContent = typeof siteContent.$inferSelect;
+export type ActivityLog = typeof activityLogs.$inferSelect;

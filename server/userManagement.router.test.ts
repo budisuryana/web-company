@@ -1,7 +1,7 @@
 /** CMS user-management tRPC integration: exercise the same protected role mutations used by the administrator panel and restore the database afterward. */
 import { afterAll, describe, expect, it } from "vitest";
 import { eq } from "drizzle-orm";
-import { users } from "../drizzle/schema";
+import { activityLogs, users } from "../drizzle/schema";
 import { getDb, upsertUser } from "./db";
 import { ENV } from "./_core/env";
 import type { TrpcContext } from "./_core/context";
@@ -17,7 +17,10 @@ const caller = appRouter.createCaller(adminCtx);
 
 afterAll(async () => {
   const db = await getDb();
-  if (db) await db.delete(users).where(eq(users.openId, temporaryOpenId));
+  if (db) {
+    await db.delete(activityLogs).where(eq(activityLogs.actorOpenId, adminCtx.user!.openId));
+    await db.delete(users).where(eq(users.openId, temporaryOpenId));
+  }
 });
 
 describe("CMS user-management tRPC procedures", () => {
@@ -30,6 +33,8 @@ describe("CMS user-management tRPC procedures", () => {
     expect(promoted.role).toBe("admin");
     const afterPromotion = await caller.registry.admin.users.list();
     expect(afterPromotion.find((user) => user.openId === temporaryOpenId)?.role).toBe("admin");
+    const dashboard = await caller.registry.admin.dashboard();
+    expect(dashboard.recentActivity.some((activity) => activity.eventType === "user.role_changed" && activity.resourceId === temporaryOpenId)).toBe(true);
 
     const demoted = await caller.registry.admin.users.setRole({ openId: temporaryOpenId, role: "user" });
     expect(demoted.role).toBe("user");
