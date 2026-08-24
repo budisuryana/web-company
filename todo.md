@@ -29,4 +29,8 @@
 - [x] Build the CMS overview dashboard with statistics and recent activity.
 - [x] Add user-management CRUD actions, filters, and improved search controls.
 - [x] Validate audit records and management workflows, then push the update to GitHub.
-- [ ] Save a checkpoint and deliver the dashboard and activity-log update.
+- [x] Save a checkpoint and deliver the dashboard and activity-log update.
+- [x] Inspect the new-product required-field validation flow.
+- [x] Add inline required-field validation and prevent invalid product submissions.
+- [ ] Test the corrected create-product flow and push the fix to GitHub.
+- [ ] Save a checkpoint and deliver the form-validation fix.
