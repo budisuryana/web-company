@@ -28,23 +28,33 @@ export function Brand({
   wordmarkPart2 = "Collective",
   tagline,
   showTagline = true,
+  size = "default",
 }: {
   logoUrl?: string;
   wordmarkPart1?: string;
   wordmarkPart2?: string;
   tagline?: string;
   showTagline?: boolean;
+  size?: "default" | "large";
 }) {
   if (logoUrl) {
     return (
-      <Link href="/" className="inline-flex flex-col items-start gap-1 text-left transition-opacity hover:opacity-90" aria-label="Beranda">
+      <Link
+        href="/"
+        className="inline-flex flex-col items-start gap-1 text-left transition-opacity hover:opacity-90"
+        aria-label="Beranda"
+      >
         <img
           src={logoUrl}
           alt={wordmarkPart1 ? `${wordmarkPart1} ${wordmarkPart2}` : "Logo Perusahaan"}
-          className="h-8 max-h-8 w-auto max-w-[180px] object-contain"
+          className={
+            size === "large"
+              ? "h-12 max-h-14 sm:h-14 w-auto max-w-[240px] object-contain"
+              : "h-10 max-h-12 sm:h-11 md:h-12 w-auto max-w-[220px] object-contain"
+          }
         />
         {showTagline && tagline && (
-          <span className="text-[9px] font-bold tracking-tight text-slate-500">
+          <span className="text-[11px] font-semibold tracking-tight text-slate-600">
             {tagline}
           </span>
         )}
@@ -148,7 +158,13 @@ export default function SiteShell({ children }: SiteShellProps) {
       {children}
       <footer className="site-footer">
         <div className="footer-top">
-          <Brand wordmarkPart1={wordmarkPart1} wordmarkPart2={wordmarkPart2} />
+          <Brand
+            logoUrl={logoUrl}
+            wordmarkPart1={wordmarkPart1}
+            wordmarkPart2={wordmarkPart2}
+            size="large"
+            showTagline={false}
+          />
           <p>{tagline}</p>
           <Link href="/contact" className="text-link">
             Mulai Konsultasi <ArrowUpRight size={15} />

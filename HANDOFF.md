@@ -249,11 +249,10 @@ pnpm install && pnpm check && pnpm test
 - **2026-08-24** — Modul Pengaturan & Profil Perusahaan (*Company Settings*) & Upload Logo Gambar:
   - Menambahkan tab khusus **🏢 Profil Perusahaan** di menu CMS `/studio/content` ([AdminContent.tsx](file:///Users/budi/Data/projects/new-web-company/client/src/pages/AdminContent.tsx)).
   - Menyediakan fitur **Unggah Logo Gambar Perusahaan (*Company Logo Uploader*)** dengan live preview, dukungan file gambar (PNG, SVG, JPG, WebP), tombol *Unggah/Ganti Logo*, serta tombol *Hapus Logo*.
-  - Menambahkan tRPC procedure `media.uploadCompanyLogo` dan `media.removeCompanyLogo` di [server/routers/registry.ts](file:///Users/budi/Data/projects/new-web-company/server/routers/registry.ts).
-  - Mengupdate komponen `<Brand />` di [SiteShell.tsx](file:///Users/budi/Data/projects/new-web-company/client/src/components/SiteShell.tsx): jika ada file logo gambar yang diunggah, header situs publik akan langsung merender logo gambar tersebut; jika belum, situs akan menggunakan logo vektor bawaan.
-  - Mengatur prioritas urutan input form secara logis: **Nama Perusahaan** berada di paling atas, diikuti oleh Tagline, Logo Teks (Wordmark 1 & 2), Email Resmi, Nomor Telepon/WA, Alamat & Kota Bandung, Motto Footer, dan Tautan Media Sosial.
-  - Membersihkan prefix yang berulang (*"Company — "*, *"Home — "*, *"About — "*, *"Contact — "*) dari seluruh label input.
+  - Menata ulang komponen `<Brand />` di [SiteShell.tsx](file:///Users/budi/Data/projects/new-web-company/client/src/components/SiteShell.tsx): jika logo gambar diunggah, logo gambar ditampilkan bersih tanpa duplikasi teks di sampingnya, dan tagline perusahaan ditampilkan rapi di bagian bawah logo sebagai subtext brand.
+  - Memperjelas label logo teks cadangan di CMS (*"Logo Teks Bagian 1 (Cadangan)"* & *"Logo Teks Bagian 2 (Cadangan)"*) agar pengguna mengetahui bahwa teks tersebut hanya digunakan saat logo gambar tidak diunggah.
   - Verifikasi: `pnpm check` bersih, 27/27 test pass, `pnpm build` sukses.
+
 
 
 
