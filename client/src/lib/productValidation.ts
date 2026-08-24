@@ -16,3 +16,11 @@ export function validateProductForm(form: ProductFormValues) {
   if (form.demoUrl.trim()) { try { new URL(form.demoUrl.trim()); } catch { errors.demoUrl = "Enter a valid URL, including https://."; } }
   return errors;
 }
+
+/** Invoke a CMS mutation callback only when every local Product Registry requirement passes. */
+export function submitProductIfValid(form: ProductFormValues, submit: () => void) {
+  const errors = validateProductForm(form);
+  if (Object.keys(errors).length > 0) return { submitted: false, errors };
+  submit();
+  return { submitted: true, errors };
+}

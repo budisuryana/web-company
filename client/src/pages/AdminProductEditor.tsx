@@ -4,7 +4,7 @@ import { ArrowDown, ArrowLeft, ArrowUp, Check, ImagePlus, Loader2, Save, Trash2,
 import { Link, useLocation, useRoute } from "wouter";
 import AdminGuard from "@/pages/AdminGuard";
 import { trpc } from "@/lib/trpc";
-import { validateProductForm } from "@/lib/productValidation";
+import { submitProductIfValid } from "@/lib/productValidation";
 import { toast } from "sonner";
 
 type EditorForm = {
@@ -62,10 +62,9 @@ export default function AdminProductEditor() {
     setValidationErrors((current) => { if (!current[field]) return current; const next = { ...current }; delete next[field]; return next; });
   };
   const save = () => {
-    const errors = validateProductForm(form);
-    setValidationErrors(errors);
-    if (Object.keys(errors).length > 0) { toast.error("Complete the highlighted required fields before saving."); return; }
-    if (isNew) create.mutate(payload); else update.mutate({ id, product: payload });
+    const result = submitProductIfValid(form, () => { if (isNew) create.mutate(payload); else update.mutate({ id, product: payload }); });
+    setValidationErrors(result.errors);
+    if (!result.submitted) toast.error("Complete the highlighted required fields before saving.");
   };
   const handleUpload = async (event: ChangeEvent<HTMLInputElement>, assetType: "logo" | "cover" | "screenshot") => {
     const file = event.target.files?.[0];

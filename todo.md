@@ -32,5 +32,6 @@
 - [x] Save a checkpoint and deliver the dashboard and activity-log update.
 - [x] Inspect the new-product required-field validation flow.
 - [x] Add inline required-field validation and prevent invalid product submissions.
-- [ ] Test the corrected create-product flow and push the fix to GitHub.
+- [x] Test the corrected create-product flow and push the fix to GitHub.
+- [x] Verify the extracted client submission guard blocks invalid mutations and confirm valid registry creation remains covered by integration tests.
 - [ ] Save a checkpoint and deliver the form-validation fix.
