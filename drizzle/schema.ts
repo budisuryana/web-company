@@ -15,9 +15,9 @@ export const users = pgTable("users", {
   email: varchar("email", { length: 320 }),
   loginMethod: varchar("loginMethod", { length: 64 }),
   role: userRoleEnum("role").default("user").notNull(),
-  createdAt: timestamp("createdAt").defaultNow().notNull(),
-  updatedAt: timestamp("updatedAt").defaultNow().notNull(),
-  lastSignedIn: timestamp("lastSignedIn").defaultNow().notNull(),
+  createdAt: timestamp("createdAt", { withTimezone: true }).defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt", { withTimezone: true }).defaultNow().notNull(),
+  lastSignedIn: timestamp("lastSignedIn", { withTimezone: true }).defaultNow().notNull(),
 });
 
 export const products = pgTable("products", {
@@ -43,8 +43,8 @@ export const products = pgTable("products", {
   workflowSteps: jsonb("workflowSteps").$type<Array<{ title: string; copy: string }>>().notNull(),
   featured: integer("featured").default(0).notNull(),
   displayOrder: integer("displayOrder").default(0).notNull(),
-  createdAt: timestamp("createdAt").defaultNow().notNull(),
-  updatedAt: timestamp("updatedAt").defaultNow().notNull(),
+  createdAt: timestamp("createdAt", { withTimezone: true }).defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt", { withTimezone: true }).defaultNow().notNull(),
 }, (table) => [index("products_public_order_idx").on(table.publicationStatus, table.displayOrder)]);
 
 export const productMedia = pgTable("product_media", {
@@ -54,14 +54,14 @@ export const productMedia = pgTable("product_media", {
   storageKey: text("storageKey").notNull(),
   alt: varchar("alt", { length: 240 }),
   displayOrder: integer("displayOrder").default(0).notNull(),
-  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  createdAt: timestamp("createdAt", { withTimezone: true }).defaultNow().notNull(),
 }, (table) => [index("product_media_order_idx").on(table.productId, table.displayOrder)]);
 
 export const siteContent = pgTable("site_content", {
   key: varchar("key", { length: 100 }).primaryKey(),
   label: varchar("label", { length: 180 }).notNull(),
   value: text("value").notNull(),
-  updatedAt: timestamp("updatedAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt", { withTimezone: true }).defaultNow().notNull(),
 });
 
 export const activityLogs = pgTable("activity_logs", {
@@ -73,7 +73,7 @@ export const activityLogs = pgTable("activity_logs", {
   resourceId: varchar("resourceId", { length: 190 }),
   summary: varchar("summary", { length: 500 }).notNull(),
   detail: jsonb("detail").$type<Record<string, unknown> | null>(),
-  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  createdAt: timestamp("createdAt", { withTimezone: true }).defaultNow().notNull(),
 }, (table) => [index("activity_logs_created_idx").on(table.createdAt), index("activity_logs_resource_idx").on(table.resourceType, table.resourceId)]);
 
 export type User = typeof users.$inferSelect;
