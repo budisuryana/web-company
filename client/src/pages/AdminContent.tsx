@@ -32,6 +32,48 @@ const tabMeta: Record<string, { title: string; desc: string }> = {
   },
 };
 
+const keyOrder: Record<string, number> = {
+  // Profil Perusahaan (Paling Atas: Nama Perusahaan, Tagline, Logo, Kontak, Lokasi, Sosial)
+  "company.name": 1,
+  "company.tagline": 2,
+  "company.wordmarkPart1": 3,
+  "company.wordmarkPart2": 4,
+  "company.email": 5,
+  "company.phone": 6,
+  "company.address": 7,
+  "company.footerMotto": 8,
+  "company.linkedinUrl": 9,
+  "company.githubUrl": 10,
+  "company.instagramUrl": 11,
+
+  // Home Page
+  "home.heroEyebrow": 1,
+  "home.heroTitle": 2,
+  "home.heroDescription": 3,
+  "home.featuredHeading": 4,
+  "home.featuredDescription": 5,
+  "home.principleHeadline": 6,
+  "home.principleBody": 7,
+  "home.methodHeading": 8,
+  "home.ctaHeadline": 9,
+
+  // About Page
+  "about.heroTitle": 1,
+  "about.heroDescription": 2,
+  "about.statement": 3,
+  "about.gridHeading": 4,
+
+  // Contact Page
+  "contact.heroTitle": 1,
+  "contact.intro": 2,
+  "contact.city": 3,
+  "contact.email": 4,
+};
+
+function formatCleanLabel(label: string): string {
+  return label.replace(/^(Company|Home|About|Contact)\s*—\s*/i, "").trim();
+}
+
 export default function AdminContent() {
   const { user } = useAuth();
   const isAdmin = user?.role === "admin";
@@ -59,20 +101,26 @@ export default function AdminContent() {
   const tabCounts = useMemo(() => {
     const company = originalItems.filter((i) => i.key.startsWith("company.")).length;
     const home = originalItems.filter((i) => i.key.startsWith("home.")).length;
-    const about = originalItems.filter((i) => i.key.startsWith("about.")).length;
+    const about = originalItems.filter((i) => i.key.startsWith("about."))?.length ?? 0;
     const contact = originalItems.filter((i) => i.key.startsWith("contact.")).length;
     return { all: originalItems.length, company, home, about, contact };
   }, [originalItems]);
 
   const filteredItems = useMemo(() => {
     const term = search.trim().toLowerCase();
-    return originalItems.filter((item) => {
+    const items = originalItems.filter((item) => {
       if (activeTab === "company" && !item.key.startsWith("company.")) return false;
       if (activeTab === "home" && !item.key.startsWith("home.")) return false;
       if (activeTab === "about" && !item.key.startsWith("about.")) return false;
       if (activeTab === "contact" && !item.key.startsWith("contact.")) return false;
       if (term && !`${item.label} ${item.key} ${item.value}`.toLowerCase().includes(term)) return false;
       return true;
+    });
+
+    return items.sort((a, b) => {
+      const orderA = keyOrder[a.key] ?? 999;
+      const orderB = keyOrder[b.key] ?? 999;
+      return orderA - orderB;
     });
   }, [originalItems, activeTab, search]);
 
@@ -214,7 +262,7 @@ export default function AdminContent() {
                       >
                         <div className="mb-2 flex items-center justify-between gap-2">
                           <label htmlFor={`field-${item.key}`} className="text-xs font-extrabold text-[#102239]">
-                            {item.label}
+                            {formatCleanLabel(item.label)}
                           </label>
                           <div className="flex items-center gap-1.5">
                             {isModified && (

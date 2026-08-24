@@ -248,10 +248,11 @@ pnpm install && pnpm check && pnpm test
   - Menyesuaikan *fallback* deteksi IP jaringan lokal (`127.0.0.1` / `localhost`) di [analytics.ts](file:///Users/budi/Data/projects/new-web-company/server/analytics.ts) menjadi **Kota Bandung, Jawa Barat**.
 - **2026-08-24** — Modul Pengaturan & Profil Perusahaan (*Company Settings*) di CMS:
   - Menambahkan tab khusus **🏢 Profil Perusahaan** di menu CMS `/studio/content` ([AdminContent.tsx](file:///Users/budi/Data/projects/new-web-company/client/src/pages/AdminContent.tsx)).
-  - Menyediakan field dinamis: Nama Perusahaan (`company.name`), Logo Teks Wordmark (`company.wordmarkPart1` & `company.wordmarkPart2`), Tagline (`company.tagline`), Motto Footer (`company.footerMotto`), Hak Cipta (`company.copyrightText`), Alamat Bandung (`company.address`), Email Resmi (`company.email`), Nomor Telepon/WA (`company.phone`), dan Akun Sosial Media (`company.linkedinUrl`, `company.githubUrl`, `company.instagramUrl`).
-  - Merestrukturisasi tata letak form di seluruh tab CMS menjadi **Grid 2-Kolom Berdampingan Penuh (*Full-Width Side-by-Side Responsive Grid*)**: menghilangkan pembatas lebar tetap (`max-w-5xl` diubah menjadi `w-full`) sehingga form memanfaatkan seluruh ruang layar tanpa menyisakan ruang kosong di sisi kanan.
-  - Menghubungkan komponen navbar, logo header, dan footer di [SiteShell.tsx](file:///Users/budi/Data/projects/new-web-company/client/src/components/SiteShell.tsx) serta [Contact.tsx](file:///Users/budi/Data/projects/new-web-company/client/src/pages/Contact.tsx) ke konfigurasi profil perusahaan dinamis di database.
+  - Menyediakan field dinamis: Nama Perusahaan (`company.name`), Logo Teks Wordmark (`company.wordmarkPart1` & `company.wordmarkPart2`), Tagline (`company.tagline`), Motto Footer (`company.footerMotto`), Alamat Bandung (`company.address`), Email Resmi (`company.email`), Nomor Telepon/WA (`company.phone`), dan Akun Sosial Media (`company.linkedinUrl`, `company.githubUrl`, `company.instagramUrl`).
+  - Menghapus input manual teks hak cipta (`company.copyrightText`), di mana teks hak cipta di footer kini di-*generate* secara otomatis menggunakan rumus `© ${new Date().getFullYear()} ${companyName}` di [SiteShell.tsx](file:///Users/budi/Data/projects/new-web-company/client/src/components/SiteShell.tsx).
+  - Merestrukturisasi tata letak form di seluruh tab CMS menjadi **Grid 2-Kolom Berdampingan Penuh (*Full-Width Side-by-Side Responsive Grid*)** tanpa ruang kosong di kanan.
   - Verifikasi: `pnpm check` bersih, 27/27 test pass, `pnpm build` sukses.
+
 
 
 
