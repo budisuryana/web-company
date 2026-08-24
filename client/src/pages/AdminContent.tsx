@@ -1,0 +1,13 @@
+/** CMS site copy editor: lightweight key/value management for the main public statements without source-code changes. */
+import { useEffect, useState } from "react";
+import { Loader2, Save } from "lucide-react";
+import AdminGuard from "@/pages/AdminGuard";
+import { trpc } from "@/lib/trpc";
+import { toast } from "sonner";
+
+export default function AdminContent() {
+  const contentQuery = trpc.registry.admin.siteContent.useQuery(); const utils = trpc.useUtils(); const [values, setValues] = useState<Record<string, string>>({});
+  useEffect(() => { if (contentQuery.data) setValues(Object.fromEntries(contentQuery.data.map((item) => [item.key, item.value]))); }, [contentQuery.data]);
+  const update = trpc.registry.admin.updateSiteContent.useMutation({ onSuccess: () => { toast.success("Site copy saved."); void utils.registry.public.siteContent.invalidate(); void utils.registry.admin.siteContent.invalidate(); }, onError: (error) => toast.error(error.message) });
+  return <AdminGuard><div className="mx-auto max-w-4xl"><span className="text-[10px] font-extrabold uppercase tracking-[.16em] text-[#f05a43]">Core site copy</span><h1 className="mt-2 font-[DM_Serif_Display] text-5xl leading-none tracking-tight text-[#102239]">Keep the main message current.</h1><p className="mt-3 max-w-2xl text-sm leading-6 text-slate-600">These statements appear on the public site. Save each change individually, and the matching page will read the updated registry value.</p><div className="mt-8 space-y-4">{contentQuery.isLoading && <div className="flex items-center gap-2 py-16 text-sm text-slate-500"><Loader2 className="h-4 w-4 animate-spin" /> Loading editable content…</div>}{contentQuery.data?.map((item) => <article className="border-t-2 border-[#102239] bg-white p-5 shadow-sm" key={item.key}><div className="mb-3 flex flex-wrap items-center justify-between gap-2"><div><span className="text-sm font-extrabold text-[#102239]">{item.label}</span><code className="ml-3 text-[10px] text-slate-400">{item.key}</code></div><button disabled={update.isPending} type="button" onClick={() => update.mutate({ key: item.key, value: values[item.key] ?? "" })} className="inline-flex items-center gap-2 bg-[#102239] px-3 py-2 text-xs font-extrabold text-white"><Save size={14} /> Save</button></div><textarea rows={item.value.length > 130 ? 4 : 2} value={values[item.key] ?? ""} onChange={(event) => setValues((current) => ({ ...current, [item.key]: event.target.value }))} className="w-full resize-y border border-slate-900/20 bg-[#fffdf8] p-3 text-sm leading-6 text-[#102239]" /></article>)}</div></div></AdminGuard>;
+}
