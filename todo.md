@@ -10,4 +10,4 @@
 - [x] Verify create, update, delete, draft/publish, reorder, and public rendering flows.
 - [x] Exercise the CMS mutation contract through authenticated tRPC callers and record cleanup evidence.
 - [x] Save the final checkpoint and deliver the CMS-enabled project.
-- [ ] Commit and push the CMS-enabled project to the connected GitHub repository.
+- [x] Commit and push the CMS-enabled project to the connected GitHub repository.
