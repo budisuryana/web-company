@@ -241,6 +241,13 @@ pnpm install && pnpm check && pnpm test
   - Menghapus seluruh data mock/seed dari database PostgreSQL (`page_views`), sehingga dashboard hanya menampilkan **data nyata (Live Data murni)** dengan tampilan *Empty State* yang bersih dan informatif saat belum ada kunjungan.
   - Menghapus kartu *Panduan Cepat* ("Kelola konten & publikasi produk") dari sidebar Dashboard agar tata letak CMS lebih lapang dan berfokus pada navigasi serta metrik operasional.
   - Verifikasi: `pnpm check` bersih, 27/27 test pass, `pnpm build` sukses.
+- **2026-08-24** — Konfigurasi Jalur CMS Dinamis via `.env` (`VITE_CMS_PATH`) & Penyesuaian GeoIP Lokal ke Bandung:
+  - Mengubah rute panel admin menjadi dinamis menggunakan variabel lingkungan `VITE_CMS_PATH` (default saat ini: `/studio`).
+  - URL `/admin` otomatis mengembalikan halaman **404 Not Found** sehingga tersembunyi dari pemindaian bot otomatis.
+  - Seluruh tautan navigasi internal CMS dikelola terpusat melalui objek konstanta `CMS_ROUTES` di [const.ts](file:///Users/budi/Data/projects/new-web-company/client/src/const.ts).
+  - Menyesuaikan *fallback* deteksi IP jaringan lokal (`127.0.0.1` / `localhost`) di [analytics.ts](file:///Users/budi/Data/projects/new-web-company/server/analytics.ts) menjadi **Kota Bandung, Jawa Barat**.
+  - Verifikasi: `pnpm check` bersih, 27/27 test pass, `pnpm build` sukses.
+
 
 
 

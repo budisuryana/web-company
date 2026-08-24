@@ -49,12 +49,12 @@ export default function SiteShell({ children }: SiteShellProps) {
       <div className="header-inner">
         <Brand />
         <nav className="main-nav" aria-label="Primary navigation">{navItems.map((item) => <Link key={item.href} href={item.href} className={location.startsWith(item.href) ? "is-active" : ""}>{item.label}</Link>)}</nav>
-        <Link href="/contact" className="header-cta">Start a conversation <ArrowUpRight size={15} /></Link>
-        <button className="menu-button" type="button" aria-label={menuOpen ? "Close menu" : "Open menu"} aria-expanded={menuOpen} onClick={() => setMenuOpen((value) => !value)}>{menuOpen ? <X size={22} /> : <Menu size={22} />}</button>
+        <Link href="/contact" className="header-cta">Hubungi Kami <ArrowUpRight size={15} /></Link>
+        <button className="menu-button" type="button" aria-label={menuOpen ? "Tutup menu" : "Buka menu"} aria-expanded={menuOpen} onClick={() => setMenuOpen((value) => !value)}>{menuOpen ? <X size={22} /> : <Menu size={22} />}</button>
       </div>
-      <div className={`mobile-menu ${menuOpen ? "is-open" : ""}`}>{navItems.map((item, index) => <Link key={item.href} href={item.href}><span>0{index + 1}</span>{item.label}<ArrowUpRight size={16} /></Link>)}<Link href="/contact" className="mobile-contact">Tell us what you are building</Link></div>
+      <div className={`mobile-menu ${menuOpen ? "is-open" : ""}`}>{navItems.map((item, index) => <Link key={item.href} href={item.href}><span>0{index + 1}</span>{item.label}<ArrowUpRight size={16} /></Link>)}<Link href="/contact" className="mobile-contact">Konsultasikan kebutuhan produk Anda</Link></div>
     </header>
     {children}
-    <footer className="site-footer"><div className="footer-top"><Brand /><p>Useful software for the work that keeps moving.</p><Link href="/contact" className="text-link">Start a conversation <ArrowUpRight size={15} /></Link></div><div className="footer-bottom"><span>© 2026 Workshop Collective</span><span>Independent by design.</span><span>Jakarta · Indonesia</span></div></footer>
+    <footer className="site-footer"><div className="footer-top"><Brand /><p>Perangkat lunak terpadu untuk alur kerja yang terus bergerak.</p><Link href="/contact" className="text-link">Mulai Konsultasi <ArrowUpRight size={15} /></Link></div><div className="footer-bottom"><span>© 2026 Workshop Collective</span><span>Independent by design.</span><span>Bandung · Indonesia</span></div></footer>
   </div>;
 }
