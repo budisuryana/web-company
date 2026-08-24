@@ -28,6 +28,7 @@ export const siteContentSeed = [
   { key: "contact.city", label: "Contact — City (Lokasi Kantor)", value: "Bandung, Jawa Barat · Indonesia" },
   { key: "contact.email", label: "Contact — Email (Alamat Email)", value: "hello@workshopcollective.co" },
   { key: "company.name", label: "Company — Nama Perusahaan", value: "Workshop Collective" },
+  { key: "company.logoUrl", label: "Company — Logo Gambar Perusahaan", value: "" },
   { key: "company.wordmarkPart1", label: "Company — Logo Teks Bagian 1", value: "Workshop" },
   { key: "company.wordmarkPart2", label: "Company — Logo Teks Bagian 2", value: "Collective" },
   { key: "company.tagline", label: "Company — Tagline / Slogan", value: "Perangkat lunak terpadu untuk alur kerja yang terus bergerak." },

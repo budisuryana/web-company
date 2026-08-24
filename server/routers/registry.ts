@@ -77,5 +77,17 @@ export const registryRouter = router({
     }),
     removeScreenshot: adminProcedure.input(z.object({ id: z.string().min(1) })).mutation(async ({ ctx, input }) => { const result = await deleteProductScreenshot(input.id); await logAdminActivity(ctx, { eventType: "product.media_removed", resourceType: "product_media", resourceId: input.id, summary: "Removed a product screenshot" }); return result; }),
     reorderScreenshots: adminProcedure.input(z.object({ productId: z.string().min(1), ids: z.array(z.string().min(1)) })).mutation(async ({ ctx, input }) => { const result = await reorderProductScreenshots(input.productId, input.ids); await logAdminActivity(ctx, { eventType: "product.updated", resourceType: "product", resourceId: input.productId, summary: "Reordered product screenshots", detail: { screenshotIds: input.ids } }); return result; }),
+    uploadCompanyLogo: adminProcedure.input(z.object({ fileName: z.string().min(1).max(160), contentType: z.string().min(1).max(100), dataUrl: z.string().min(1) })).mutation(async ({ ctx, input }) => {
+      const bytes = decodeImageDataUrl(input.dataUrl, input.contentType);
+      const stored = await storagePut(`company/logo/${safeUploadName(input.fileName)}`, bytes, input.contentType);
+      await updateSiteContent("company.logoUrl", stored.url);
+      await logAdminActivity(ctx, { eventType: "site_content.updated", resourceType: "site_content", resourceId: "company.logoUrl", summary: `Uploaded company logo`, detail: { url: stored.url } });
+      return { url: stored.url };
+    }),
+    removeCompanyLogo: adminProcedure.mutation(async ({ ctx }) => {
+      await updateSiteContent("company.logoUrl", "");
+      await logAdminActivity(ctx, { eventType: "site_content.updated", resourceType: "site_content", resourceId: "company.logoUrl", summary: `Removed company logo` });
+      return { success: true };
+    }),
   }),
 });

@@ -23,19 +23,31 @@ export function BrandMark({ className = "" }: { className?: string }) {
 }
 
 export function Brand({
+  logoUrl,
   wordmarkPart1 = "Workshop",
   wordmarkPart2 = "Collective",
 }: {
+  logoUrl?: string;
   wordmarkPart1?: string;
   wordmarkPart2?: string;
 }) {
   return (
-    <Link href="/" className="brand-lockup" aria-label="Workshop Collective beranda">
-      <BrandMark />
-      <span className="brand-wordmark">
-        <b>{wordmarkPart1}</b>
-        <b>{wordmarkPart2}</b>
-      </span>
+    <Link href="/" className="brand-lockup" aria-label="Beranda">
+      {logoUrl ? (
+        <img
+          src={logoUrl}
+          alt={wordmarkPart1 ? `${wordmarkPart1} ${wordmarkPart2}` : "Logo Perusahaan"}
+          className="h-8 max-h-8 w-auto max-w-[160px] object-contain"
+        />
+      ) : (
+        <BrandMark />
+      )}
+      {(wordmarkPart1 || wordmarkPart2) && (
+        <span className="brand-wordmark">
+          {wordmarkPart1 && <b>{wordmarkPart1}</b>}
+          {wordmarkPart2 && <b>{wordmarkPart2}</b>}
+        </span>
+      )}
       <i className="brand-index-slash" />
     </Link>
   );
@@ -52,6 +64,7 @@ export default function SiteShell({ children }: SiteShellProps) {
     return Object.fromEntries((contentQuery.data ?? []).map((item) => [item.key, item.value]));
   }, [contentQuery.data]);
 
+  const logoUrl = content["company.logoUrl"] || undefined;
   const wordmarkPart1 = content["company.wordmarkPart1"] ?? "Workshop";
   const wordmarkPart2 = content["company.wordmarkPart2"] ?? "Collective";
   const companyName = content["company.name"] ?? `${wordmarkPart1} ${wordmarkPart2}`.trim();
@@ -81,7 +94,7 @@ export default function SiteShell({ children }: SiteShellProps) {
     <div className="site-shell">
       <header className={`site-header ${scrolled ? "is-scrolled" : ""}`}>
         <div className="header-inner">
-          <Brand wordmarkPart1={wordmarkPart1} wordmarkPart2={wordmarkPart2} />
+          <Brand logoUrl={logoUrl} wordmarkPart1={wordmarkPart1} wordmarkPart2={wordmarkPart2} />
           <nav className="main-nav" aria-label="Navigasi Utama">
             {navItems.map((item) => (
               <Link

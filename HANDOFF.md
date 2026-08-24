@@ -248,10 +248,12 @@ pnpm install && pnpm check && pnpm test
   - Menyesuaikan *fallback* deteksi IP jaringan lokal (`127.0.0.1` / `localhost`) di [analytics.ts](file:///Users/budi/Data/projects/new-web-company/server/analytics.ts) menjadi **Kota Bandung, Jawa Barat**.
 - **2026-08-24** — Modul Pengaturan & Profil Perusahaan (*Company Settings*) di CMS:
   - Menambahkan tab khusus **🏢 Profil Perusahaan** di menu CMS `/studio/content` ([AdminContent.tsx](file:///Users/budi/Data/projects/new-web-company/client/src/pages/AdminContent.tsx)).
-  - Menyediakan field dinamis: Nama Perusahaan (`company.name`), Logo Teks Wordmark (`company.wordmarkPart1` & `company.wordmarkPart2`), Tagline (`company.tagline`), Motto Footer (`company.footerMotto`), Alamat Bandung (`company.address`), Email Resmi (`company.email`), Nomor Telepon/WA (`company.phone`), dan Akun Sosial Media (`company.linkedinUrl`, `company.githubUrl`, `company.instagramUrl`).
-  - Menghapus input manual teks hak cipta (`company.copyrightText`), di mana teks hak cipta di footer kini di-*generate* secara otomatis menggunakan rumus `© ${new Date().getFullYear()} ${companyName}` di [SiteShell.tsx](file:///Users/budi/Data/projects/new-web-company/client/src/components/SiteShell.tsx).
-  - Merestrukturisasi tata letak form di seluruh tab CMS menjadi **Grid 2-Kolom Berdampingan Penuh (*Full-Width Side-by-Side Responsive Grid*)** tanpa ruang kosong di kanan.
+  - Mengatur prioritas urutan input form secara logis: **Nama Perusahaan** berada di paling atas, diikuti oleh Tagline, Logo Teks (Wordmark 1 & 2), Email Resmi, Nomor Telepon/WA, Alamat & Kota Bandung, Motto Footer, dan Tautan Media Sosial.
+  - Membersihkan prefix yang berulang (*"Company — "*, *"Home — "*, *"About — "*, *"Contact — "*) dari seluruh label input agar formulir terlihat bersih, fokus, dan nyaman dibaca.
+  - Teks hak cipta di footer di-*generate* secara otomatis menggunakan rumus `© ${new Date().getFullYear()} ${companyName}` di [SiteShell.tsx](file:///Users/budi/Data/projects/new-web-company/client/src/components/SiteShell.tsx).
+  - Form memanfaatkan lebar penuh (*Full-Width Responsive 2-Column Grid*) tanpa celah kosong di kanan.
   - Verifikasi: `pnpm check` bersih, 27/27 test pass, `pnpm build` sukses.
+
 
 
 

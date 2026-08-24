@@ -1,18 +1,27 @@
-/** CMS site copy editor: unified single-form per tab (Home, About, Contact, All) with batch save. */
-import { useEffect, useMemo, useState } from "react";
-import { Check, FileText, Loader2, RotateCcw, Save, Search } from "lucide-react";
+import { ChangeEvent, useEffect, useMemo, useState } from "react";
+import { Check, FileText, ImageIcon, Loader2, RotateCcw, Save, Search, Trash2, UploadCloud } from "lucide-react";
 import AdminGuard from "@/pages/AdminGuard";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { BrandMark } from "@/components/SiteShell";
 import { trpc } from "@/lib/trpc";
 import { toast } from "sonner";
+
+async function fileToDataUrl(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result as string);
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
 
 const tabTriggerClass = "rounded-none border-b-2 border-transparent px-2 pb-3 pt-2 text-xs font-extrabold uppercase tracking-[.14em] text-slate-400 transition-colors hover:text-[#102239] data-[state=active]:border-[#f05a43] data-[state=active]:bg-transparent data-[state=active]:text-[#102239] data-[state=active]:shadow-none";
 
 const tabMeta: Record<string, { title: string; desc: string }> = {
   company: {
     title: "Profil & Identitas Perusahaan",
-    desc: "Nama perusahaan, logo teks (wordmark), moto footer, alamat kantor Bandung, email resmi, dan media sosial.",
+    desc: "Nama perusahaan, logo teks (wordmark), logo gambar (opsional), moto footer, alamat kantor Bandung, email resmi, dan media sosial.",
   },
   home: {
     title: "Home Page Copy",
@@ -83,6 +92,7 @@ export default function AdminContent() {
   const [activeTab, setActiveTab] = useState("company");
   const [search, setSearch] = useState("");
   const [isSaving, setIsSaving] = useState(false);
+  const [isUploadingLogo, setIsUploadingLogo] = useState(false);
 
   const originalItems = contentQuery.data ?? [];
   const originalValues = useMemo(
@@ -97,9 +107,51 @@ export default function AdminContent() {
   }, [contentQuery.data]);
 
   const updateMutation = trpc.registry.admin.updateSiteContent.useMutation();
+  const uploadLogoMutation = trpc.registry.media.uploadCompanyLogo.useMutation();
+  const removeLogoMutation = trpc.registry.media.removeCompanyLogo.useMutation();
+
+  const logoUrl = values["company.logoUrl"] || originalValues["company.logoUrl"] || "";
+
+  const handleLogoUpload = async (event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    try {
+      setIsUploadingLogo(true);
+      const dataUrl = await fileToDataUrl(file);
+      const res = await uploadLogoMutation.mutateAsync({
+        fileName: file.name,
+        contentType: file.type || "image/png",
+        dataUrl,
+      });
+      setValues((prev) => ({ ...prev, "company.logoUrl": res.url }));
+      await utils.registry.admin.siteContent.invalidate();
+      await utils.registry.public.siteContent.invalidate();
+      toast.success("Logo perusahaan berhasil diunggah!");
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : "Gagal mengunggah logo.");
+    } finally {
+      setIsUploadingLogo(false);
+      event.target.value = "";
+    }
+  };
+
+  const handleLogoRemove = async () => {
+    try {
+      setIsUploadingLogo(true);
+      await removeLogoMutation.mutateAsync();
+      setValues((prev) => ({ ...prev, "company.logoUrl": "" }));
+      await utils.registry.admin.siteContent.invalidate();
+      await utils.registry.public.siteContent.invalidate();
+      toast.success("Logo gambar berhasil dihapus, kembali ke logo default.");
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : "Gagal menghapus logo.");
+    } finally {
+      setIsUploadingLogo(false);
+    }
+  };
 
   const tabCounts = useMemo(() => {
-    const company = originalItems.filter((i) => i.key.startsWith("company.")).length;
+    const company = originalItems.filter((i) => i.key.startsWith("company.") && i.key !== "company.logoUrl").length;
     const home = originalItems.filter((i) => i.key.startsWith("home.")).length;
     const about = originalItems.filter((i) => i.key.startsWith("about."))?.length ?? 0;
     const contact = originalItems.filter((i) => i.key.startsWith("contact.")).length;
@@ -109,6 +161,7 @@ export default function AdminContent() {
   const filteredItems = useMemo(() => {
     const term = search.trim().toLowerCase();
     const items = originalItems.filter((item) => {
+      if (item.key === "company.logoUrl") return false; // Managed separately via logo uploader
       if (activeTab === "company" && !item.key.startsWith("company.")) return false;
       if (activeTab === "home" && !item.key.startsWith("home.")) return false;
       if (activeTab === "about" && !item.key.startsWith("about.")) return false;
@@ -236,6 +289,60 @@ export default function AdminContent() {
                   <h2 className="font-[DM_Serif_Display] text-3xl text-[#102239]">{currentMeta.title}</h2>
                   <p className="mt-1 text-xs text-slate-500">{currentMeta.desc}</p>
                 </div>
+
+                {/* Logo Uploader Card (Visible on Company Tab) */}
+                {activeTab === "company" && (
+                  <div className="border-b border-slate-900/10 bg-[#faf8f5]/60 p-6">
+                    <div className="flex flex-wrap items-center justify-between gap-6">
+                      <div className="flex items-center gap-5">
+                        <div className="grid h-16 w-24 place-items-center rounded border border-slate-900/15 bg-white p-2 shadow-inner">
+                          {logoUrl ? (
+                            <img src={logoUrl} alt="Logo Preview" className="max-h-12 max-w-full object-contain" />
+                          ) : (
+                            <div className="flex flex-col items-center gap-1 text-slate-400">
+                              <BrandMark className="h-7 w-7" />
+                              <span className="text-[9px] font-bold">Logo Vektor</span>
+                            </div>
+                          )}
+                        </div>
+                        <div>
+                          <h3 className="text-sm font-extrabold text-[#102239]">Logo Gambar Perusahaan (Opsional)</h3>
+                          <p className="mt-0.5 text-xs text-slate-500">
+                            Unggah file logo gambar (PNG, SVG, JPG, WebP). Jika kosong, situs akan menggunakan logo ikon bawaan.
+                          </p>
+                          {logoUrl && (
+                            <p className="mt-1 max-w-sm truncate font-mono text-[10px] text-slate-400">
+                              {logoUrl}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        {logoUrl && (
+                          <button
+                            type="button"
+                            disabled={isUploadingLogo}
+                            onClick={() => void handleLogoRemove()}
+                            className="inline-flex items-center gap-1.5 border border-red-200 bg-white px-3 py-2 text-xs font-bold text-red-700 hover:bg-red-50 disabled:opacity-50"
+                          >
+                            <Trash2 size={13} /> Hapus Logo
+                          </button>
+                        )}
+                        <label className="inline-flex cursor-pointer items-center gap-2 bg-[#102239] px-4 py-2 text-xs font-extrabold text-[#fffdf8] transition-transform duration-150 hover:-translate-y-0.5 disabled:opacity-50">
+                          {isUploadingLogo ? <Loader2 size={14} className="animate-spin" /> : <UploadCloud size={14} />}
+                          {logoUrl ? "Ganti Logo" : "Unggah Logo"}
+                          <input
+                            type="file"
+                            accept="image/*"
+                            className="hidden"
+                            disabled={isUploadingLogo}
+                            onChange={(e) => void handleLogoUpload(e)}
+                          />
+                        </label>
+                      </div>
+                    </div>
+                  </div>
+                )}
 
                 {/* Form Body - Responsive 2-Column Side-by-Side Grid */}
                 <div className="grid grid-cols-1 gap-x-6 gap-y-5 p-6 md:grid-cols-2">
