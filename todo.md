@@ -20,5 +20,6 @@
 - [x] Redesign the CMS login and access-denied views to match the workshop editorial system.
 - [x] Add secure server-side user listing and administrator role-management procedures.
 - [x] Add an administrator user-management screen and CMS navigation entry.
-- [ ] Test user-role controls, verify the interface, and push the completed changes to GitHub.
+- [x] Test user-role controls, verify the interface, and push the completed changes to GitHub.
+- [x] Exercise the user-management tRPC role mutation end-to-end and push the final verification update to GitHub.
 - [ ] Save a checkpoint and deliver the user-management update.
