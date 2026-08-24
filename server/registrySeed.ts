@@ -32,7 +32,6 @@ export const siteContentSeed = [
   { key: "company.wordmarkPart2", label: "Company — Logo Teks Bagian 2", value: "Collective" },
   { key: "company.tagline", label: "Company — Tagline / Slogan", value: "Perangkat lunak terpadu untuk alur kerja yang terus bergerak." },
   { key: "company.footerMotto", label: "Company — Motto Footer", value: "Independent by design." },
-  { key: "company.copyrightText", label: "Company — Teks Hak Cipta", value: "© 2026 Workshop Collective" },
   { key: "company.address", label: "Company — Alamat & Kota", value: "Bandung, Jawa Barat · Indonesia" },
   { key: "company.email", label: "Company — Email Resmi", value: "hello@workshopcollective.co" },
   { key: "company.phone", label: "Company — Nomor Kontak / WhatsApp", value: "+62 812-3456-7890" },

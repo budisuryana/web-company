@@ -54,8 +54,9 @@ export default function SiteShell({ children }: SiteShellProps) {
 
   const wordmarkPart1 = content["company.wordmarkPart1"] ?? "Workshop";
   const wordmarkPart2 = content["company.wordmarkPart2"] ?? "Collective";
+  const companyName = content["company.name"] ?? `${wordmarkPart1} ${wordmarkPart2}`.trim();
   const tagline = content["company.tagline"] ?? "Perangkat lunak terpadu untuk alur kerja yang terus bergerak.";
-  const copyrightText = content["company.copyrightText"] ?? "© 2026 Workshop Collective";
+  const copyrightText = `© ${new Date().getFullYear()} ${companyName}`;
   const footerMotto = content["company.footerMotto"] ?? "Independent by design.";
   const address = content["company.address"] ?? "Bandung · Indonesia";
 
