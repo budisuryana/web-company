@@ -10,6 +10,10 @@ import { toast } from "sonner";
 const tabTriggerClass = "rounded-none border-b-2 border-transparent px-2 pb-3 pt-2 text-xs font-extrabold uppercase tracking-[.14em] text-slate-400 transition-colors hover:text-[#102239] data-[state=active]:border-[#f05a43] data-[state=active]:bg-transparent data-[state=active]:text-[#102239] data-[state=active]:shadow-none";
 
 const tabMeta: Record<string, { title: string; desc: string }> = {
+  company: {
+    title: "Profil & Identitas Perusahaan",
+    desc: "Nama perusahaan, logo teks (wordmark), moto footer, alamat kantor Bandung, email resmi, dan media sosial.",
+  },
   home: {
     title: "Home Page Copy",
     desc: "Teks headline, deskripsi hero, dan judul section produk unggulan di halaman utama.",
@@ -34,7 +38,7 @@ export default function AdminContent() {
   const contentQuery = trpc.registry.admin.siteContent.useQuery(undefined, { enabled: isAdmin });
   const utils = trpc.useUtils();
   const [values, setValues] = useState<Record<string, string>>({});
-  const [activeTab, setActiveTab] = useState("home");
+  const [activeTab, setActiveTab] = useState("company");
   const [search, setSearch] = useState("");
   const [isSaving, setIsSaving] = useState(false);
 
@@ -53,15 +57,17 @@ export default function AdminContent() {
   const updateMutation = trpc.registry.admin.updateSiteContent.useMutation();
 
   const tabCounts = useMemo(() => {
+    const company = originalItems.filter((i) => i.key.startsWith("company.")).length;
     const home = originalItems.filter((i) => i.key.startsWith("home.")).length;
     const about = originalItems.filter((i) => i.key.startsWith("about.")).length;
     const contact = originalItems.filter((i) => i.key.startsWith("contact.")).length;
-    return { all: originalItems.length, home, about, contact };
+    return { all: originalItems.length, company, home, about, contact };
   }, [originalItems]);
 
   const filteredItems = useMemo(() => {
     const term = search.trim().toLowerCase();
     return originalItems.filter((item) => {
+      if (activeTab === "company" && !item.key.startsWith("company.")) return false;
       if (activeTab === "home" && !item.key.startsWith("home.")) return false;
       if (activeTab === "about" && !item.key.startsWith("about.")) return false;
       if (activeTab === "contact" && !item.key.startsWith("contact.")) return false;
@@ -82,16 +88,16 @@ export default function AdminContent() {
       resetPatch[item.key] = originalValues[item.key] ?? "";
     }
     setValues((prev) => ({ ...prev, ...resetPatch }));
-    toast.info("Perubahan pada tab ini telah dikembalikan ke awal.");
+    toast.info("Perubahan pada tab ini telah dikembalikan.");
   };
 
   const handleSaveCurrentTab = async () => {
     if (modifiedKeys.length === 0) {
-      toast.info("Tidak ada perubahan yang perlu disimpan.");
+      toast.info("Tidak ada perubahan baru untuk disimpan pada tab ini.");
       return;
     }
-    setIsSaving(true);
     try {
+      setIsSaving(true);
       await Promise.all(
         modifiedKeys.map((key) =>
           updateMutation.mutateAsync({
@@ -101,12 +107,12 @@ export default function AdminContent() {
         )
       );
       await Promise.all([
-        utils.registry.public.siteContent.invalidate(),
         utils.registry.admin.siteContent.invalidate(),
+        utils.registry.public.siteContent.invalidate(),
       ]);
-      toast.success(`${modifiedKeys.length} teks berhasil disimpan.`);
-    } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Gagal menyimpan perubahan.");
+      toast.success(`${modifiedKeys.length} teks berhasil diperbarui!`);
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : "Gagal menyimpan perubahan konten.");
     } finally {
       setIsSaving(false);
     }
@@ -116,15 +122,15 @@ export default function AdminContent() {
 
   return (
     <AdminGuard>
-      <div className="w-full">
-        <div className="mb-6 flex flex-wrap items-end justify-between gap-4">
+      <div className="space-y-6">
+        <div className="flex flex-wrap items-end justify-between gap-4 border-b border-slate-900/15 pb-6">
           <div>
-            <span className="text-[10px] font-extrabold uppercase tracking-[.16em] text-[#f05a43]">Konten Situs</span>
-            <h1 className="mt-2 font-[DM_Serif_Display] text-5xl leading-none tracking-tight text-[#102239]">
-              Site Content &amp; Copy Editor
-            </h1>
-            <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-600">
-              Kelola teks headline, tagline, dan copy halaman website publik secara dinamis tanpa perlu deploy.
+            <span className="font-mono text-xs font-bold uppercase tracking-widest text-[#f05a43]">
+              Pengaturan &amp; Konten
+            </span>
+            <h1 className="mt-1 font-[DM_Serif_Display] text-4xl text-[#102239]">Profil &amp; Konten Situs</h1>
+            <p className="mt-1 text-xs text-slate-500">
+              Kelola profil perusahaan, logo teks, alamat, kontak, dan seluruh copy publik dalam satu formulir terpadu.
             </p>
           </div>
           <div className="relative">
@@ -141,6 +147,9 @@ export default function AdminContent() {
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="mt-6 w-full">
           <TabsList className="mb-6 h-auto w-full justify-start gap-8 rounded-none border-b-2 border-[#102239] bg-transparent p-0">
+            <TabsTrigger value="company" className={tabTriggerClass}>
+              Profil Perusahaan <span className="ml-1.5 rounded-full bg-slate-200 px-1.5 py-0.5 text-[10px] text-slate-700">{tabCounts.company}</span>
+            </TabsTrigger>
             <TabsTrigger value="home" className={tabTriggerClass}>
               Home Page <span className="ml-1.5 rounded-full bg-slate-200 px-1.5 py-0.5 text-[10px] text-slate-700">{tabCounts.home}</span>
             </TabsTrigger>

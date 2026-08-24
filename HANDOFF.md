@@ -246,10 +246,12 @@ pnpm install && pnpm check && pnpm test
   - URL `/admin` otomatis mengembalikan halaman **404 Not Found** sehingga tersembunyi dari pemindaian bot otomatis.
   - Seluruh tautan navigasi internal CMS dikelola terpusat melalui objek konstanta `CMS_ROUTES` di [const.ts](file:///Users/budi/Data/projects/new-web-company/client/src/const.ts).
   - Menyesuaikan *fallback* deteksi IP jaringan lokal (`127.0.0.1` / `localhost`) di [analytics.ts](file:///Users/budi/Data/projects/new-web-company/server/analytics.ts) menjadi **Kota Bandung, Jawa Barat**.
-- **2026-08-24** — Integrasi Ilustrasi Visual pada Halaman 404 (Not Found):
-  - Menyimpan ilustrasi 404 bersih ke `client/public/images/404-illustration.png` (seluruh teks "404", "Page Not Found", tombol "Back to Home", dan paragraf telah dibersihkan sehingga hanya menampilkan maskot 3D dan jendela browser dengan latar belakang lembut).
-  - Mendesain ulang [NotFound.tsx](file:///Users/budi/Data/projects/new-web-company/client/src/pages/NotFound.tsx) dengan tata letak responsif 2-kolom: kolom kiri memuat teks error, tombol aksi (*Ke Halaman Utama*, *Kembali Sebelumnya*), serta link bantuan; kolom kanan menampilkan ilustrasi maskot visual yang bersih.
+- **2026-08-24** — Lokalisasi Penuh Bahasa Indonesia & Integrasi Dinamis CMS pada Situs Publik:
+  - Mengubah seluruh teks statis/hardcoded di halaman publik ([Home.tsx](file:///Users/budi/Data/projects/new-web-company/client/src/pages/Home.tsx), [Products.tsx](file:///Users/budi/Data/projects/new-web-company/client/src/pages/Products.tsx), [About.tsx](file:///Users/budi/Data/projects/new-web-company/client/src/pages/About.tsx), [Contact.tsx](file:///Users/budi/Data/projects/new-web-company/client/src/pages/Contact.tsx), [ProductDetail.tsx](file:///Users/budi/Data/projects/new-web-company/client/src/pages/ProductDetail.tsx)) ke dalam Bahasa Indonesia yang alami dan profesional.
+  - Memperluas variabel konten situs di database PostgreSQL (`site_content`) dengan 17 field teks utama (headline, deskripsi, filosofi, metodologi, dan kontak) yang dapat diedit langsung secara batch di CMS `/studio/content`.
+  - Memperbarui lokasi kantor di seluruh halaman kontak dan footer menjadi **Bandung, Jawa Barat · Indonesia**.
   - Verifikasi: `pnpm check` bersih, 27/27 test pass, `pnpm build` sukses.
+
 
 
 

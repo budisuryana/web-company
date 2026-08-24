@@ -12,11 +12,11 @@ import { DashboardLayoutSkeleton } from "./DashboardLayoutSkeleton";
 import { Button } from "./ui/button";
 
 const menuItems = [
-  { icon: LayoutDashboard, label: "Overview", path: CMS_ROUTES.dashboard },
-  { icon: Boxes, label: "Product Registry", path: CMS_ROUTES.products },
-  { icon: FileText, label: "Site Copy", path: CMS_ROUTES.content },
-  { icon: UsersRound, label: "User Management", path: CMS_ROUTES.users },
-  { icon: ExternalLink, label: "Public Website", path: "/" },
+  { icon: LayoutDashboard, label: "Ringkasan", path: CMS_ROUTES.dashboard },
+  { icon: Boxes, label: "Katalog Produk", path: CMS_ROUTES.products },
+  { icon: FileText, label: "Profil & Konten", path: CMS_ROUTES.content },
+  { icon: UsersRound, label: "Manajemen Pengguna", path: CMS_ROUTES.users },
+  { icon: ExternalLink, label: "Lihat Situs Publik", path: "/" },
 ];
 const SIDEBAR_WIDTH_KEY = "workshop-cms-sidebar-width"; const DEFAULT_WIDTH = 270; const MIN_WIDTH = 220; const MAX_WIDTH = 380;
 

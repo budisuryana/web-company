@@ -12,14 +12,18 @@ export default function Contact() {
   const contentQuery = trpc.registry.public.siteContent.useQuery();
   const content = contentMap(contentQuery.data);
 
+  const email = content["company.email"] ?? "hello@workshopcollective.co";
+  const address = content["company.address"] ?? "Bandung, Jawa Barat · Indonesia";
+
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const data = new FormData(event.currentTarget);
-    const subject = encodeURIComponent(`Inquiry Workshop Collective — ${String(data.get("company") || data.get("name"))}`);
+    const companyName = content["company.name"] ?? "Workshop Collective";
+    const subject = encodeURIComponent(`Inquiry ${companyName} — ${String(data.get("company") || data.get("name"))}`);
     const body = encodeURIComponent(
       `Nama: ${data.get("name")}\nEmail: ${data.get("email")}\nPerusahaan / Tim: ${data.get("company")}\n\nPesan:\n${data.get("message")}`
     );
-    window.location.href = `mailto:hello@workshopcollective.co?subject=${subject}&body=${body}`;
+    window.location.href = `mailto:${email}?subject=${subject}&body=${body}`;
   };
 
   return (
@@ -47,14 +51,14 @@ export default function Contact() {
           <aside className="contact-aside">
             <div>
               <span>Kirim Email Langsung</span>
-              <a href="mailto:hello@workshopcollective.co">
-                <Mail size={16} /> hello@workshopcollective.co <ArrowUpRight size={14} />
+              <a href={`mailto:${email}`}>
+                <Mail size={16} /> {email} <ArrowUpRight size={14} />
               </a>
             </div>
             <div>
               <span>Lokasi Kantor</span>
               <p>
-                <MapPin size={16} /> Bandung, Jawa Barat · Indonesia<br />
+                <MapPin size={16} /> {address}<br />
                 Bekerja fleksibel lintas zona waktu.
               </p>
             </div>
