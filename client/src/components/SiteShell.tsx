@@ -24,15 +24,13 @@ export function BrandMark({ className = "" }: { className?: string }) {
 
 export function Brand({
   logoUrl,
-  wordmarkPart1 = "Workshop",
-  wordmarkPart2 = "Collective",
+  companyName = "Workshop Collective",
   tagline,
   showTagline = true,
   size = "default",
 }: {
   logoUrl?: string;
-  wordmarkPart1?: string;
-  wordmarkPart2?: string;
+  companyName?: string;
   tagline?: string;
   showTagline?: boolean;
   size?: "default" | "large";
@@ -46,7 +44,7 @@ export function Brand({
       >
         <img
           src={logoUrl}
-          alt={wordmarkPart1 ? `${wordmarkPart1} ${wordmarkPart2}` : "Logo Perusahaan"}
+          alt={companyName}
           className={
             size === "large"
               ? "h-14 sm:h-16 max-h-20 w-auto max-w-[320px] object-contain"
@@ -62,15 +60,17 @@ export function Brand({
     );
   }
 
+  const parts = companyName.trim().split(/\s+/);
+  const part1 = parts[0] || "Workshop";
+  const part2 = parts.slice(1).join(" ") || "";
+
   return (
     <Link href="/" className="brand-lockup" aria-label="Beranda">
       <BrandMark />
-      {(wordmarkPart1 || wordmarkPart2) && (
-        <span className="brand-wordmark">
-          {wordmarkPart1 && <b>{wordmarkPart1}</b>}
-          {wordmarkPart2 && <b>{wordmarkPart2}</b>}
-        </span>
-      )}
+      <span className="brand-wordmark">
+        <b>{part1}</b>
+        {part2 && <b>{part2}</b>}
+      </span>
       <i className="brand-index-slash" />
     </Link>
   );
@@ -88,9 +88,7 @@ export default function SiteShell({ children }: SiteShellProps) {
   }, [contentQuery.data]);
 
   const logoUrl = content["company.logoUrl"] || undefined;
-  const wordmarkPart1 = content["company.wordmarkPart1"] ?? "Workshop";
-  const wordmarkPart2 = content["company.wordmarkPart2"] ?? "Collective";
-  const companyName = content["company.name"] ?? `${wordmarkPart1} ${wordmarkPart2}`.trim();
+  const companyName = content["company.name"] ?? "Workshop Collective";
   const tagline = content["company.tagline"] ?? "Perangkat lunak terpadu untuk alur kerja yang terus bergerak.";
   const copyrightText = `© ${new Date().getFullYear()} ${companyName}`;
   const footerMotto = content["company.footerMotto"] ?? "Independent by design.";
@@ -117,7 +115,7 @@ export default function SiteShell({ children }: SiteShellProps) {
     <div className="site-shell">
       <header className={`site-header ${scrolled ? "is-scrolled" : ""}`}>
         <div className="header-inner">
-          <Brand logoUrl={logoUrl} wordmarkPart1={wordmarkPart1} wordmarkPart2={wordmarkPart2} tagline={tagline} />
+          <Brand logoUrl={logoUrl} companyName={companyName} tagline={tagline} />
           <nav className="main-nav" aria-label="Navigasi Utama">
             {navItems.map((item) => (
               <Link
@@ -160,8 +158,7 @@ export default function SiteShell({ children }: SiteShellProps) {
         <div className="footer-top">
           <Brand
             logoUrl={logoUrl}
-            wordmarkPart1={wordmarkPart1}
-            wordmarkPart2={wordmarkPart2}
+            companyName={companyName}
             size="large"
             showTagline={false}
           />

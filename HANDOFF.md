@@ -249,9 +249,10 @@ pnpm install && pnpm check && pnpm test
 - **2026-08-24** — Modul Pengaturan & Profil Perusahaan (*Company Settings*) & Upload Logo Gambar:
   - Menambahkan tab khusus **🏢 Profil Perusahaan** di menu CMS `/studio/content` ([AdminContent.tsx](file:///Users/budi/Data/projects/new-web-company/client/src/pages/AdminContent.tsx)).
   - Menyediakan fitur **Unggah Logo Gambar Perusahaan (*Company Logo Uploader*)** dengan live preview, dukungan file gambar (PNG, SVG, JPG, WebP), tombol *Unggah/Ganti Logo*, serta tombol *Hapus Logo*.
-  - Menambahkan fungsi pemangkas margin otomatis (*Client-Side Auto-Cropping Canvas Trim*): saat pengguna mengunggah gambar logo dengan margin putih/transparan yang sangat luas (misal hasil generasi AI/ChatGPT), sistem secara cerdas mendeteksi batas kotak logo dan memangkas (*trim*) ruang kosong tersebut sehingga logo tampil 100% penuh, tajam, dan proporsional.
-  - Memperbesar ukuran tampilan logo di [SiteShell.tsx](file:///Users/budi/Data/projects/new-web-company/client/src/components/SiteShell.tsx) menjadi `h-11 sm:h-12 md:h-14 max-h-14 max-w-[280px]` (header) dan `h-14 sm:h-16 max-h-20 max-w-[320px]` (footer).
+  - Menambahkan fungsi pemangkas margin otomatis (*Client-Side Auto-Cropping Canvas Trim*): memotong kelebihan ruang kosong putih/transparan di sekitar logo secara otomatis saat file diunggah.
+  - Memberikan jarak vertikal (*Vertical Breathing Room*) pada header di [index.css](file:///Users/budi/Data/projects/new-web-company/client/src/index.css) (`min-height: 92px`, `padding: 14px 48px`) dan [SiteShell.tsx](file:///Users/budi/Data/projects/new-web-company/client/src/components/SiteShell.tsx) (`pt-2.5 pb-1`) sehingga logo tidak menempel rapat pada batas atas jendela browser.
   - Verifikasi: `pnpm check` bersih, 27/27 test pass, `pnpm build` sukses.
+
 
 
 

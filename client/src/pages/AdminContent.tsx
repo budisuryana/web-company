@@ -119,18 +119,16 @@ const tabMeta: Record<string, { title: string; desc: string }> = {
 };
 
 const keyOrder: Record<string, number> = {
-  // Profil Perusahaan (Paling Atas: Nama Perusahaan, Tagline, Logo, Kontak, Lokasi, Sosial)
+  // Profil Perusahaan (Paling Atas: Nama Perusahaan, Tagline, Kontak, Lokasi, Sosial)
   "company.name": 1,
   "company.tagline": 2,
-  "company.wordmarkPart1": 3,
-  "company.wordmarkPart2": 4,
-  "company.email": 5,
-  "company.phone": 6,
-  "company.address": 7,
-  "company.footerMotto": 8,
-  "company.linkedinUrl": 9,
-  "company.githubUrl": 10,
-  "company.instagramUrl": 11,
+  "company.email": 3,
+  "company.phone": 4,
+  "company.address": 5,
+  "company.footerMotto": 6,
+  "company.linkedinUrl": 7,
+  "company.githubUrl": 8,
+  "company.instagramUrl": 9,
 
   // Home Page
   "home.heroEyebrow": 1,
