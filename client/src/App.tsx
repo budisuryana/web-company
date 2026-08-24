@@ -8,13 +8,14 @@ import About from "./pages/About";
 import AdminContent from "./pages/AdminContent";
 import AdminProductEditor from "./pages/AdminProductEditor";
 import AdminProducts from "./pages/AdminProducts";
+import AdminUsers from "./pages/AdminUsers";
 import Contact from "./pages/Contact";
 import Home from "./pages/Home";
 import NotFound from "./pages/NotFound";
 import ProductDetail from "./pages/ProductDetail";
 import Products from "./pages/Products";
 function Router() {
-  return <Switch><Route path="/admin/products/:id" component={AdminProductEditor} /><Route path="/admin/content" component={AdminContent} /><Route path="/admin" component={AdminProducts} /><Route path="/" component={Home} /><Route path="/products" component={Products} /><Route path="/products/:slug" component={ProductDetail} /><Route path="/about" component={About} /><Route path="/contact" component={Contact} /><Route component={NotFound} /></Switch>;
+  return <Switch><Route path="/admin/products/:id" component={AdminProductEditor} /><Route path="/admin/content" component={AdminContent} /><Route path="/admin/users" component={AdminUsers} /><Route path="/admin" component={AdminProducts} /><Route path="/" component={Home} /><Route path="/products" component={Products} /><Route path="/products/:slug" component={ProductDetail} /><Route path="/about" component={About} /><Route path="/contact" component={Contact} /><Route component={NotFound} /></Switch>;
 }
 
 function App() {

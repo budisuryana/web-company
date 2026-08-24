@@ -11,3 +11,14 @@
 - [x] Exercise the CMS mutation contract through authenticated tRPC callers and record cleanup evidence.
 - [x] Save the final checkpoint and deliver the CMS-enabled project.
 - [x] Commit and push the CMS-enabled project to the connected GitHub repository.
+- [x] Audit the existing OAuth session and administrator-role assignment flow.
+- [x] Add a first-admin bootstrap safeguard and secure administrator access messaging.
+- [x] Add a first-admin setup guide covering database and environment-based configuration.
+- [x] Verify role restrictions and document the operational setup steps.
+- [x] Save a checkpoint and deliver the authentication update.
+- [x] Review the current CMS access view and administrator role model.
+- [x] Redesign the CMS login and access-denied views to match the workshop editorial system.
+- [x] Add secure server-side user listing and administrator role-management procedures.
+- [x] Add an administrator user-management screen and CMS navigation entry.
+- [ ] Test user-role controls, verify the interface, and push the completed changes to GitHub.
+- [ ] Save a checkpoint and deliver the user-management update.

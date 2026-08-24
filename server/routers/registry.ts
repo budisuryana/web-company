@@ -5,6 +5,7 @@ import { adminProcedure, publicProcedure, router } from "../_core/trpc";
 import { storagePut } from "../storage";
 import { addProductScreenshot, createRegistryProduct, deleteProductScreenshot, deleteRegistryProduct, getRegistryProductById, getRegistryProductBySlug, listRegistryProducts, listSiteContent, reorderProductScreenshots, reorderRegistryProducts, updateProductAsset, updateRegistryProduct, updateSiteContent } from "../registry";
 import { decodeImageDataUrl, safeUploadName } from "../registryUpload";
+import { listManagedUsers, setManagedUserRole } from "../userManagement";
 
 const productInput = z.object({
   name: z.string().trim().min(1).max(160),
@@ -45,6 +46,16 @@ export const registryRouter = router({
     reorder: adminProcedure.input(z.object({ ids: z.array(z.string().min(1)).min(1) })).mutation(({ input }) => reorderRegistryProducts(input.ids)),
     siteContent: adminProcedure.query(() => listSiteContent()),
     updateSiteContent: adminProcedure.input(z.object({ key: z.string().min(1), value: z.string().trim().min(1) })).mutation(({ input }) => updateSiteContent(input.key, input.value)),
+    users: router({
+      list: adminProcedure.query(() => listManagedUsers()),
+      setRole: adminProcedure.input(z.object({ openId: z.string().min(1), role: z.enum(["admin", "user"]) })).mutation(async ({ ctx, input }) => {
+        try {
+          return await setManagedUserRole({ actorOpenId: ctx.user.openId, targetOpenId: input.openId, role: input.role });
+        } catch (error) {
+          throw new TRPCError({ code: "BAD_REQUEST", message: error instanceof Error ? error.message : "User role update failed." });
+        }
+      }),
+    }),
   }),
   media: router({
     upload: adminProcedure.input(z.object({ productId: z.string().min(1), assetType: z.enum(["logo", "cover", "screenshot"]), fileName: z.string().min(1).max(160), contentType: z.string().min(1).max(100), dataUrl: z.string().min(1), alt: z.string().trim().max(240).optional() })).mutation(async ({ input }) => {

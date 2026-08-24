@@ -6,6 +6,14 @@ import { ENV } from "./_core/env";
 
 let database: ReturnType<typeof drizzle> | null = null;
 
+/** Keep role assignment authoritative in the database, except for the configured project owner who must retain bootstrap admin access. */
+export function getRolePlan(openId: string, requestedRole: InsertUser["role"] | undefined, ownerOpenId = ENV.ownerOpenId) {
+  const isConfiguredOwner = Boolean(ownerOpenId) && openId === ownerOpenId;
+  const insertRole = requestedRole ?? (isConfiguredOwner ? "admin" : "user");
+  const updateRole = requestedRole ?? (isConfiguredOwner ? "admin" : undefined);
+  return { insertRole, updateRole };
+}
+
 export async function getDb() {
   if (!database && process.env.DATABASE_URL) {
     try {
@@ -30,8 +38,11 @@ export async function upsertUser(user: InsertUser): Promise<void> {
       updateSet[field] = user[field];
     }
   });
-  values.role = user.role ?? (user.openId === ENV.ownerOpenId ? "admin" : "user");
-  updateSet.role = values.role;
+  const rolePlan = getRolePlan(user.openId, user.role);
+  values.role = rolePlan.insertRole;
+  // Never downgrade a database-appointed admin on routine OAuth sign-in.
+  // The configured project owner is re-promoted deliberately as the bootstrap account.
+  if (rolePlan.updateRole) updateSet.role = rolePlan.updateRole;
   await db.insert(users).values(values).onDuplicateKeyUpdate({ set: updateSet });
 }
 
