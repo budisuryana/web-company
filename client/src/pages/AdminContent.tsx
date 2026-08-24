@@ -7,11 +7,88 @@ import { BrandMark } from "@/components/SiteShell";
 import { trpc } from "@/lib/trpc";
 import { toast } from "sonner";
 
-async function fileToDataUrl(file: File): Promise<string> {
+async function processLogoImage(file: File): Promise<{ dataUrl: string; fileName: string; contentType: string }> {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
-    reader.onload = () => resolve(reader.result as string);
     reader.onerror = reject;
+    reader.onload = () => {
+      const img = new Image();
+      img.onerror = reject;
+      img.onload = () => {
+        const canvas = document.createElement("canvas");
+        canvas.width = img.width;
+        canvas.height = img.height;
+        const ctx = canvas.getContext("2d");
+        if (!ctx) {
+          resolve({ dataUrl: reader.result as string, fileName: file.name, contentType: file.type || "image/png" });
+          return;
+        }
+        ctx.drawImage(img, 0, 0);
+        const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+        const data = imgData.data;
+
+        // Sample top-left corner as background color
+        const bgR = data[0];
+        const bgG = data[1];
+        const bgB = data[2];
+        const bgA = data[3];
+
+        let minX = canvas.width;
+        let maxX = 0;
+        let minY = canvas.height;
+        let maxY = 0;
+
+        for (let y = 0; y < canvas.height; y++) {
+          for (let x = 0; x < canvas.width; x++) {
+            const idx = (y * canvas.width + x) * 4;
+            const r = data[idx];
+            const g = data[idx + 1];
+            const b = data[idx + 2];
+            const a = data[idx + 3];
+
+            const isBg =
+              a < 20 ||
+              (Math.abs(r - bgR) < 22 && Math.abs(g - bgG) < 22 && Math.abs(b - bgB) < 22 && Math.abs(a - bgA) < 22) ||
+              (r > 245 && g > 245 && b > 245 && bgR > 240 && bgG > 240 && bgB > 240);
+
+            if (!isBg) {
+              if (x < minX) minX = x;
+              if (x > maxX) maxX = x;
+              if (y < minY) minY = y;
+              if (y > maxY) maxY = y;
+            }
+          }
+        }
+
+        // If bounding box found with whitespace
+        if (maxX > minX && maxY > minY && (minX > 10 || minY > 10 || maxX < canvas.width - 10 || maxY < canvas.height - 10)) {
+          const pad = 12;
+          minX = Math.max(0, minX - pad);
+          minY = Math.max(0, minY - pad);
+          maxX = Math.min(canvas.width, maxX + pad);
+          maxY = Math.min(canvas.height, maxY + pad);
+          const cropW = maxX - minX;
+          const cropH = maxY - minY;
+
+          const cropCanvas = document.createElement("canvas");
+          cropCanvas.width = cropW;
+          cropCanvas.height = cropH;
+          const cropCtx = cropCanvas.getContext("2d");
+          if (cropCtx) {
+            cropCtx.drawImage(img, minX, minY, cropW, cropH, 0, 0, cropW, cropH);
+            resolve({
+              dataUrl: cropCanvas.toDataURL("image/png"),
+              fileName: file.name.replace(/\.[^/.]+$/, ".png"),
+              contentType: "image/png",
+            });
+            return;
+          }
+        }
+
+        resolve({ dataUrl: reader.result as string, fileName: file.name, contentType: file.type || "image/png" });
+      };
+      img.src = reader.result as string;
+    };
     reader.readAsDataURL(file);
   });
 }
@@ -117,16 +194,16 @@ export default function AdminContent() {
     if (!file) return;
     try {
       setIsUploadingLogo(true);
-      const dataUrl = await fileToDataUrl(file);
+      const processed = await processLogoImage(file);
       const res = await uploadLogoMutation.mutateAsync({
-        fileName: file.name,
-        contentType: file.type || "image/png",
-        dataUrl,
+        fileName: processed.fileName,
+        contentType: processed.contentType,
+        dataUrl: processed.dataUrl,
       });
       setValues((prev) => ({ ...prev, "company.logoUrl": res.url }));
       await utils.registry.admin.siteContent.invalidate();
       await utils.registry.public.siteContent.invalidate();
-      toast.success("Logo perusahaan berhasil diunggah!");
+      toast.success("Logo perusahaan berhasil diunggah dan disesuaikan!");
     } catch (err: unknown) {
       toast.error(err instanceof Error ? err.message : "Gagal mengunggah logo.");
     } finally {

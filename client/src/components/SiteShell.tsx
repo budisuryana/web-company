@@ -49,12 +49,12 @@ export function Brand({
           alt={wordmarkPart1 ? `${wordmarkPart1} ${wordmarkPart2}` : "Logo Perusahaan"}
           className={
             size === "large"
-              ? "h-12 max-h-14 sm:h-14 w-auto max-w-[240px] object-contain"
-              : "h-10 max-h-12 sm:h-11 md:h-12 w-auto max-w-[220px] object-contain"
+              ? "h-14 sm:h-16 max-h-20 w-auto max-w-[320px] object-contain"
+              : "h-11 sm:h-12 md:h-14 max-h-14 w-auto max-w-[280px] object-contain"
           }
         />
         {showTagline && tagline && (
-          <span className="text-[11px] font-semibold tracking-tight text-slate-600">
+          <span className="text-xs font-semibold tracking-tight text-slate-500">
             {tagline}
           </span>
         )}

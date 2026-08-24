@@ -249,9 +249,11 @@ pnpm install && pnpm check && pnpm test
 - **2026-08-24** — Modul Pengaturan & Profil Perusahaan (*Company Settings*) & Upload Logo Gambar:
   - Menambahkan tab khusus **🏢 Profil Perusahaan** di menu CMS `/studio/content` ([AdminContent.tsx](file:///Users/budi/Data/projects/new-web-company/client/src/pages/AdminContent.tsx)).
   - Menyediakan fitur **Unggah Logo Gambar Perusahaan (*Company Logo Uploader*)** dengan live preview, dukungan file gambar (PNG, SVG, JPG, WebP), tombol *Unggah/Ganti Logo*, serta tombol *Hapus Logo*.
-  - Menata ulang komponen `<Brand />` di [SiteShell.tsx](file:///Users/budi/Data/projects/new-web-company/client/src/components/SiteShell.tsx): jika logo gambar diunggah, logo gambar ditampilkan bersih tanpa duplikasi teks di sampingnya, dan tagline perusahaan ditampilkan rapi di bagian bawah logo sebagai subtext brand.
-  - Memperjelas label logo teks cadangan di CMS (*"Logo Teks Bagian 1 (Cadangan)"* & *"Logo Teks Bagian 2 (Cadangan)"*) agar pengguna mengetahui bahwa teks tersebut hanya digunakan saat logo gambar tidak diunggah.
+  - Menata ulang dan memperbesar ukuran logo brand di [SiteShell.tsx](file:///Users/budi/Data/projects/new-web-company/client/src/components/SiteShell.tsx):
+    - Ukuran logo gambar diperbesar menjadi `h-10 sm:h-11 md:h-12` di header dan `h-12 sm:h-14` di footer agar terlihat tegas, proporsional, dan tajam di layar resolusi tinggi.
+    - Ukuran teks tagline di bawah logo disesuaikan menjadi `text-[11px] font-semibold` yang nyaman dan jelas dibaca.
   - Verifikasi: `pnpm check` bersih, 27/27 test pass, `pnpm build` sukses.
+
 
 
 
