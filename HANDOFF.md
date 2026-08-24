@@ -246,6 +246,11 @@ pnpm install && pnpm check && pnpm test
   - URL `/admin` otomatis mengembalikan halaman **404 Not Found** sehingga tersembunyi dari pemindaian bot otomatis.
   - Seluruh tautan navigasi internal CMS dikelola terpusat melalui objek konstanta `CMS_ROUTES` di [const.ts](file:///Users/budi/Data/projects/new-web-company/client/src/const.ts).
   - Menyesuaikan *fallback* deteksi IP jaringan lokal (`127.0.0.1` / `localhost`) di [analytics.ts](file:///Users/budi/Data/projects/new-web-company/server/analytics.ts) menjadi **Kota Bandung, Jawa Barat**.
+- **2026-08-25** — Penyesuaian Skala Tipografi (*Typography Scaling & Proportions*):
+  - Memperkecil dan menyeimbangkan ukuran *heading* (H1, H2, H3) di seluruh website agar terlihat proporsional, rapi, dan profesional (*clean editorial aesthetic*).
+  - Mengubah ukuran *Home Hero H1* dari `clamp(58px, 6vw, 92px)` menjadi `clamp(34px, 3.8vw, 52px)` dengan `line-height: 1.15; letter-spacing: -0.03em`.
+  - Menyesuaikan section titles, statement banner, closing CTA, product detail headings, contact hero, dan dashboard admin titles agar seimbang di semua breakpoint layar (desktop, tablet, mobile).
+  - Verifikasi: `pnpm check` bersih, 27/27 test pass, `pnpm build` sukses (0 CSS warning).
 - **2026-08-24** — Modul Pengaturan & Profil Perusahaan (*Company Settings*) & Upload Logo Gambar:
   - Menambahkan tab khusus **🏢 Profil Perusahaan** di menu CMS `/studio/content` ([AdminContent.tsx](file:///Users/budi/Data/projects/new-web-company/client/src/pages/AdminContent.tsx)).
   - Menyediakan fitur **Unggah Logo Gambar Perusahaan (*Company Logo Uploader*)** dengan live preview, dukungan file gambar (PNG, SVG, JPG, WebP), tombol *Unggah/Ganti Logo*, serta tombol *Hapus Logo*.
