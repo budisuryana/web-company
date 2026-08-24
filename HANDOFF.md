@@ -246,13 +246,15 @@ pnpm install && pnpm check && pnpm test
   - URL `/admin` otomatis mengembalikan halaman **404 Not Found** sehingga tersembunyi dari pemindaian bot otomatis.
   - Seluruh tautan navigasi internal CMS dikelola terpusat melalui objek konstanta `CMS_ROUTES` di [const.ts](file:///Users/budi/Data/projects/new-web-company/client/src/const.ts).
   - Menyesuaikan *fallback* deteksi IP jaringan lokal (`127.0.0.1` / `localhost`) di [analytics.ts](file:///Users/budi/Data/projects/new-web-company/server/analytics.ts) menjadi **Kota Bandung, Jawa Barat**.
-- **2026-08-24** — Modul Pengaturan & Profil Perusahaan (*Company Settings*) di CMS:
+- **2026-08-24** — Modul Pengaturan & Profil Perusahaan (*Company Settings*) & Upload Logo Gambar:
   - Menambahkan tab khusus **🏢 Profil Perusahaan** di menu CMS `/studio/content` ([AdminContent.tsx](file:///Users/budi/Data/projects/new-web-company/client/src/pages/AdminContent.tsx)).
+  - Menyediakan fitur **Unggah Logo Gambar Perusahaan (*Company Logo Uploader*)** dengan live preview, dukungan file gambar (PNG, SVG, JPG, WebP), tombol *Unggah/Ganti Logo*, serta tombol *Hapus Logo*.
+  - Menambahkan tRPC procedure `media.uploadCompanyLogo` dan `media.removeCompanyLogo` di [server/routers/registry.ts](file:///Users/budi/Data/projects/new-web-company/server/routers/registry.ts).
+  - Mengupdate komponen `<Brand />` di [SiteShell.tsx](file:///Users/budi/Data/projects/new-web-company/client/src/components/SiteShell.tsx): jika ada file logo gambar yang diunggah, header situs publik akan langsung merender logo gambar tersebut; jika belum, situs akan menggunakan logo vektor bawaan.
   - Mengatur prioritas urutan input form secara logis: **Nama Perusahaan** berada di paling atas, diikuti oleh Tagline, Logo Teks (Wordmark 1 & 2), Email Resmi, Nomor Telepon/WA, Alamat & Kota Bandung, Motto Footer, dan Tautan Media Sosial.
-  - Membersihkan prefix yang berulang (*"Company — "*, *"Home — "*, *"About — "*, *"Contact — "*) dari seluruh label input agar formulir terlihat bersih, fokus, dan nyaman dibaca.
-  - Teks hak cipta di footer di-*generate* secara otomatis menggunakan rumus `© ${new Date().getFullYear()} ${companyName}` di [SiteShell.tsx](file:///Users/budi/Data/projects/new-web-company/client/src/components/SiteShell.tsx).
-  - Form memanfaatkan lebar penuh (*Full-Width Responsive 2-Column Grid*) tanpa celah kosong di kanan.
+  - Membersihkan prefix yang berulang (*"Company — "*, *"Home — "*, *"About — "*, *"Contact — "*) dari seluruh label input.
   - Verifikasi: `pnpm check` bersih, 27/27 test pass, `pnpm build` sukses.
+
 
 
 

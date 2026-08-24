@@ -26,22 +26,35 @@ export function Brand({
   logoUrl,
   wordmarkPart1 = "Workshop",
   wordmarkPart2 = "Collective",
+  tagline,
+  showTagline = true,
 }: {
   logoUrl?: string;
   wordmarkPart1?: string;
   wordmarkPart2?: string;
+  tagline?: string;
+  showTagline?: boolean;
 }) {
-  return (
-    <Link href="/" className="brand-lockup" aria-label="Beranda">
-      {logoUrl ? (
+  if (logoUrl) {
+    return (
+      <Link href="/" className="inline-flex flex-col items-start gap-1 text-left transition-opacity hover:opacity-90" aria-label="Beranda">
         <img
           src={logoUrl}
           alt={wordmarkPart1 ? `${wordmarkPart1} ${wordmarkPart2}` : "Logo Perusahaan"}
-          className="h-8 max-h-8 w-auto max-w-[160px] object-contain"
+          className="h-8 max-h-8 w-auto max-w-[180px] object-contain"
         />
-      ) : (
-        <BrandMark />
-      )}
+        {showTagline && tagline && (
+          <span className="text-[9px] font-bold tracking-tight text-slate-500">
+            {tagline}
+          </span>
+        )}
+      </Link>
+    );
+  }
+
+  return (
+    <Link href="/" className="brand-lockup" aria-label="Beranda">
+      <BrandMark />
       {(wordmarkPart1 || wordmarkPart2) && (
         <span className="brand-wordmark">
           {wordmarkPart1 && <b>{wordmarkPart1}</b>}
@@ -94,7 +107,7 @@ export default function SiteShell({ children }: SiteShellProps) {
     <div className="site-shell">
       <header className={`site-header ${scrolled ? "is-scrolled" : ""}`}>
         <div className="header-inner">
-          <Brand logoUrl={logoUrl} wordmarkPart1={wordmarkPart1} wordmarkPart2={wordmarkPart2} />
+          <Brand logoUrl={logoUrl} wordmarkPart1={wordmarkPart1} wordmarkPart2={wordmarkPart2} tagline={tagline} />
           <nav className="main-nav" aria-label="Navigasi Utama">
             {navItems.map((item) => (
               <Link
