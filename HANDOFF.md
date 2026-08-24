@@ -246,9 +246,11 @@ pnpm install && pnpm check && pnpm test
   - URL `/admin` otomatis mengembalikan halaman **404 Not Found** sehingga tersembunyi dari pemindaian bot otomatis.
   - Seluruh tautan navigasi internal CMS dikelola terpusat melalui objek konstanta `CMS_ROUTES` di [const.ts](file:///Users/budi/Data/projects/new-web-company/client/src/const.ts).
   - Menyesuaikan *fallback* deteksi IP jaringan lokal (`127.0.0.1` / `localhost`) di [analytics.ts](file:///Users/budi/Data/projects/new-web-company/server/analytics.ts) menjadi **Kota Bandung, Jawa Barat**.
-  - Mengubah halaman [NotFound.tsx](file:///Users/budi/Data/projects/new-web-company/client/src/pages/NotFound.tsx) (404 Error) menjadi **halaman error standalone murni** yang terisolasi (tanpa membocorkan header publik, navigasi menu, ataupun footer situs publik).
-  - Menyesuaikan copy header/footer di [SiteShell.tsx](file:///Users/budi/Data/projects/new-web-company/client/src/components/SiteShell.tsx) ke Bahasa Indonesia dan lokasi **Bandung · Indonesia**.
+- **2026-08-24** — Integrasi Ilustrasi Visual pada Halaman 404 (Not Found):
+  - Menyimpan ilustrasi 404 ke `client/public/images/404-illustration.png`.
+  - Mendesain ulang [NotFound.tsx](file:///Users/budi/Data/projects/new-web-company/client/src/pages/NotFound.tsx) dengan tata letak responsif 2-kolom: kolom kiri memuat teks error, tombol aksi (*Ke Halaman Utama*, *Kembali Sebelumnya*), serta link bantuan; kolom kanan menampilkan ilustrasi visual yang menarik.
   - Verifikasi: `pnpm check` bersih, 27/27 test pass, `pnpm build` sukses.
+
 
 
 
