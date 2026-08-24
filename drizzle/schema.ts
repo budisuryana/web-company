@@ -11,6 +11,8 @@ export const publicationStatusEnum = pgEnum("publication_status", publicationSta
 export const users = pgTable("users", {
   id: serial("id").primaryKey(),
   openId: varchar("openId", { length: 64 }).notNull().unique(),
+  username: varchar("username", { length: 80 }),
+  passwordHash: text("passwordHash"),
   name: text("name"),
   email: varchar("email", { length: 320 }),
   loginMethod: varchar("loginMethod", { length: 64 }),
@@ -76,6 +78,27 @@ export const activityLogs = pgTable("activity_logs", {
   createdAt: timestamp("createdAt", { withTimezone: true }).defaultNow().notNull(),
 }, (table) => [index("activity_logs_created_idx").on(table.createdAt), index("activity_logs_resource_idx").on(table.resourceType, table.resourceId)]);
 
+export const pageViews = pgTable("page_views", {
+  id: serial("id").primaryKey(),
+  path: varchar("path", { length: 255 }).notNull(),
+  referrer: varchar("referrer", { length: 500 }),
+  visitorHash: varchar("visitorHash", { length: 64 }).notNull(),
+  ip: varchar("ip", { length: 45 }),
+  city: varchar("city", { length: 100 }),
+  region: varchar("region", { length: 100 }),
+  country: varchar("country", { length: 100 }),
+  countryCode: varchar("countryCode", { length: 10 }),
+  deviceType: varchar("deviceType", { length: 50 }),
+  browser: varchar("browser", { length: 50 }),
+  os: varchar("os", { length: 50 }),
+  createdAt: timestamp("createdAt", { withTimezone: true }).defaultNow().notNull(),
+}, (table) => [
+  index("page_views_created_at_idx").on(table.createdAt),
+  index("page_views_path_idx").on(table.path),
+  index("page_views_city_idx").on(table.city),
+  index("page_views_country_idx").on(table.countryCode),
+]);
+
 export type User = typeof users.$inferSelect;
 export type InsertUser = typeof users.$inferInsert;
 export type Product = typeof products.$inferSelect;
@@ -83,3 +106,5 @@ export type InsertProduct = typeof products.$inferInsert;
 export type ProductMedia = typeof productMedia.$inferSelect;
 export type SiteContent = typeof siteContent.$inferSelect;
 export type ActivityLog = typeof activityLogs.$inferSelect;
+export type PageView = typeof pageViews.$inferSelect;
+export type InsertPageView = typeof pageViews.$inferInsert;

@@ -2,7 +2,7 @@
 import { and, asc, count, eq, inArray, ne } from "drizzle-orm";
 import { nanoid } from "nanoid";
 import { productMedia, products, siteContent, type InsertProduct, type Product, type ProductMedia } from "../drizzle/schema";
-import { getDb } from "./db";
+import { ensureDefaultAdmin, getDb } from "./db";
 import { registryProductSeed, siteContentSeed } from "./registrySeed";
 import { storageRemove } from "./storage";
 
@@ -27,29 +27,28 @@ export type RegistryProductInput = {
   targetUsers: string;
   demoUrl?: string | null;
   workflowSteps: WorkflowStepInput[];
-  featured: boolean;
-  displayOrder: number;
+  featured?: boolean;
+  displayOrder?: number;
 };
 
 export type RegistryMedia = ProductMedia;
 export type RegistryProduct = Omit<Product, "featured"> & { featured: boolean; screenshots: RegistryMedia[] };
 
-function requireDb() {
-  return getDb().then((database) => {
-    if (!database) throw new Error("Database is not available.");
-    return database;
-  });
+async function requireDb() {
+  const db = await getDb();
+  if (!db) throw new Error("DATABASE_UNAVAILABLE");
+  return db;
 }
 
-function asRegistryProduct(product: Product, media: RegistryMedia[]): RegistryProduct {
-  return { ...product, featured: product.featured === 1, screenshots: media };
+function asRegistryProduct(product: Product, media: RegistryMedia[] = []): RegistryProduct {
+  return { ...product, featured: Boolean(product.featured), screenshots: media };
 }
 
 export async function isSlugTaken(slug: string, excludeId?: string) {
   const db = await requireDb();
   const condition = excludeId ? and(eq(products.slug, slug), ne(products.id, excludeId)) : eq(products.slug, slug);
-  const [row] = await db.select({ id: products.id }).from(products).where(condition).limit(1);
-  return Boolean(row);
+  const rows = await db.select({ id: products.id }).from(products).where(condition).limit(1);
+  return rows.length > 0;
 }
 
 async function removeStorageKeys(keys: Array<string | null | undefined>) {
@@ -79,7 +78,7 @@ function productValues(input: RegistryProductInput): Omit<InsertProduct, "id" | 
     demoUrl: input.demoUrl || null,
     workflowSteps: input.workflowSteps,
     featured: input.featured ? 1 : 0,
-    displayOrder: input.displayOrder,
+    displayOrder: input.displayOrder || 0,
   };
 }
 
@@ -92,6 +91,8 @@ export async function ensureRegistrySeeded() {
   const existingKeys = new Set(existingContent.map((item) => item.key));
   const missingContent = siteContentSeed.filter((item) => !existingKeys.has(item.key));
   if (missingContent.length) await db.insert(siteContent).values(missingContent);
+
+  await ensureDefaultAdmin();
 }
 
 async function hydrateProducts(rows: Product[]): Promise<RegistryProduct[]> {

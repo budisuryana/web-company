@@ -6,6 +6,7 @@
 dist/
 build/
 *.dist
+graphify-out/
 
 # Environment variables
 .env

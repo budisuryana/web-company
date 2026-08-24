@@ -4,7 +4,7 @@ import { users, type User } from "../drizzle/schema";
 import { ENV } from "./_core/env";
 import { getDb } from "./db";
 
-export type ManagedUser = Pick<User, "id" | "openId" | "name" | "email" | "role" | "createdAt" | "lastSignedIn"> & { isProjectOwner: boolean };
+export type ManagedUser = Pick<User, "id" | "openId" | "name" | "username" | "email" | "role" | "createdAt" | "lastSignedIn"> & { isProjectOwner: boolean };
 
 async function requireDb() {
   const db = await getDb();
@@ -13,7 +13,7 @@ async function requireDb() {
 }
 
 function asManagedUser(user: User): ManagedUser {
-  return { id: user.id, openId: user.openId, name: user.name, email: user.email, role: user.role, createdAt: user.createdAt, lastSignedIn: user.lastSignedIn, isProjectOwner: Boolean(ENV.ownerOpenId) && user.openId === ENV.ownerOpenId };
+  return { id: user.id, openId: user.openId, name: user.name, username: user.username, email: user.email, role: user.role, createdAt: user.createdAt, lastSignedIn: user.lastSignedIn, isProjectOwner: Boolean(ENV.ownerOpenId) && user.openId === ENV.ownerOpenId };
 }
 
 export function getRoleChangeBlock(input: { actorOpenId: string; targetOpenId: string; targetRole: "admin" | "user"; nextRole: "admin" | "user"; ownerOpenId: string; adminCount: number }) {

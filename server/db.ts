@@ -1,9 +1,9 @@
-/** Core database access: authentication helpers are intentionally small; Product Registry queries live in registry.ts. */
-import { eq } from "drizzle-orm";
+import { eq, ilike, or } from "drizzle-orm";
 import { drizzle, type PostgresJsDatabase } from "drizzle-orm/postgres-js";
 import postgres from "postgres";
 import { type InsertUser, users } from "../drizzle/schema";
 import { ENV } from "./_core/env";
+import { hashPassword } from "./_core/password";
 
 let database: PostgresJsDatabase | null = null;
 
@@ -33,7 +33,7 @@ export async function upsertUser(user: InsertUser): Promise<void> {
   if (!db) return;
   const values: InsertUser = { openId: user.openId, lastSignedIn: user.lastSignedIn ?? new Date() };
   const updateSet: Record<string, unknown> = { lastSignedIn: values.lastSignedIn };
-  (["name", "email", "loginMethod"] as const).forEach((field) => {
+  (["name", "email", "username", "passwordHash", "loginMethod"] as const).forEach((field) => {
     if (user[field] !== undefined) {
       values[field] = user[field];
       updateSet[field] = user[field];
@@ -41,8 +41,6 @@ export async function upsertUser(user: InsertUser): Promise<void> {
   });
   const rolePlan = getRolePlan(user.openId, user.role);
   values.role = rolePlan.insertRole;
-  // Never downgrade a database-appointed admin on routine OAuth sign-in.
-  // The configured project owner is re-promoted deliberately as the bootstrap account.
   if (rolePlan.updateRole) updateSet.role = rolePlan.updateRole;
   await db.insert(users).values(values).onConflictDoUpdate({ target: users.openId, set: updateSet });
 }
@@ -52,4 +50,43 @@ export async function getUserByOpenId(openId: string) {
   if (!db) return undefined;
   const result = await db.select().from(users).where(eq(users.openId, openId)).limit(1);
   return result[0];
+}
+
+export async function getUserByUsernameOrEmail(identifier: string) {
+  const db = await getDb();
+  if (!db) return undefined;
+  const term = identifier.trim().toLowerCase();
+  const result = await db
+    .select()
+    .from(users)
+    .where(or(ilike(users.email, term), ilike(users.username, term), eq(users.openId, term)))
+    .limit(1);
+  return result[0];
+}
+
+export async function ensureDefaultAdmin() {
+  const db = await getDb();
+  if (!db) return;
+  const existing = await getUserByUsernameOrEmail("admin");
+  if (!existing) {
+    await db.insert(users).values({
+      openId: "local_admin",
+      username: "admin",
+      name: "Administrator",
+      email: "admin@workshopcollective.co",
+      passwordHash: hashPassword("admin123"),
+      loginMethod: "credentials",
+      role: "admin",
+      lastSignedIn: new Date(),
+    });
+  } else if (!existing.passwordHash) {
+    await db
+      .update(users)
+      .set({
+        username: existing.username || "admin",
+        passwordHash: hashPassword("admin123"),
+        role: "admin",
+      })
+      .where(eq(users.id, existing.id));
+  }
 }

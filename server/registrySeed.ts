@@ -10,10 +10,10 @@ export const registryProductSeed: InsertProduct[] = [
 ];
 
 export const siteContentSeed = [
-  { key: "home.heroEyebrow", label: "Home — Hero eyebrow", value: "Independent software products" },
-  { key: "home.heroTitle", label: "Home — Hero title", value: "Work gets lighter when the system makes sense." },
-  { key: "home.heroDescription", label: "Home — Hero description", value: "We build calm, useful software for teams and creators who have real work to move through." },
-  { key: "home.featuredHeading", label: "Home — Featured products heading", value: "Built around the messy middle of work." },
-  { key: "about.statement", label: "About — Statement", value: "Software has the most value when it gives people back their attention." },
-  { key: "contact.intro", label: "Contact — Intro", value: "Whether you are exploring one of our products, considering a partnership, or working through a business software need—we would like to hear the shape of it." },
+  { key: "home.heroEyebrow", label: "Home — Hero Eyebrow (Teks Pengantar)", value: "Produk Digital & Solusi Perangkat Lunak" },
+  { key: "home.heroTitle", label: "Home — Hero Title (Judul Utama)", value: "Pekerjaan menjadi lebih ringan saat sistem tersusun rapi dan terarah." },
+  { key: "home.heroDescription", label: "Home — Hero Description (Deskripsi Utama)", value: "Kami merancang dan mengembangkan perangkat lunak yang fungsional, terstruktur, dan mudah digunakan untuk mendukung produktivitas tim dan kreator." },
+  { key: "home.featuredHeading", label: "Home — Featured Heading (Judul Produk Pilihan)", value: "Dirancang khusus untuk menyelesaikan kendala nyata dalam operasional kerja." },
+  { key: "about.statement", label: "About — Statement (Pernyataan Visi & Misi)", value: "Perangkat lunak memberikan nilai tertinggi saat mampu mengembalikan fokus dan efisiensi waktu penggunanya." },
+  { key: "contact.intro", label: "Contact — Intro (Pengantar Kontak)", value: "Tertarik menggunakan produk kami, mendiskusikan peluang kemitraan, atau memiliki kebutuhan solusi sistem khusus? Mari diskusikan bersama kami." },
 ];

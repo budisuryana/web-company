@@ -8,6 +8,7 @@ import { decodeImageDataUrl, safeUploadName } from "../registryUpload";
 import { listManagedUsers, setManagedUserRole } from "../userManagement";
 import { recordActivity } from "../activityLog";
 import { getCmsDashboard } from "../dashboard";
+import { getVisitorAnalytics, recordPageView } from "../analytics";
 
 const productInput = z.object({
   name: z.string().trim().min(1).max(160), slug: z.string().trim().regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, "Slug must use lowercase letters, numbers, and hyphens."), shortDescription: z.string().trim().min(1), fullDescription: z.string().trim().min(1), heroHeadline: z.string().trim().min(1), problem: z.string().trim().min(1), solution: z.string().trim().min(1), outcome: z.string().trim().min(1), category: z.string().trim().min(1).max(160), productStatus: z.enum(["active", "planned", "retired"]), publicationStatus: z.enum(["draft", "published"]), logoUrl: z.string().nullable().optional(), logoKey: z.string().nullable().optional(), coverUrl: z.string().nullable().optional(), coverKey: z.string().nullable().optional(), capabilities: z.array(z.string().trim().min(1)).max(12), targetUsers: z.string().trim().min(1), demoUrl: z.string().url().nullable().optional().or(z.literal("")), workflowSteps: z.array(z.object({ title: z.string().trim().min(1), copy: z.string().trim().min(1) })).max(8), featured: z.boolean(), displayOrder: z.number().int().min(0),
@@ -31,11 +32,20 @@ export const registryRouter = router({
     list: publicProcedure.query(() => listRegistryProducts(true)),
     bySlug: publicProcedure.input(z.object({ slug: z.string().min(1) })).query(({ input }) => getRegistryProductBySlug(input.slug, true)),
     siteContent: publicProcedure.query(() => listSiteContent()),
+    trackView: publicProcedure
+      .input(z.object({ path: z.string().min(1), referrer: z.string().optional() }))
+      .mutation(async ({ ctx, input }) => {
+        const ip = (ctx.req.headers["x-forwarded-for"] as string)?.split(",")[0]?.trim() || ctx.req.socket.remoteAddress || "127.0.0.1";
+        const userAgent = ctx.req.headers["user-agent"] || "";
+        await recordPageView({ path: input.path, referrer: input.referrer, ip, userAgent });
+        return { success: true };
+      }),
   }),
   admin: router({
     list: adminProcedure.query(() => listRegistryProducts(false)),
     byId: adminProcedure.input(z.object({ id: z.string().min(1) })).query(({ input }) => getRegistryProductById(input.id)),
     dashboard: adminProcedure.query(() => getCmsDashboard()),
+    analytics: adminProcedure.query(() => getVisitorAnalytics()),
     create: adminProcedure.input(productInput).mutation(async ({ ctx, input }) => { let product; try { product = await createRegistryProduct({ ...input, demoUrl: input.demoUrl || null }); } catch (error) { throw mapSlugConflict(error); } if (product) await logAdminActivity(ctx, { eventType: "product.created", resourceType: "product", resourceId: product.id, summary: `Created ${product.name}`, detail: { slug: product.slug, publicationStatus: product.publicationStatus } }); return product; }),
     update: adminProcedure.input(z.object({ id: z.string().min(1), product: productInput })).mutation(async ({ ctx, input }) => { let product; try { product = await updateRegistryProduct(input.id, { ...input.product, demoUrl: input.product.demoUrl || null }); } catch (error) { throw mapSlugConflict(error); } if (product) await logAdminActivity(ctx, { eventType: "product.updated", resourceType: "product", resourceId: product.id, summary: `Updated ${product.name}`, detail: { publicationStatus: product.publicationStatus, featured: product.featured } }); return product; }),
     remove: adminProcedure.input(z.object({ id: z.string().min(1) })).mutation(async ({ ctx, input }) => { const product = await getRegistryProductById(input.id); const result = await deleteRegistryProduct(input.id); if (product) await logAdminActivity(ctx, { eventType: "product.deleted", resourceType: "product", resourceId: product.id, summary: `Deleted ${product.name}`, detail: { slug: product.slug } }); return result; }),
