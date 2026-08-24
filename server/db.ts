@@ -1,10 +1,11 @@
 /** Core database access: authentication helpers are intentionally small; Product Registry queries live in registry.ts. */
 import { eq } from "drizzle-orm";
-import { drizzle } from "drizzle-orm/mysql2";
+import { drizzle, type PostgresJsDatabase } from "drizzle-orm/postgres-js";
+import postgres from "postgres";
 import { type InsertUser, users } from "../drizzle/schema";
 import { ENV } from "./_core/env";
 
-let database: ReturnType<typeof drizzle> | null = null;
+let database: PostgresJsDatabase | null = null;
 
 /** Keep role assignment authoritative in the database, except for the configured project owner who must retain bootstrap admin access. */
 export function getRolePlan(openId: string, requestedRole: InsertUser["role"] | undefined, ownerOpenId = ENV.ownerOpenId) {
@@ -17,7 +18,7 @@ export function getRolePlan(openId: string, requestedRole: InsertUser["role"] | 
 export async function getDb() {
   if (!database && process.env.DATABASE_URL) {
     try {
-      database = drizzle(process.env.DATABASE_URL);
+      database = drizzle(postgres(process.env.DATABASE_URL));
     } catch (error) {
       console.warn("[Database] Failed to connect:", error);
       database = null;
@@ -43,7 +44,7 @@ export async function upsertUser(user: InsertUser): Promise<void> {
   // Never downgrade a database-appointed admin on routine OAuth sign-in.
   // The configured project owner is re-promoted deliberately as the bootstrap account.
   if (rolePlan.updateRole) updateSet.role = rolePlan.updateRole;
-  await db.insert(users).values(values).onDuplicateKeyUpdate({ set: updateSet });
+  await db.insert(users).values(values).onConflictDoUpdate({ target: users.openId, set: updateSet });
 }
 
 export async function getUserByOpenId(openId: string) {
