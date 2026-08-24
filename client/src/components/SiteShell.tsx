@@ -3,6 +3,7 @@ import { useEffect, useState, type ReactNode } from "react";
 import { ArrowUpRight, Menu, X } from "lucide-react";
 import { Link, useLocation } from "wouter";
 import { trpc } from "@/lib/trpc";
+import { CMS_BASE_PATH } from "@/const";
 
 type SiteShellProps = { children: ReactNode };
 
@@ -35,7 +36,7 @@ export default function SiteShell({ children }: SiteShellProps) {
 
   useEffect(() => {
     setMenuOpen(false);
-    if (!location.startsWith("/admin")) {
+    if (!location.startsWith(CMS_BASE_PATH) && !location.startsWith("/admin")) {
       trackView.mutate({
         path: location,
         referrer: typeof document !== "undefined" ? document.referrer : undefined,

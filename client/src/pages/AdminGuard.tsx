@@ -5,6 +5,7 @@ import { Link } from "wouter";
 import DashboardLayout from "@/components/DashboardLayout";
 import { BrandMark } from "@/components/SiteShell";
 import { useAuth } from "@/_core/hooks/useAuth";
+import { CMS_BASE_PATH } from "@/const";
 import { trpc } from "@/lib/trpc";
 import { toast } from "sonner";
 
@@ -243,7 +244,7 @@ export default function AdminGuard({ children }: { children: ReactNode }) {
             type="button"
             onClick={async () => {
               await logout();
-              window.location.href = "/admin";
+              window.location.href = CMS_BASE_PATH;
             }}
             className="group inline-flex items-center gap-2 bg-[#102239] px-5 py-3.5 text-sm font-extrabold text-[#fffdf8] transition-transform duration-150 hover:-translate-y-0.5 active:scale-[.97]"
           >

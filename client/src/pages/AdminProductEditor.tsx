@@ -4,6 +4,7 @@ import { ArrowDown, ArrowLeft, ArrowUp, Check, ImagePlus, Loader2, Save, Trash2,
 import { Link, useLocation, useRoute } from "wouter";
 import AdminGuard from "@/pages/AdminGuard";
 import { useAuth } from "@/_core/hooks/useAuth";
+import { CMS_BASE_PATH, CMS_ROUTES } from "@/const";
 import { trpc } from "@/lib/trpc";
 import { submitProductIfValid } from "@/lib/productValidation";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -33,7 +34,7 @@ function fileToDataUrl(file: File) {
 export default function AdminProductEditor() {
   const { user } = useAuth();
   const isAdmin = user?.role === "admin";
-  const [, params] = useRoute("/admin/products/:id");
+  const [, params] = useRoute(`${CMS_BASE_PATH}/products/:id`);
   const [, navigate] = useLocation();
   const id = params?.id ?? "new";
   const isNew = id === "new";
@@ -60,7 +61,7 @@ export default function AdminProductEditor() {
   useEffect(() => { if (productQuery.data) setForm(toForm(productQuery.data)); }, [productQuery.data]);
 
   const create = trpc.registry.admin.create.useMutation({
-    onSuccess: (product) => { toast.success("Product created as a registry record."); void utils.registry.admin.list.invalidate(); if (product) navigate(`/admin/products/${product.id}`); },
+    onSuccess: (product) => { toast.success("Product created as a registry record."); void utils.registry.admin.list.invalidate(); if (product) navigate(CMS_ROUTES.productEdit(product.id)); },
     onError: (error) => { const slugError = error.message.toLowerCase().includes("slug"); if (slugError) { setActiveTab("identity"); setValidationErrors((current) => ({ ...current, slug: error.message })); } toast.error(slugError ? error.message : "Product could not be created. Check the required fields and try again."); },
   });
   const update = trpc.registry.admin.update.useMutation({
@@ -72,7 +73,7 @@ export default function AdminProductEditor() {
       toast.success("Produk berhasil dihapus.");
       void utils.registry.admin.list.invalidate();
       setConfirmModal((prev) => ({ ...prev, open: false }));
-      navigate("/admin/products");
+      navigate(CMS_ROUTES.products);
     },
     onError: (error) => {
       toast.error(error.message);
@@ -122,7 +123,7 @@ export default function AdminProductEditor() {
   const screenshots = productQuery.data?.screenshots ?? [];
   const moveScreenshot = (index: number, direction: -1 | 1) => { const target = index + direction; if (target < 0 || target >= screenshots.length) return; const next = [...screenshots]; [next[index], next[target]] = [next[target], next[index]]; reorderScreenshots.mutate({ productId: id, ids: next.map((screenshot) => screenshot.id) }); };
 
-  return <AdminGuard><div className="w-full"><div className="mb-7 flex flex-wrap items-end justify-between gap-4"><div><Link href="/admin/products" className="inline-flex items-center gap-2 text-xs font-extrabold text-slate-500"><ArrowLeft size={14} /> Product Registry</Link><span className="mt-5 block text-[10px] font-extrabold uppercase tracking-[.16em] text-[#f05a43]">{isNew ? "New product" : `Editing: ${form.name || "Product"}`}</span><h1 className="mt-2 font-[DM_Serif_Display] text-5xl leading-none tracking-tight text-[#102239]">{isNew ? "Add New Product" : "Edit Product Details"}</h1></div>{!isNew && <button disabled={remove.isPending} type="button" onClick={() => {
+  return <AdminGuard><div className="w-full"><div className="mb-7 flex flex-wrap items-end justify-between gap-4"><div><Link href={CMS_ROUTES.products} className="inline-flex items-center gap-2 text-xs font-extrabold text-slate-500"><ArrowLeft size={14} /> Product Registry</Link><span className="mt-5 block text-[10px] font-extrabold uppercase tracking-[.16em] text-[#f05a43]">{isNew ? "New product" : `Editing: ${form.name || "Product"}`}</span><h1 className="mt-2 font-[DM_Serif_Display] text-5xl leading-none tracking-tight text-[#102239]">{isNew ? "Add New Product" : "Edit Product Details"}</h1></div>{!isNew && <button disabled={remove.isPending} type="button" onClick={() => {
     setConfirmModal({
       open: true,
       title: "Hapus Produk?",
@@ -144,7 +145,7 @@ export default function AdminProductEditor() {
           onConfirm: () => deleteScreenshot.mutate({ id: screenshot.id }),
         });
       }} className="grid h-7 w-7 place-items-center border border-red-200 text-red-700 hover:bg-red-50"><Trash2 size={13} /></button></div></div></div>)}</div></div></section>}</TabsContent>
-      <div className="mt-2 flex justify-end gap-3 border border-slate-900/15 bg-[#f6f0e6] p-3"><Link href="/admin/products" className="px-4 py-3 text-xs font-extrabold text-[#102239]">Cancel</Link><button disabled={busy} type="button" onClick={save} className="inline-flex items-center gap-2 bg-[#102239] px-5 py-3 text-xs font-extrabold text-[#fffdf8] disabled:opacity-60">{busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save size={15} />}{isNew ? "Create product" : "Save product"}</button></div>
+      <div className="mt-2 flex justify-end gap-3 border border-slate-900/15 bg-[#f6f0e6] p-3"><Link href={CMS_ROUTES.products} className="px-4 py-3 text-xs font-extrabold text-[#102239]">Cancel</Link><button disabled={busy} type="button" onClick={save} className="inline-flex items-center gap-2 bg-[#102239] px-5 py-3 text-xs font-extrabold text-[#fffdf8] disabled:opacity-60">{busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save size={15} />}{isNew ? "Create product" : "Save product"}</button></div>
     </Tabs>}
 
     <ConfirmModal

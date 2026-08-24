@@ -27,6 +27,7 @@ import {
 import { Link } from "wouter";
 import AdminGuard from "@/pages/AdminGuard";
 import { useAuth } from "@/_core/hooks/useAuth";
+import { CMS_ROUTES } from "@/const";
 import { trpc } from "@/lib/trpc";
 
 const activityIcon = (type: string) =>
@@ -127,13 +128,13 @@ export default function AdminDashboard() {
           </div>
           <div className="flex flex-wrap content-end gap-3">
             <Link
-              href="/admin/products/new"
+              href={CMS_ROUTES.productNew}
               className="inline-flex items-center gap-2 bg-[#102239] px-4 py-3 text-xs font-extrabold text-[#fffdf8] transition-transform duration-150 hover:-translate-y-0.5"
             >
               Add product <ArrowUpRight size={14} />
             </Link>
             <Link
-              href="/admin/content"
+              href={CMS_ROUTES.content}
               className="inline-flex items-center gap-2 border border-[#102239] bg-white px-4 py-3 text-xs font-extrabold text-[#102239] transition-transform duration-150 hover:-translate-y-0.5"
             >
               Edit Site Copy <FileText size={14} />
@@ -666,21 +667,21 @@ export default function AdminDashboard() {
                   </span>
                   <div className="mt-3 divide-y divide-slate-100 text-xs">
                     <Link
-                      href="/admin/products"
+                      href={CMS_ROUTES.products}
                       className="flex items-center justify-between py-2.5 font-bold text-[#102239] transition-colors hover:text-[#f05a43]"
                     >
                       <span>Katalog Produk Registry</span>
                       <ArrowUpRight size={13} className="text-slate-400" />
                     </Link>
                     <Link
-                      href="/admin/content"
+                      href={CMS_ROUTES.content}
                       className="flex items-center justify-between py-2.5 font-bold text-[#102239] transition-colors hover:text-[#f05a43]"
                     >
                       <span>Site Content &amp; Copy Editor</span>
                       <ArrowUpRight size={13} className="text-slate-400" />
                     </Link>
                     <Link
-                      href="/admin/users"
+                      href={CMS_ROUTES.users}
                       className="flex items-center justify-between py-2.5 font-bold text-[#102239] transition-colors hover:text-[#f05a43]"
                     >
                       <span>Manajemen User &amp; Peran</span>

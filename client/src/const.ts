@@ -2,6 +2,18 @@ import { OAUTH_STATE_COOKIE, encodeOAuthState } from "@shared/const";
 
 export { COOKIE_NAME, ONE_YEAR_MS } from "@shared/const";
 
+/** Configurable CMS route prefix via VITE_CMS_PATH (default: /studio) */
+export const CMS_BASE_PATH = (import.meta.env.VITE_CMS_PATH || "/studio").replace(/\/+$/, "") || "/studio";
+
+export const CMS_ROUTES = {
+  dashboard: CMS_BASE_PATH,
+  products: `${CMS_BASE_PATH}/products`,
+  productNew: `${CMS_BASE_PATH}/products/new`,
+  productEdit: (id: string | number) => `${CMS_BASE_PATH}/products/${id}`,
+  content: `${CMS_BASE_PATH}/content`,
+  users: `${CMS_BASE_PATH}/users`,
+};
+
 // Start the Manus OAuth login. Call this from an event handler or effect at the
 // moment you want to navigate, e.g. `onClick={() => startLogin()}`.
 //

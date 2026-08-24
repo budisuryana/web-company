@@ -4,6 +4,7 @@ import { ArrowDown, ArrowUp, ArrowUpRight, Boxes, Loader2, Pencil, Plus, RotateC
 import { Link } from "wouter";
 import AdminGuard from "@/pages/AdminGuard";
 import { useAuth } from "@/_core/hooks/useAuth";
+import { CMS_ROUTES } from "@/const";
 import { trpc } from "@/lib/trpc";
 import { toast } from "sonner";
 import { formatDistanceToNow } from "date-fns";
@@ -63,7 +64,7 @@ export default function AdminProducts() {
         <h1 className="mt-1 font-[DM_Serif_Display] text-3xl leading-tight tracking-tight text-[#102239]">Product Registry &amp; Catalog</h1>
         <p className="mt-1 text-xs leading-5 text-slate-600">Kelola daftar produk, status publikasi (Draft / Published), status produk, dan urutan tampilan portofolio.</p>
       </div>
-      <Link href="/admin/products/new" className="inline-flex items-center gap-2 bg-[#102239] px-4 py-2 text-xs font-extrabold text-[#fffdf8]"><Plus size={14} /> Add product</Link>
+      <Link href={CMS_ROUTES.productNew} className="inline-flex items-center gap-2 bg-[#102239] px-4 py-2 text-xs font-extrabold text-[#fffdf8]"><Plus size={14} /> Add product</Link>
     </div>
 
     <div className="overflow-hidden border border-slate-900/15 bg-white shadow-sm">
@@ -88,7 +89,7 @@ export default function AdminProducts() {
       {!registryQuery.isLoading && !registryQuery.isError && filtered.length === 0 && <div className="grid place-items-center gap-2 border-b border-slate-900/10 px-3 py-10 text-center">
         <Boxes size={22} className="text-slate-300" />
         <p className="text-sm font-bold text-[#102239]">{hasActiveFilter ? "No products match these filters." : "The registry is empty."}</p>
-        {hasActiveFilter ? <button type="button" onClick={clearFilters} className="text-xs font-extrabold text-[#c44735] underline underline-offset-2">Clear filters</button> : <Link href="/admin/products/new" className="inline-flex items-center gap-1 text-xs font-extrabold text-[#c44735] underline underline-offset-2">Add the first product <Plus size={12} /></Link>}
+        {hasActiveFilter ? <button type="button" onClick={clearFilters} className="text-xs font-extrabold text-[#c44735] underline underline-offset-2">Clear filters</button> : <Link href={CMS_ROUTES.productNew} className="inline-flex items-center gap-1 text-xs font-extrabold text-[#c44735] underline underline-offset-2">Add the first product <Plus size={12} /></Link>}
       </div>}
 
       {filtered.length > 0 && <div aria-hidden="true" className={`hidden border-b border-slate-900/10 py-1.5 md:grid ${rowTracks}`}><span /><span className={headCellClass}>Product</span><span className={headCellClass}>Status</span><span /></div>}
@@ -112,7 +113,7 @@ export default function AdminProducts() {
             <span className={`${badgeClass} min-w-[74px] ${product.publicationStatus === "published" ? "bg-[#e8efe5] text-[#356448]" : "bg-slate-100 text-slate-500"}`}>{product.publicationStatus}</span>
             <span className={`${badgeClass} min-w-[62px] border border-slate-900/15 text-slate-600`}>{product.productStatus}</span>
           </div>
-          <Link href={`/admin/products/${product.id}`} className="inline-flex w-full items-center justify-center gap-2 border border-[#102239] px-3 py-1.5 text-xs font-extrabold text-[#102239]">Edit <Pencil size={12} /></Link>
+          <Link href={CMS_ROUTES.productEdit(product.id)} className="inline-flex w-full items-center justify-center gap-2 border border-[#102239] px-3 py-1.5 text-xs font-extrabold text-[#102239]">Edit <Pencil size={12} /></Link>
         </div>)}
 
       <div className="flex flex-wrap items-center justify-between gap-2 bg-white px-3 py-2 text-xs text-slate-500">

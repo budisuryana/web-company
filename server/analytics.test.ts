@@ -27,11 +27,11 @@ describe("Visitor Analytics & Geo-Location", () => {
     expect(desktopParsed.browser).toBe("Chrome");
   });
 
-  it("resolves local IP to Jakarta Indonesia fallback", () => {
+  it("resolves local IP to Bandung Indonesia fallback", () => {
     const localGeo = resolveGeoLocation("127.0.0.1");
     expect(localGeo.country).toBe("Indonesia");
     expect(localGeo.countryCode).toBe("ID");
-    expect(localGeo.city).toBe("Jakarta");
+    expect(localGeo.city).toBe("Bandung");
   });
 
   it("does not record views for internal admin and api routes", async () => {

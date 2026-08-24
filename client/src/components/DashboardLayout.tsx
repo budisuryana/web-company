@@ -3,7 +3,7 @@ import { useAuth } from "@/_core/hooks/useAuth";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarInset, SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarProvider, SidebarTrigger, useSidebar } from "@/components/ui/sidebar";
-import { startLogin } from "@/const";
+import { CMS_BASE_PATH, CMS_ROUTES, startLogin } from "@/const";
 import { useIsMobile } from "@/hooks/useMobile";
 import { Boxes, ExternalLink, FileText, LayoutDashboard, LogOut, PanelLeft, UsersRound } from "lucide-react";
 import { CSSProperties, useEffect, useRef, useState } from "react";
@@ -11,7 +11,13 @@ import { useLocation } from "wouter";
 import { DashboardLayoutSkeleton } from "./DashboardLayoutSkeleton";
 import { Button } from "./ui/button";
 
-const menuItems = [{ icon: LayoutDashboard, label: "Overview", path: "/admin" }, { icon: Boxes, label: "Product Registry", path: "/admin/products" }, { icon: FileText, label: "Site Copy", path: "/admin/content" }, { icon: UsersRound, label: "User Management", path: "/admin/users" }, { icon: ExternalLink, label: "Public Website", path: "/" }];
+const menuItems = [
+  { icon: LayoutDashboard, label: "Overview", path: CMS_ROUTES.dashboard },
+  { icon: Boxes, label: "Product Registry", path: CMS_ROUTES.products },
+  { icon: FileText, label: "Site Copy", path: CMS_ROUTES.content },
+  { icon: UsersRound, label: "User Management", path: CMS_ROUTES.users },
+  { icon: ExternalLink, label: "Public Website", path: "/" },
+];
 const SIDEBAR_WIDTH_KEY = "workshop-cms-sidebar-width"; const DEFAULT_WIDTH = 270; const MIN_WIDTH = 220; const MAX_WIDTH = 380;
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) { const [sidebarWidth, setSidebarWidth] = useState(() => Number(localStorage.getItem(SIDEBAR_WIDTH_KEY)) || DEFAULT_WIDTH); const { loading, user } = useAuth(); useEffect(() => localStorage.setItem(SIDEBAR_WIDTH_KEY, String(sidebarWidth)), [sidebarWidth]); if (loading) return <DashboardLayoutSkeleton />; if (!user) return <div className="flex min-h-screen items-center justify-center"><div className="max-w-md p-8 text-center"><h1 className="text-2xl font-semibold">Sign in to continue</h1><p className="mt-3 text-sm text-muted-foreground">Access to this workspace requires authentication.</p><Button onClick={() => startLogin()} size="lg" className="mt-6 w-full">Sign in</Button></div></div>; return <SidebarProvider style={{ "--sidebar-width": `${sidebarWidth}px` } as CSSProperties}><DashboardLayoutContent setSidebarWidth={setSidebarWidth}>{children}</DashboardLayoutContent></SidebarProvider>; }
@@ -23,13 +29,15 @@ function DashboardLayoutContent({ children, setSidebarWidth }: { children: React
   const [isResizing, setIsResizing] = useState(false);
   const sidebarRef = useRef<HTMLDivElement>(null);
   const isMobile = useIsMobile();
-  const activeMenuItem = menuItems.find((item) => item.path === location || (item.path === "/admin/products" && location.startsWith("/admin/products")));
+  const activeMenuItem = menuItems.find(
+    (item) => item.path === location || (item.path === CMS_ROUTES.products && location.startsWith(CMS_ROUTES.products))
+  );
 
   const handleLogout = async () => {
     try {
       await logout();
     } finally {
-      window.location.href = "/admin";
+      window.location.href = CMS_BASE_PATH;
     }
   };
 

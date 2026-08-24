@@ -70,7 +70,7 @@ export function resolveGeoLocation(ip: string = "127.0.0.1"): {
 } {
   const cleanIp = ip.replace(/^::ffff:/, "").trim();
 
-  // Local / Development IPs -> Default to Jakarta, Indonesia
+  // Local / Development IPs -> Default to Bandung, Indonesia
   if (
     cleanIp === "127.0.0.1" ||
     cleanIp === "::1" ||
@@ -80,8 +80,8 @@ export function resolveGeoLocation(ip: string = "127.0.0.1"): {
     cleanIp === "localhost"
   ) {
     return {
-      city: "Jakarta",
-      region: "DKI Jakarta",
+      city: "Bandung",
+      region: "Jawa Barat",
       country: "Indonesia",
       countryCode: "ID",
     };
@@ -92,8 +92,8 @@ export function resolveGeoLocation(ip: string = "127.0.0.1"): {
     if (geo) {
       const countryCode = geo.country || "ID";
       const country = COUNTRY_NAMES[countryCode] || geo.country || "Indonesia";
-      const city = geo.city || "Jakarta";
-      const region = geo.region || "DKI Jakarta";
+      const city = geo.city || "Bandung";
+      const region = geo.region || "Jawa Barat";
       return { city, region, country, countryCode };
     }
   } catch {
@@ -101,8 +101,8 @@ export function resolveGeoLocation(ip: string = "127.0.0.1"): {
   }
 
   return {
-    city: "Jakarta",
-    region: "DKI Jakarta",
+    city: "Bandung",
+    region: "Jawa Barat",
     country: "Indonesia",
     countryCode: "ID",
   };
@@ -114,8 +114,9 @@ export async function recordPageView(input: {
   ip?: string;
   userAgent?: string;
 }) {
-  // Never track internal admin routes
-  if (input.path.startsWith("/admin") || input.path.startsWith("/api")) return null;
+  const cmsPrefix = process.env.VITE_CMS_PATH || "/studio";
+  // Never track internal admin / studio routes
+  if (input.path.startsWith("/admin") || input.path.startsWith(cmsPrefix) || input.path.startsWith("/api")) return null;
 
   const db = await requireDb();
   const rawIp = input.ip || "127.0.0.1";
