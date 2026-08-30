@@ -1,5 +1,10 @@
 import type { Express } from "express";
+import { stat } from "node:fs/promises";
 import { ENV } from "./env";
+import {
+  isForgeStorageConfigured,
+  resolveLocalStoragePath,
+} from "../storage";
 
 export function registerStorageProxy(app: Express) {
   app.get("/manus-storage/*", async (req, res) => {
@@ -9,8 +14,24 @@ export function registerStorageProxy(app: Express) {
       return;
     }
 
-    if (!ENV.forgeApiUrl || !ENV.forgeApiKey) {
-      res.status(500).send("Storage proxy not configured");
+    // Local development fallback: serve uploaded files straight from disk.
+    if (!isForgeStorageConfigured()) {
+      const filePath = resolveLocalStoragePath(key);
+      if (!filePath) {
+        res.status(400).send("Invalid storage key");
+        return;
+      }
+      try {
+        const info = await stat(filePath);
+        if (!info.isFile()) throw new Error("Not a file");
+      } catch {
+        res.status(404).send("Not found");
+        return;
+      }
+      res.set("Cache-Control", "no-store");
+      res.sendFile(filePath, (err) => {
+        if (err && !res.headersSent) res.status(404).send("Not found");
+      });
       return;
     }
 

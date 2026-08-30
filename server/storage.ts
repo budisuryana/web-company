@@ -1,7 +1,11 @@
 // Preconfigured storage helpers for Manus WebDev templates
 // Uploads via Forge Server presigned URL to S3 (PUT direct).
 // Downloads return /manus-storage/{key} paths served via 307 redirect.
+// When Forge is not configured (local development), files are written to a
+// local directory and served back through the same /manus-storage paths.
 
+import { mkdir, unlink, writeFile } from "node:fs/promises";
+import path from "node:path";
 import { ENV } from "./_core/env";
 
 function getForgeConfig() {
@@ -17,6 +21,24 @@ function getForgeConfig() {
   return { forgeUrl: forgeUrl.replace(/\/+$/, ""), forgeKey };
 }
 
+export function isForgeStorageConfigured(): boolean {
+  return Boolean(ENV.forgeApiUrl && ENV.forgeApiKey);
+}
+
+/** Root directory used by the local-development storage fallback. */
+export function getLocalStorageDir(): string {
+  return process.env.LOCAL_STORAGE_DIR
+    ? path.resolve(process.env.LOCAL_STORAGE_DIR)
+    : path.resolve(process.cwd(), ".local-storage");
+}
+
+/** Resolve a storage key inside the local storage root, refusing traversal. */
+export function resolveLocalStoragePath(key: string): string | null {
+  const root = getLocalStorageDir();
+  const target = path.resolve(root, normalizeKey(key));
+  return target.startsWith(root + path.sep) ? target : null;
+}
+
 function normalizeKey(relKey: string): string {
   return relKey.replace(/^\/+/, "");
 }
@@ -28,13 +50,26 @@ function appendHashSuffix(relKey: string): string {
   return `${relKey.slice(0, lastDot)}_${hash}${relKey.slice(lastDot)}`;
 }
 
+async function putLocal(key: string, data: Buffer): Promise<{ key: string; url: string }> {
+  const target = resolveLocalStoragePath(key);
+  if (!target) throw new Error("Invalid storage key");
+  await mkdir(path.dirname(target), { recursive: true });
+  await writeFile(target, data);
+  return { key, url: `/manus-storage/${key}` };
+}
+
 export async function storagePut(
   relKey: string,
   data: Buffer | Uint8Array | string,
   contentType = "application/octet-stream",
 ): Promise<{ key: string; url: string }> {
-  const { forgeUrl, forgeKey } = getForgeConfig();
   const key = appendHashSuffix(normalizeKey(relKey));
+
+  if (!isForgeStorageConfigured()) {
+    return putLocal(key, typeof data === "string" ? Buffer.from(data, "utf8") : Buffer.from(data));
+  }
+
+  const { forgeUrl, forgeKey } = getForgeConfig();
 
   // 1. Get presigned PUT URL from Forge
   const presignUrl = new URL("v1/storage/presign/put", forgeUrl + "/");
@@ -74,6 +109,28 @@ export async function storagePut(
 export async function storageGet(relKey: string): Promise<{ key: string; url: string }> {
   const key = normalizeKey(relKey);
   return { key, url: `/manus-storage/${key}` };
+}
+
+/** Best-effort deletion of a stored object. The Forge API exposes presigned
+ * put/get only, so remote deletions are reported as skipped instead of failing. */
+export async function storageRemove(relKey: string): Promise<{ removed: boolean; skipped?: boolean }> {
+  const key = normalizeKey(relKey);
+  if (!key) return { removed: false };
+
+  if (!isForgeStorageConfigured()) {
+    const target = resolveLocalStoragePath(key);
+    if (!target) return { removed: false };
+    try {
+      await unlink(target);
+      return { removed: true };
+    } catch (error) {
+      if ((error as NodeJS.ErrnoException)?.code === "ENOENT") return { removed: false };
+      throw error;
+    }
+  }
+
+  console.warn(`[Storage] Deletion skipped for ${key}: the Forge storage API has no delete operation.`);
+  return { removed: false, skipped: true };
 }
 
 export async function storageGetSignedUrl(relKey: string): Promise<string> {

@@ -1,28 +1,98 @@
-/** Design system: Software Almanac — calm navigation and a modular mark frame every product story. */
-import { useEffect, useState, type ReactNode } from "react";
+/** Design system: Software Almanac — brand lockup, header, and footer dynamically read company profile from PostgreSQL. */
+import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { ArrowUpRight, Menu, X } from "lucide-react";
 import { Link, useLocation } from "wouter";
+import { trpc } from "@/lib/trpc";
+import { CMS_BASE_PATH } from "@/const";
 
 type SiteShellProps = { children: ReactNode };
 
 const navItems = [
-  { label: "Products", href: "/products" },
-  { label: "About", href: "/about" },
-  { label: "Contact", href: "/contact" },
+  { label: "Produk", href: "/products" },
+  { label: "Tentang Kami", href: "/about" },
+  { label: "Kontak", href: "/contact" },
 ];
 
 export function BrandMark({ className = "" }: { className?: string }) {
-  return <svg className={`brand-mark ${className}`} viewBox="0 0 48 48" aria-hidden="true"><path d="M7 9h10l7 17L31 9h10L29 39h-9L7 9Z" fill="currentColor" /><path d="m24 26 5.4 13h-9L24 26Z" fill="#F05A43" /></svg>;
+  return (
+    <svg className={`brand-mark ${className}`} viewBox="0 0 48 48" aria-hidden="true">
+      <path d="M7 9h10l7 17L31 9h10L29 39h-9L7 9Z" fill="currentColor" />
+      <path d="m24 26 5.4 13h-9L24 26Z" fill="#F05A43" />
+    </svg>
+  );
 }
 
-function Brand() {
-  return <Link href="/" className="brand-lockup" aria-label="Workshop Collective home"><BrandMark /><span className="brand-wordmark"><b>Workshop</b><b>Collective</b></span><i className="brand-index-slash" /></Link>;
+export function Brand({
+  logoUrl,
+  companyName = "Workshop Collective",
+  tagline,
+  showTagline = true,
+  size = "default",
+}: {
+  logoUrl?: string;
+  companyName?: string;
+  tagline?: string;
+  showTagline?: boolean;
+  size?: "default" | "large";
+}) {
+  if (logoUrl) {
+    return (
+      <Link
+        href="/"
+        className="inline-flex flex-col items-start justify-center gap-1 pt-2.5 pb-1 text-left transition-opacity hover:opacity-90"
+        aria-label="Beranda"
+      >
+        <img
+          src={logoUrl}
+          alt={companyName}
+          className={
+            size === "large"
+              ? "h-14 sm:h-16 max-h-20 w-auto max-w-[320px] object-contain"
+              : "h-10 sm:h-11 md:h-12 max-h-12 w-auto max-w-[280px] object-contain"
+          }
+        />
+        {showTagline && tagline && (
+          <span className="mt-0.5 text-xs font-semibold tracking-tight text-slate-500">
+            {tagline}
+          </span>
+        )}
+      </Link>
+    );
+  }
+
+  const parts = companyName.trim().split(/\s+/);
+  const part1 = parts[0] || "Workshop";
+  const part2 = parts.slice(1).join(" ") || "";
+
+  return (
+    <Link href="/" className="brand-lockup" aria-label="Beranda">
+      <BrandMark />
+      <span className="brand-wordmark">
+        <b>{part1}</b>
+        {part2 && <b>{part2}</b>}
+      </span>
+      <i className="brand-index-slash" />
+    </Link>
+  );
 }
 
 export default function SiteShell({ children }: SiteShellProps) {
   const [location] = useLocation();
   const [menuOpen, setMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const trackView = trpc.registry.public.trackView.useMutation();
+  const contentQuery = trpc.registry.public.siteContent.useQuery();
+
+  const content = useMemo(() => {
+    return Object.fromEntries((contentQuery.data ?? []).map((item) => [item.key, item.value]));
+  }, [contentQuery.data]);
+
+  const logoUrl = content["company.logoUrl"] || undefined;
+  const companyName = content["company.name"] ?? "Workshop Collective";
+  const tagline = content["company.tagline"] ?? "Perangkat lunak terpadu untuk alur kerja yang terus bergerak.";
+  const copyrightText = `© ${new Date().getFullYear()} ${companyName}`;
+  const footerMotto = content["company.footerMotto"] ?? "Independent by design.";
+  const address = content["company.address"] ?? "Bandung · Indonesia";
 
   useEffect(() => {
     const updateHeader = () => setScrolled(window.scrollY > 14);
@@ -31,19 +101,78 @@ export default function SiteShell({ children }: SiteShellProps) {
     return () => window.removeEventListener("scroll", updateHeader);
   }, []);
 
-  useEffect(() => setMenuOpen(false), [location]);
+  useEffect(() => {
+    setMenuOpen(false);
+    if (!location.startsWith(CMS_BASE_PATH) && !location.startsWith("/admin")) {
+      trackView.mutate({
+        path: location,
+        referrer: typeof document !== "undefined" ? document.referrer : undefined,
+      });
+    }
+  }, [location]);
 
-  return <div className="site-shell">
-    <header className={`site-header ${scrolled ? "is-scrolled" : ""}`}>
-      <div className="header-inner">
-        <Brand />
-        <nav className="main-nav" aria-label="Primary navigation">{navItems.map((item) => <Link key={item.href} href={item.href} className={location.startsWith(item.href) ? "is-active" : ""}>{item.label}</Link>)}</nav>
-        <Link href="/contact" className="header-cta">Start a conversation <ArrowUpRight size={15} /></Link>
-        <button className="menu-button" type="button" aria-label={menuOpen ? "Close menu" : "Open menu"} aria-expanded={menuOpen} onClick={() => setMenuOpen((value) => !value)}>{menuOpen ? <X size={22} /> : <Menu size={22} />}</button>
-      </div>
-      <div className={`mobile-menu ${menuOpen ? "is-open" : ""}`}>{navItems.map((item, index) => <Link key={item.href} href={item.href}><span>0{index + 1}</span>{item.label}<ArrowUpRight size={16} /></Link>)}<Link href="/contact" className="mobile-contact">Tell us what you are building</Link></div>
-    </header>
-    {children}
-    <footer className="site-footer"><div className="footer-top"><Brand /><p>Useful software for the work that keeps moving.</p><Link href="/contact" className="text-link">Start a conversation <ArrowUpRight size={15} /></Link></div><div className="footer-bottom"><span>© 2026 Workshop Collective</span><span>Independent by design.</span><span>Jakarta · Indonesia</span></div></footer>
-  </div>;
+  return (
+    <div className="site-shell">
+      <header className={`site-header ${scrolled ? "is-scrolled" : ""}`}>
+        <div className="header-inner">
+          <Brand logoUrl={logoUrl} companyName={companyName} tagline={tagline} />
+          <nav className="main-nav" aria-label="Navigasi Utama">
+            {navItems.map((item) => (
+              <Link
+                key={item.href}
+                href={item.href}
+                className={location.startsWith(item.href) ? "is-active" : ""}
+              >
+                {item.label}
+              </Link>
+            ))}
+          </nav>
+          <Link href="/contact" className="header-cta">
+            Hubungi Kami <ArrowUpRight size={15} />
+          </Link>
+          <button
+            className="menu-button"
+            type="button"
+            aria-label={menuOpen ? "Tutup menu" : "Buka menu"}
+            aria-expanded={menuOpen}
+            onClick={() => setMenuOpen((value) => !value)}
+          >
+            {menuOpen ? <X size={22} /> : <Menu size={22} />}
+          </button>
+        </div>
+        <div className={`mobile-menu ${menuOpen ? "is-open" : ""}`}>
+          {navItems.map((item, index) => (
+            <Link key={item.href} href={item.href}>
+              <span>0{index + 1}</span>
+              {item.label}
+              <ArrowUpRight size={16} />
+            </Link>
+          ))}
+          <Link href="/contact" className="mobile-contact">
+            Konsultasikan kebutuhan produk Anda
+          </Link>
+        </div>
+      </header>
+      {children}
+      <footer className="site-footer">
+        <div className="footer-top">
+          <Brand
+            logoUrl={logoUrl}
+            companyName={companyName}
+            size="large"
+            showTagline={false}
+          />
+          <p>{tagline}</p>
+          <Link href="/contact" className="text-link">
+            Mulai Konsultasi <ArrowUpRight size={15} />
+          </Link>
+        </div>
+        <div className="footer-bottom">
+          <span>{copyrightText}</span>
+          <span>{footerMotto}</span>
+          <span>{address}</span>
+        </div>
+      </footer>
+    </div>
+  );
 }

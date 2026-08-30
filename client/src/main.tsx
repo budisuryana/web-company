@@ -5,19 +5,30 @@ import { httpBatchLink, TRPCClientError } from "@trpc/client";
 import { createRoot } from "react-dom/client";
 import superjson from "superjson";
 import App from "./App";
-import { startLogin } from "./const";
+import { CMS_BASE_PATH, startLogin } from "./const";
 import "./index.css";
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      retry: (failureCount, error) => {
+        if (error instanceof TRPCClientError) {
+          const code = error.data?.code;
+          if (code === "UNAUTHORIZED" || code === "FORBIDDEN") return false;
+        }
+        return failureCount < 1;
+      },
+      refetchOnWindowFocus: false,
+    },
+  },
+});
 
 const redirectToLoginIfUnauthorized = (error: unknown) => {
   if (!(error instanceof TRPCClientError)) return;
   if (typeof window === "undefined") return;
-
   const isUnauthorized = error.message === UNAUTHED_ERR_MSG;
-
   if (!isUnauthorized) return;
-
+  if (window.location.pathname.startsWith(CMS_BASE_PATH) || window.location.pathname.startsWith("/admin")) return;
   startLogin();
 };
 

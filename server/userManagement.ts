@@ -4,7 +4,7 @@ import { users, type User } from "../drizzle/schema";
 import { ENV } from "./_core/env";
 import { getDb } from "./db";
 
-export type ManagedUser = Pick<User, "id" | "openId" | "name" | "email" | "role" | "createdAt" | "lastSignedIn"> & { isProjectOwner: boolean };
+export type ManagedUser = Pick<User, "id" | "openId" | "name" | "username" | "email" | "role" | "createdAt" | "lastSignedIn"> & { isProjectOwner: boolean };
 
 async function requireDb() {
   const db = await getDb();
@@ -13,7 +13,7 @@ async function requireDb() {
 }
 
 function asManagedUser(user: User): ManagedUser {
-  return { id: user.id, openId: user.openId, name: user.name, email: user.email, role: user.role, createdAt: user.createdAt, lastSignedIn: user.lastSignedIn, isProjectOwner: Boolean(ENV.ownerOpenId) && user.openId === ENV.ownerOpenId };
+  return { id: user.id, openId: user.openId, name: user.name, username: user.username, email: user.email, role: user.role, createdAt: user.createdAt, lastSignedIn: user.lastSignedIn, isProjectOwner: Boolean(ENV.ownerOpenId) && user.openId === ENV.ownerOpenId };
 }
 
 export function getRoleChangeBlock(input: { actorOpenId: string; targetOpenId: string; targetRole: "admin" | "user"; nextRole: "admin" | "user"; ownerOpenId: string; adminCount: number }) {
@@ -37,7 +37,7 @@ export async function setManagedUserRole(input: { actorOpenId: string; targetOpe
   const adminRows = input.role === "user" && target.role === "admin" ? await db.select({ openId: users.openId }).from(users).where(eq(users.role, "admin")) : [];
   const block = getRoleChangeBlock({ actorOpenId: input.actorOpenId, targetOpenId: input.targetOpenId, targetRole: target.role, nextRole: input.role, ownerOpenId: ENV.ownerOpenId, adminCount: adminRows.length });
   if (block) throw new Error(block);
-  await db.update(users).set({ role: input.role }).where(eq(users.openId, input.targetOpenId));
+  await db.update(users).set({ role: input.role, updatedAt: new Date() }).where(eq(users.openId, input.targetOpenId));
   const [updated] = await db.select().from(users).where(eq(users.openId, input.targetOpenId)).limit(1);
   if (!updated) throw new Error("User role update could not be completed.");
   return asManagedUser(updated);
