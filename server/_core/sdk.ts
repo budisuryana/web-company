@@ -24,6 +24,22 @@ export type SessionPayload = {
   name: string;
 };
 
+/**
+ * The `appId` claim carried by every session token.
+ *
+ * `verifySession` requires it to be a non-empty string. It is never compared
+ * against anything — it only scopes a token to this deployment — but an empty
+ * value fails that check and the session is rejected on the very next request.
+ *
+ * `ENV.appId` is the Manus OAuth client id, and it is unset on any deployment
+ * that does not use OAuth. Credential sign-in then minted `appId: ""` and every
+ * session it issued was refused with "Session payload missing required fields".
+ * This fallback keeps the claim populated without pulling OAuth configuration
+ * into the credential path, and leaves `ENV.appId` itself untouched so the
+ * OAuth client id and project id stay exactly as configured.
+ */
+const SESSION_APP_ID = ENV.appId || "web-company-cms";
+
 const EXCHANGE_TOKEN_PATH = `/webdev.v1.WebDevAuthPublicService/ExchangeToken`;
 const GET_USER_INFO_PATH = `/webdev.v1.WebDevAuthPublicService/GetUserInfo`;
 const GET_USER_INFO_WITH_JWT_PATH = `/webdev.v1.WebDevAuthPublicService/GetUserInfoWithJwt`;
@@ -159,7 +175,12 @@ class SDKServer {
   }
 
   /**
-   * Create a session token for a Manus user openId
+   * Create a session token for a user openId.
+   *
+   * Every field written here is required to be a non-empty string by
+   * `verifySession`, so this is the single place that has to guarantee the
+   * contract — for credential sign-in, OAuth, and local development alike.
+   *
    * @example
    * const sessionToken = await sdk.createSessionToken(userInfo.openId);
    */
@@ -170,8 +191,10 @@ class SDKServer {
     return this.signSession(
       {
         openId,
-        appId: ENV.appId,
-        name: options.name || "",
+        appId: SESSION_APP_ID,
+        // The claim is never displayed — `authenticateRequest` loads the real
+        // profile from the database by openId — but it must not be empty.
+        name: options.name?.trim() || openId,
       },
       options
     );
