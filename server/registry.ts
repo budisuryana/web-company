@@ -4,6 +4,7 @@ import { nanoid } from "nanoid";
 import { productMedia, products, siteContent, type InsertProduct, type Product, type ProductMedia } from "../drizzle/schema";
 import { ensureDefaultAdmin, getDb } from "./db";
 import { registryProductSeed, siteContentSeed } from "./registrySeed";
+import { demoSeedAllowed } from "./seedPolicy";
 import { storageRemove } from "./storage";
 
 export type WorkflowStepInput = { title: string; copy: string };
@@ -84,8 +85,12 @@ function productValues(input: RegistryProductInput): Omit<InsertProduct, "id" | 
 
 export async function ensureRegistrySeeded() {
   const db = await requireDb();
-  const [{ total }] = await db.select({ total: count() }).from(products);
-  if (Number(total) === 0) await db.insert(products).values(registryProductSeed);
+  // Sample products are development scaffolding. A live catalogue is built in
+  // the CMS, and an empty one is a valid state — not an invitation to refill it.
+  if (demoSeedAllowed()) {
+    const [{ total }] = await db.select({ total: count() }).from(products);
+    if (Number(total) === 0) await db.insert(products).values(registryProductSeed);
+  }
 
   const existingContent = await db.select({ key: siteContent.key }).from(siteContent);
   const existingKeys = new Set(existingContent.map((item) => item.key));

@@ -9,6 +9,7 @@ import { listManagedUsers, setManagedUserRole } from "../userManagement";
 import { recordActivity } from "../activityLog";
 import { getCmsDashboard } from "../dashboard";
 import { getVisitorAnalytics, recordPageView } from "../analytics";
+import { createSubmission, deleteSubmission, getSubmission, getSubmissionCounts, listSubmissions, setSubmissionStatus, submissionRateLimited } from "../contact";
 
 const productInput = z.object({
   name: z.string().trim().min(1).max(160), slug: z.string().trim().regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, "Slug must use lowercase letters, numbers, and hyphens."), shortDescription: z.string().trim().min(1), fullDescription: z.string().trim().min(1), heroHeadline: z.string().trim().min(1), problem: z.string().trim().min(1), solution: z.string().trim().min(1), outcome: z.string().trim().min(1), category: z.string().trim().min(1).max(160), productStatus: z.enum(["active", "planned", "retired"]), publicationStatus: z.enum(["draft", "published"]), logoUrl: z.string().nullable().optional(), logoKey: z.string().nullable().optional(), coverUrl: z.string().nullable().optional(), coverKey: z.string().nullable().optional(), capabilities: z.array(z.string().trim().min(1)).max(12), targetUsers: z.string().trim().min(1), demoUrl: z.string().url().nullable().optional().or(z.literal("")), workflowSteps: z.array(z.object({ title: z.string().trim().min(1), copy: z.string().trim().min(1) })).max(8), featured: z.boolean(), displayOrder: z.number().int().min(0),
@@ -40,6 +41,31 @@ export const registryRouter = router({
         await recordPageView({ path: input.path, referrer: input.referrer, ip, userAgent });
         return { success: true };
       }),
+    submitContact: publicProcedure
+      .input(z.object({
+        name: z.string().trim().min(1, "Nama wajib diisi.").max(180),
+        email: z.string().trim().email("Alamat email tidak valid.").max(320),
+        company: z.string().trim().max(180).optional(),
+        message: z.string().trim().min(1, "Pesan wajib diisi.").max(5000),
+        // Honeypot: a real person never sees this field, so anything in it is a bot.
+        botField: z.string().max(0).optional(),
+      }))
+      .mutation(async ({ ctx, input }) => {
+        const ip = (ctx.req.headers["x-forwarded-for"] as string)?.split(",")[0]?.trim() || ctx.req.socket.remoteAddress || "127.0.0.1";
+        if (submissionRateLimited(ip)) {
+          throw new TRPCError({ code: "TOO_MANY_REQUESTS", message: "Terlalu banyak pesan dari jaringan ini. Coba lagi nanti." });
+        }
+        await createSubmission({
+          name: input.name,
+          email: input.email,
+          company: input.company,
+          message: input.message,
+          ip,
+          userAgent: ctx.req.headers["user-agent"] || null,
+        });
+        // Deliberately returns nothing about the stored row: this endpoint is public.
+        return { success: true };
+      }),
   }),
   admin: router({
     list: adminProcedure.query(() => listRegistryProducts(false)),
@@ -50,6 +76,29 @@ export const registryRouter = router({
     update: adminProcedure.input(z.object({ id: z.string().min(1), product: productInput })).mutation(async ({ ctx, input }) => { let product; try { product = await updateRegistryProduct(input.id, { ...input.product, demoUrl: input.product.demoUrl || null }); } catch (error) { throw mapSlugConflict(error); } if (product) await logAdminActivity(ctx, { eventType: "product.updated", resourceType: "product", resourceId: product.id, summary: `Updated ${product.name}`, detail: { publicationStatus: product.publicationStatus, featured: product.featured } }); return product; }),
     remove: adminProcedure.input(z.object({ id: z.string().min(1) })).mutation(async ({ ctx, input }) => { const product = await getRegistryProductById(input.id); const result = await deleteRegistryProduct(input.id); if (product) await logAdminActivity(ctx, { eventType: "product.deleted", resourceType: "product", resourceId: product.id, summary: `Deleted ${product.name}`, detail: { slug: product.slug } }); return result; }),
     reorder: adminProcedure.input(z.object({ ids: z.array(z.string().min(1)).min(1) })).mutation(async ({ ctx, input }) => { const result = await reorderRegistryProducts(input.ids); await logAdminActivity(ctx, { eventType: "product.reordered", resourceType: "product", summary: `Reordered ${input.ids.length} products`, detail: { ids: input.ids } }); return result; }),
+    submissions: router({
+      list: adminProcedure
+        .input(z.object({ status: z.enum(["new", "read", "archived"]).optional() }).optional())
+        .query(({ input }) => listSubmissions(input?.status)),
+      counts: adminProcedure.query(() => getSubmissionCounts()),
+      setStatus: adminProcedure
+        .input(z.object({ id: z.string().min(1), status: z.enum(["new", "read", "archived"]) }))
+        .mutation(async ({ ctx, input }) => {
+          const updated = await setSubmissionStatus(input.id, input.status);
+          if (!updated) throw new TRPCError({ code: "NOT_FOUND", message: "Pesan tidak ditemukan." });
+          await logAdminActivity(ctx, { eventType: "submission.status_changed", resourceType: "contact_submission", resourceId: updated.id, summary: `Pesan dari ${updated.name} ditandai ${input.status}`, detail: { status: input.status } });
+          return updated;
+        }),
+      remove: adminProcedure
+        .input(z.object({ id: z.string().min(1) }))
+        .mutation(async ({ ctx, input }) => {
+          const existing = await getSubmission(input.id);
+          if (!existing) throw new TRPCError({ code: "NOT_FOUND", message: "Pesan tidak ditemukan." });
+          const result = await deleteSubmission(input.id);
+          await logAdminActivity(ctx, { eventType: "submission.deleted", resourceType: "contact_submission", resourceId: existing.id, summary: `Menghapus pesan dari ${existing.name}`, detail: { email: existing.email } });
+          return result;
+        }),
+    }),
     siteContent: adminProcedure.query(() => listSiteContent()),
     updateSiteContent: adminProcedure.input(z.object({ key: z.string().min(1), value: z.string().trim() })).mutation(async ({ ctx, input }) => { const updated = await updateSiteContent(input.key, input.value); if (updated) await logAdminActivity(ctx, { eventType: "site_content.updated", resourceType: "site_content", resourceId: updated.key, summary: `Updated ${updated.label}`, detail: { key: updated.key } }); return updated; }),
     users: router({

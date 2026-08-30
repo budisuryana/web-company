@@ -3,71 +3,77 @@ import { useState, type FormEvent, type ReactNode } from "react";
 import { ArrowRight, ChevronRight, Eye, EyeOff, KeyRound, Loader2, Lock, LockKeyhole, LogOut, Mail, ShieldAlert, ShieldCheck, Sparkles, User } from "lucide-react";
 import { Link } from "wouter";
 import DashboardLayout from "@/components/DashboardLayout";
-import { BrandMark } from "@/components/SiteShell";
+import { BrandLockup } from "@/components/BrandLockup";
+import CmsIllustration from "@/components/CmsIllustration";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { CMS_BASE_PATH } from "@/const";
 import { trpc } from "@/lib/trpc";
 import { toast } from "sonner";
 
 function AccessFrame({ eyebrow, title, body, children, denied = false }: { eyebrow: string; title: ReactNode; body: string; children: ReactNode; denied?: boolean }) {
+  // Public query, so the sign-in screen carries the real company name before any session exists.
+  const contentQuery = trpc.registry.public.siteContent.useQuery();
+  const content = Object.fromEntries((contentQuery.data ?? []).map((item) => [item.key, item.value]));
+  const companyName = content["company.name"] || "Ruang Karya";
+
   return (
-    <main className="min-h-screen overflow-hidden bg-[#f6f0e6] text-[#102239]">
-      <div className="grid min-h-screen lg:grid-cols-[.92fr_1.08fr]">
-        <section className="relative flex min-h-[44vh] flex-col justify-between overflow-hidden bg-[#102239] px-7 py-8 text-[#f8f4ea] sm:px-12 sm:py-12">
-          <div className="absolute -right-24 -top-28 h-80 w-80 rounded-full border border-white/15" />
-          <div className="absolute -bottom-28 -left-24 h-80 w-80 rounded-full border border-[#f05a43]/60" />
-          <div className="relative flex items-center justify-between">
-            <Link href="/" className="inline-flex items-center gap-3 text-[#f8f4ea]">
-              <span className="grid h-9 w-9 place-items-center border border-white/25">
-                <BrandMark />
-              </span>
-              <span>
-                <b className="block font-[DM_Serif_Display] text-xl leading-none">Workshop</b>
-                <small className="mt-1 block text-[9px] font-extrabold uppercase tracking-[.16em] text-white/60">Collective CMS</small>
-              </span>
+    <main className="min-h-screen overflow-hidden bg-[var(--paper)] text-[var(--ink)]">
+      <div className="grid min-h-screen lg:grid-cols-[1.02fr_.98fr]">
+        {/* Brand panel */}
+        <section className="relative flex min-h-[46vh] flex-col justify-between overflow-hidden bg-[var(--ink)] px-7 py-8 text-[var(--warm-20)] sm:px-12 sm:py-12">
+          <div className="pointer-events-none absolute -right-32 -top-36 h-96 w-96 rounded-full bg-[var(--purple-80)] opacity-40 blur-3xl" />
+          <div className="pointer-events-none absolute -bottom-40 -left-28 h-96 w-96 rounded-full bg-[var(--teal-80)] opacity-35 blur-3xl" />
+
+          <div className="relative flex items-center justify-between gap-4">
+            <Link href="/" className="text-[var(--lightest)] transition-opacity hover:opacity-85">
+              <BrandLockup name={companyName} variant="duo" />
             </Link>
-            <span className="text-[10px] font-extrabold uppercase tracking-[.16em] text-white/50">Admin access</span>
-          </div>
-          <div className="relative max-w-md py-12 lg:py-0">
-            <span className="mb-5 inline-flex items-center gap-2 text-[10px] font-extrabold uppercase tracking-[.17em] text-[#ff826e]">
-              <Sparkles size={13} /> Independent software, considered
+            <span className="font-[family-name:var(--mono)] text-[10px] font-semibold uppercase tracking-[.16em] text-[var(--warm-40)]">
+              Panel Admin
             </span>
-            <p className="font-[DM_Serif_Display] text-2xl sm:text-3xl leading-tight">
-              The calm side<br />
-              of <em className="text-[#ff826e]">keeping work</em><br />
-              in motion.
+          </div>
+
+          <div className="relative my-10 lg:my-0">
+            <CmsIllustration className="mx-auto w-full max-w-[440px]" />
+          </div>
+
+          <div className="relative">
+            <span className="inline-flex items-center gap-2 font-[family-name:var(--mono)] text-[10px] font-semibold uppercase tracking-[.17em] text-[var(--lime-30)]">
+              <Sparkles size={13} /> Ruang kerja privat
+            </span>
+            <p className="mt-4 max-w-md admin-display text-2xl leading-tight text-[var(--lightest)] sm:text-[27px]">
+              Kelola katalog produk dan seluruh konten situs <em className="text-[var(--lime-30)]">dari satu tempat.</em>
             </p>
-          </div>
-          <div className="relative flex items-end justify-between border-t border-white/15 pt-5 text-xs leading-5 text-white/60">
-            <span>
-              Product Registry<br />
-              Site content<br />
-              Access control
-            </span>
-            <span className="text-right">
-              A private workspace<br />
-              for considered publishing.
-            </span>
+            <div className="mt-7 flex flex-wrap gap-x-7 gap-y-2 border-t border-white/12 pt-5 font-[family-name:var(--mono)] text-[11px] text-[var(--warm-40)]">
+              <span>Katalog Produk</span>
+              <span>Profil &amp; Konten</span>
+              <span>Kotak Masuk</span>
+              <span>Kontrol Akses</span>
+            </div>
           </div>
         </section>
-        <section className="relative flex items-center px-7 py-10 sm:px-14 lg:px-20">
-          <div className="absolute right-8 top-8 text-[10px] font-extrabold uppercase tracking-[.15em] text-slate-400">[ secure sign-in ]</div>
-          <div className="w-full max-w-xl">
-            <span className={`inline-flex items-center gap-2 text-[10px] font-extrabold uppercase tracking-[.16em] ${denied ? "text-[#c44735]" : "text-[#f05a43]"}`}>
+
+        {/* Sign-in panel */}
+        <section className="relative flex items-center px-7 py-12 sm:px-14 lg:px-16">
+          <span className="absolute right-8 top-8 font-[family-name:var(--mono)] text-[10px] font-semibold uppercase tracking-[.15em] text-[var(--cool-40)]">
+            [ masuk aman ]
+          </span>
+          <div className="w-full max-w-lg">
+            <span className={`inline-flex items-center gap-2 font-[family-name:var(--mono)] text-[10px] font-semibold uppercase tracking-[.16em] ${denied ? "text-[var(--red-50)]" : "text-[var(--accent)]"}`}>
               {denied ? <ShieldAlert size={14} /> : <LockKeyhole size={14} />}
               {eyebrow}
             </span>
-            <h1 className="mt-4 font-[DM_Serif_Display] text-2xl sm:text-3xl leading-tight tracking-tight text-[#102239]">{title}</h1>
-            <p className="mt-4 max-w-lg text-sm leading-6 text-slate-600">{body}</p>
-            <div className="mt-7">{children}</div>
-            <div className="mt-10 grid gap-3 border-t border-slate-900/15 pt-5 text-xs leading-5 text-slate-500 sm:grid-cols-2">
+            <h1 className="mt-4 admin-display text-[27px] leading-tight text-[var(--ink)] sm:text-4xl">{title}</h1>
+            <p className="mt-4 max-w-md text-sm leading-6 text-[var(--ink-soft)]">{body}</p>
+            <div className="mt-8">{children}</div>
+            <div className="mt-9 grid gap-3 border-t border-[var(--line)] pt-5 text-xs leading-5 text-[var(--ink-soft)] sm:grid-cols-2">
               <span className="flex gap-2">
-                <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-[#4d7c5a]" />
-                Role checks run on the server for every CMS action.
+                <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-[var(--green-50)]" />
+                Pemeriksaan peran dijalankan di server untuk setiap tindakan CMS.
               </span>
               <span className="flex gap-2">
-                <LockKeyhole className="mt-0.5 h-4 w-4 shrink-0 text-[#4d7c5a]" />
-                Your session is verified before product or user data is available.
+                <LockKeyhole className="mt-0.5 h-4 w-4 shrink-0 text-[var(--green-50)]" />
+                Sesi Anda diverifikasi sebelum data produk atau pengguna dibuka.
               </span>
             </div>
           </div>
@@ -87,7 +93,10 @@ function LoginForm() {
   const loginMutation = trpc.auth.login.useMutation({
     onSuccess: (userData) => {
       setErrorMessage(null);
-      toast.success("Berhasil masuk ke CMS.");
+      // Credentials can be valid while the account still lacks the admin role, so don't
+      // claim CMS access here — AdminGuard decides which screen comes next.
+      const isAdmin = (userData as { role?: string } | null)?.role === "admin";
+      toast.success(isAdmin ? "Berhasil masuk ke CMS." : "Akun terverifikasi. Menunggu izin administrator.");
       utils.auth.me.setData(undefined, userData as any);
       void utils.auth.me.invalidate();
     },
@@ -109,18 +118,18 @@ function LoginForm() {
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       {errorMessage && (
-        <div className="flex items-start gap-3 border border-[#f05a43]/40 bg-[#fff5f3] p-3.5 text-xs leading-5 text-[#c44735]">
-          <ShieldAlert size={16} className="mt-0.5 shrink-0 text-[#f05a43]" />
+        <div className="flex items-start gap-3 rounded-[var(--r-sm)] border-[1.5px] border-[var(--red-30)] bg-[var(--red-10)] p-3.5 text-xs font-semibold leading-5 text-[var(--red-70)]">
+          <ShieldAlert size={16} className="mt-0.5 shrink-0 text-[var(--red-50)]" />
           <div>{errorMessage}</div>
         </div>
       )}
 
       <div>
-        <label className="block text-xs font-extrabold uppercase tracking-wide text-[#102239]" htmlFor="usernameOrEmail">
+        <label className="block text-xs font-extrabold uppercase tracking-wide text-[var(--ink)]" htmlFor="usernameOrEmail">
           Username atau Email
         </label>
         <div className="relative mt-1.5">
-          <User size={15} className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
+          <User size={15} className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-[var(--cool-40)]" />
           <input
             id="usernameOrEmail"
             type="text"
@@ -129,17 +138,17 @@ function LoginForm() {
             value={usernameOrEmail}
             onChange={(e) => setUsernameOrEmail(e.target.value)}
             placeholder="admin atau email anda"
-            className="w-full border border-slate-900/20 bg-[#fffdf8] py-3 pl-10 pr-3 text-sm text-[#102239] outline-none transition-colors focus:border-[#f05a43]"
+            className="w-full rounded-[var(--r-sm)] border-[1.5px] border-[var(--line-strong)] bg-[var(--card)] py-3 pl-10 pr-3 text-sm text-[var(--ink)] outline-none transition-colors focus:border-[var(--accent)]"
           />
         </div>
       </div>
 
       <div>
-        <label className="block text-xs font-extrabold uppercase tracking-wide text-[#102239]" htmlFor="password">
+        <label className="block text-xs font-extrabold uppercase tracking-wide text-[var(--ink)]" htmlFor="password">
           Password
         </label>
         <div className="relative mt-1.5">
-          <Lock size={15} className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
+          <Lock size={15} className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-[var(--cool-40)]" />
           <input
             id="password"
             type={showPassword ? "text" : "password"}
@@ -148,13 +157,13 @@ function LoginForm() {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             placeholder="••••••••"
-            className="w-full border border-slate-900/20 bg-[#fffdf8] py-3 pl-10 pr-10 text-sm text-[#102239] outline-none transition-colors focus:border-[#f05a43]"
+            className="w-full rounded-[var(--r-sm)] border-[1.5px] border-[var(--line-strong)] bg-[var(--card)] py-3 pl-10 pr-10 text-sm text-[var(--ink)] outline-none transition-colors focus:border-[var(--accent)]"
           />
           <button
             type="button"
             tabIndex={-1}
             onClick={() => setShowPassword(!showPassword)}
-            className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 transition-colors hover:text-[#102239]"
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--cool-40)] transition-colors hover:text-[var(--ink)]"
           >
             {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
           </button>
@@ -165,7 +174,7 @@ function LoginForm() {
         <button
           type="submit"
           disabled={loginMutation.isPending}
-          className="group flex w-full items-center justify-center gap-2.5 bg-[#102239] py-3.5 text-sm font-extrabold text-[#fffdf8] transition-all hover:bg-[#1a3455] active:scale-[.98] disabled:cursor-not-allowed disabled:opacity-60"
+          className="group flex w-full items-center justify-center gap-2.5 rounded-[var(--r-pill)] bg-[var(--ink)] py-3.5 text-sm font-bold text-[var(--lightest)] transition-all hover:bg-[var(--cool-80)] active:scale-[.98] disabled:cursor-not-allowed disabled:opacity-60"
         >
           {loginMutation.isPending ? (
             <>
@@ -180,32 +189,40 @@ function LoginForm() {
         </button>
       </div>
 
-      <div className="mt-5 border border-slate-900/10 bg-white/70 p-3.5 text-xs text-slate-600">
-        <span className="flex items-center gap-1.5 font-bold text-[#102239]">
-          <KeyRound size={13} className="text-[#f05a43]" /> Kredensial Default Admin:
-        </span>
-        <div className="mt-1.5 grid grid-cols-2 gap-2 text-[11px]">
-          <div>
-            <span className="text-slate-400">Username:</span> <code className="font-bold text-[#102239]">admin</code>
-          </div>
-          <div>
-            <span className="text-slate-400">Password:</span> <code className="font-bold text-[#102239]">admin123</code>
+      {import.meta.env.DEV && (
+        <div className="mt-5 rounded-[var(--r-md)] border border-[var(--line)] bg-[var(--warm-2)] p-3.5 text-xs text-[var(--ink-soft)]">
+          <span className="flex items-center gap-1.5 font-bold text-[var(--ink)]">
+            <KeyRound size={13} className="text-[var(--accent)]" /> Kredensial default admin
+            <span className="ml-1 rounded-full bg-[var(--yellow-10)] px-2 py-0.5 font-[family-name:var(--mono)] text-[9px] font-semibold uppercase tracking-[.1em] text-[var(--ink)]">
+              hanya dev
+            </span>
+          </span>
+          <div className="mt-2 grid grid-cols-2 gap-2 text-[11px]">
+            <div>
+              <span className="text-[var(--cool-40)]">Username:</span> <code className="font-bold text-[var(--ink)]">admin</code>
+            </div>
+            <div>
+              <span className="text-[var(--cool-40)]">Password:</span> <code className="font-bold text-[var(--ink)]">admin123</code>
+            </div>
           </div>
         </div>
-      </div>
+      )}
     </form>
   );
 }
 
 export default function AdminGuard({ children }: { children: ReactNode }) {
   const { user, loading, logout } = useAuth();
+  const contentQuery = trpc.registry.public.siteContent.useQuery();
+  const companyName =
+    (contentQuery.data ?? []).find((item) => item.key === "company.name")?.value || "Ruang Karya";
 
   if (loading) {
     return (
-      <main className="grid min-h-screen place-items-center bg-[#f6f0e6]">
+      <main className="grid min-h-screen place-items-center bg-[var(--paper)]">
         <div className="text-center">
-          <span className="inline-block h-8 w-8 animate-spin rounded-full border-2 border-[#102239]/20 border-t-[#f05a43]" />
-          <p className="mt-4 text-xs font-extrabold uppercase tracking-[.16em] text-[#102239]">Opening the CMS</p>
+          <span className="inline-block h-8 w-8 animate-spin rounded-full border-2 border-[var(--line-strong)] border-t-[var(--accent)]" />
+          <p className="mt-4 font-[family-name:var(--mono)] text-xs font-semibold uppercase tracking-[.16em] text-[var(--ink)]">Membuka CMS…</p>
         </div>
       </main>
     );
@@ -214,10 +231,10 @@ export default function AdminGuard({ children }: { children: ReactNode }) {
   if (!user) {
     return (
       <AccessFrame
-        eyebrow="Workshop CMS Admin"
+        eyebrow={`Panel Admin ${companyName}`}
         title={
           <>
-            Masuk ke <em className="text-[#f05a43]">Workshop CMS.</em>
+            Masuk ke <em className="text-[var(--accent)]">CMS {companyName}.</em>
           </>
         }
         body="Silakan masukkan username/email dan password administrator untuk mengelola konten dan katalog produk."
@@ -234,7 +251,7 @@ export default function AdminGuard({ children }: { children: ReactNode }) {
         eyebrow="Akses Membutuhkan Persetujuan"
         title={
           <>
-            Akun Terhubung, <em className="text-[#f05a43]">Belum Memiliki Izin.</em>
+            Akun Terhubung, <em className="text-[var(--accent)]">Belum Memiliki Izin.</em>
           </>
         }
         body="Akun Anda telah terdaftar, namun belum memiliki role administrator. Hubungi administrator yang berwenang untuk menyetujui akses akun ini atau masuk dengan akun admin."
@@ -246,13 +263,13 @@ export default function AdminGuard({ children }: { children: ReactNode }) {
               await logout();
               window.location.href = CMS_BASE_PATH;
             }}
-            className="group inline-flex items-center gap-2 bg-[#102239] px-5 py-3.5 text-sm font-extrabold text-[#fffdf8] transition-transform duration-150 hover:-translate-y-0.5 active:scale-[.97]"
+            className="group inline-flex items-center gap-2 rounded-[var(--r-pill)] bg-[var(--ink)] px-6 py-3.5 text-sm font-bold text-[var(--lightest)] transition-transform duration-150 hover:-translate-y-0.5 active:scale-[.97]"
           >
             <LogOut size={15} /> Keluar &amp; Ganti Akun
           </button>
           <Link
             href="/"
-            className="group inline-flex items-center gap-3 border border-[#102239] px-5 py-3.5 text-sm font-extrabold text-[#102239] transition-transform duration-150 hover:-translate-y-0.5 active:scale-[.97]"
+            className="group inline-flex items-center gap-3 rounded-[var(--r-pill)] border-[1.5px] border-[var(--ink)] px-6 py-3.5 text-sm font-bold text-[var(--ink)] transition-transform duration-150 hover:-translate-y-0.5 active:scale-[.97]"
           >
             Kembali ke website <ChevronRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
           </Link>

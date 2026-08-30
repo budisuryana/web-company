@@ -1,6 +1,7 @@
 /** Design system: Software Almanac — the public homepage reading product catalog and marketing copy from PostgreSQL. */
 import { ArrowDownRight, ArrowUpRight, Check, ChevronRight, Loader2 } from "lucide-react";
 import { Link } from "wouter";
+import { ConfettiBits, NodePath, RainbowArc, SparkCluster, TiltFrame } from "@/components/Decor";
 import RegistryProductVisual from "@/components/RegistryProductVisual";
 import SiteShell from "@/components/SiteShell";
 import { trpc } from "@/lib/trpc";
@@ -22,6 +23,7 @@ export default function Home() {
       <main>
         {/* Hero Section */}
         <section className="hero-home section-rule">
+          <SparkCluster />
           <div className="home-hero-copy">
             <span className="section-label">
               <i /> {content["home.heroEyebrow"] ?? "Produk Digital & Solusi Perangkat Lunak"}
@@ -117,6 +119,7 @@ export default function Home() {
 
         {/* Principle Band */}
         <section className="principle-band">
+          <NodePath />
           <div className="principle-eyebrow">Prinsip &amp; Sudut Pandang</div>
           <div className="principle-message">
             <p>
@@ -130,7 +133,8 @@ export default function Home() {
             </span>
           </div>
           <div className="principle-stamp">
-            <b>W</b>
+            {/* Initial follows the CMS company name so it cannot drift from the brand again. */}
+            <b>{(content["company.name"] ?? "Ruang Karya").trim().charAt(0).toUpperCase()}</b>
             <small>
               dibuat dengan<br />ketelitian
             </small>
@@ -139,6 +143,7 @@ export default function Home() {
 
         {/* Showcase Section */}
         <section className="showcase-section">
+          <RainbowArc />
           {heroProduct && (
             <>
               <div className="showcase-copy">
@@ -153,7 +158,7 @@ export default function Home() {
                     </span>
                   ))}
                 </div>
-                <Link href={`/products/${heroProduct.slug}`} className="button button-coral">
+                <Link href={`/products/${heroProduct.slug}`} className="button button-accent">
                   Jelajahi {heroProduct.name} <ArrowUpRight size={17} />
                 </Link>
               </div>
@@ -171,6 +176,7 @@ export default function Home() {
 
         {/* Working Method Section */}
         <section className="working-method">
+          <TiltFrame />
           <div className="method-heading">
             <span className="section-label"><i /> 03 / Cara Kami Membangun</span>
             <h2>{content["home.methodHeading"] ?? "Standar kualitas yang tinggi untuk setiap fungsi."}</h2>
@@ -207,6 +213,7 @@ export default function Home() {
 
         {/* Closing CTA */}
         <section className="closing-cta">
+          <ConfettiBits className="decor-confetti-a" />
           <span className="plate-index">[ 04 / Langkah Jelas Berikutnya ]</span>
           <span className="section-label"><i /> Studio Produk Independen</span>
           <h2>

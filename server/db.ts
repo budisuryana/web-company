@@ -4,6 +4,7 @@ import postgres from "postgres";
 import { type InsertUser, users } from "../drizzle/schema";
 import { ENV } from "./_core/env";
 import { hashPassword } from "./_core/password";
+import { demoSeedAllowed } from "./seedPolicy";
 
 let database: PostgresJsDatabase | null = null;
 
@@ -64,9 +65,19 @@ export async function getUserByUsernameOrEmail(identifier: string) {
   return result[0];
 }
 
-export async function ensureDefaultAdmin() {
+export type DefaultAdminOutcome = "skipped" | "created" | "repaired" | "unchanged";
+
+/**
+ * Creates the local development admin account.
+ *
+ * Returns "skipped" without touching the database whenever demo seeding is not
+ * allowed — the guard runs before any query so production cannot create, or
+ * reset, a credential nobody chose.
+ */
+export async function ensureDefaultAdmin(): Promise<DefaultAdminOutcome> {
+  if (!demoSeedAllowed()) return "skipped";
   const db = await getDb();
-  if (!db) return;
+  if (!db) return "skipped";
   const existing = await getUserByUsernameOrEmail("admin");
   if (!existing) {
     await db.insert(users).values({
@@ -79,7 +90,9 @@ export async function ensureDefaultAdmin() {
       role: "admin",
       lastSignedIn: new Date(),
     });
-  } else if (!existing.passwordHash) {
+    return "created";
+  }
+  if (!existing.passwordHash) {
     await db
       .update(users)
       .set({
@@ -88,5 +101,7 @@ export async function ensureDefaultAdmin() {
         role: "admin",
       })
       .where(eq(users.id, existing.id));
+    return "repaired";
   }
+  return "unchanged";
 }

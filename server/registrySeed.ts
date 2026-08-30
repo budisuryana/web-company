@@ -9,6 +9,10 @@ export const registryProductSeed: InsertProduct[] = [
   { id: "product_kontenjadi", name: "KontenJadi", slug: "kontenjadi", shortDescription: "Satu workspace untuk membawa ide menjadi konten yang siap dipublikasikan dan didistribusikan.", fullDescription: "KontenJadi menyatukan seluruh alur creator: Idea → Direction → Script → Content Production → Video → Publish → Distribution.", heroHeadline: "One clear path from spark to publish.", problem: "Creator berpindah-pindah tool untuk mencari ide, menyusun arah, menulis skrip, menyiapkan aset, dan mempublikasikan konten. Alur menjadi putus, energi habis di perpindahan.", solution: "KontenJadi merangkai proses tersebut sebagai satu workspace end-to-end—agar waktu kreatif dipakai untuk membuat keputusan yang lebih baik, bukan mengelola tool yang terpisah.", outcome: "Dari ide sampai distribusi, setiap langkah memiliki arah dan tetap tersambung.", category: "Creator workflow", productStatus: "active", publicationStatus: "published", capabilities: ["Idea discovery", "Content direction", "Script creation", "Publish & distribution"], targetUsers: "Creator dan content teams yang ingin membuat lebih konsisten tanpa menambah tumpukan tools.", demoUrl: null, workflowSteps: [{ title: "Cari ide", copy: "Temukan benang merah yang layak dikembangkan dari insight dan referensi." }, { title: "Pilih arah", copy: "Tentukan sudut cerita, format, dan pesan sebelum produksi dimulai." }, { title: "Susun skrip", copy: "Rangkai struktur yang menjaga konten tetap fokus dan mudah dieksekusi." }, { title: "Siapkan konten", copy: "Kumpulkan aset, susun produksi, dan arahkan video dalam workspace yang sama." }, { title: "Publish", copy: "Siapkan materi final dengan detail yang siap ditayangkan." }, { title: "Distribute", copy: "Bawa konten ke kanal yang relevan tanpa kehilangan konteks asalnya." }], featured: 1, displayOrder: 5 },
 ];
 
+// Default site configuration. Unlike the product catalogue above this is not
+// demo data, so it seeds in every environment — which is exactly why it must
+// carry the real brand and no invented contact details. Social URLs stay empty
+// until a real profile exists; schema.org sameAs is better absent than wrong.
 export const siteContentSeed = [
   { key: "home.heroEyebrow", label: "Home — Hero Eyebrow (Teks Pengantar)", value: "Produk Digital & Solusi Perangkat Lunak" },
   { key: "home.heroTitle", label: "Home — Hero Title (Judul Utama)", value: "Pekerjaan menjadi lebih ringan saat sistem tersusun rapi dan terarah." },
@@ -26,15 +30,15 @@ export const siteContentSeed = [
   { key: "contact.heroTitle", label: "Contact — Hero Title (Judul Kontak)", value: "Sampaikan tantangan yang ingin Anda buat lebih sederhana." },
   { key: "contact.intro", label: "Contact — Intro (Pengantar Kontak)", value: "Tertarik menggunakan produk kami, mendiskusikan peluang kemitraan, atau memiliki kebutuhan solusi sistem khusus? Mari diskusikan bersama kami." },
   { key: "contact.city", label: "Contact — City (Lokasi Kantor)", value: "Bandung, Jawa Barat · Indonesia" },
-  { key: "contact.email", label: "Contact — Email (Alamat Email)", value: "hello@workshopcollective.co" },
-  { key: "company.name", label: "Company — Nama Perusahaan", value: "Workshop Collective" },
+  { key: "contact.email", label: "Contact — Email (Alamat Email)", value: "info@ruang-karya.co.id" },
+  { key: "company.name", label: "Company — Nama Perusahaan", value: "Ruang Karya" },
   { key: "company.tagline", label: "Company — Tagline / Slogan Perusahaan", value: "Perangkat lunak terpadu untuk alur kerja yang terus bergerak." },
   { key: "company.logoUrl", label: "Company — Logo Gambar Perusahaan", value: "" },
   { key: "company.footerMotto", label: "Company — Motto Footer", value: "Independent by design." },
   { key: "company.address", label: "Company — Alamat & Kota", value: "Bandung, Jawa Barat · Indonesia" },
-  { key: "company.email", label: "Company — Email Resmi", value: "hello@workshopcollective.co" },
-  { key: "company.phone", label: "Company — Nomor Kontak / WhatsApp", value: "+62 812-3456-7890" },
-  { key: "company.linkedinUrl", label: "Company — URL LinkedIn", value: "https://linkedin.com/company/workshop-collective" },
-  { key: "company.githubUrl", label: "Company — URL GitHub", value: "https://github.com/budisuryana/web-company" },
-  { key: "company.instagramUrl", label: "Company — URL Instagram", value: "https://instagram.com/workshopcollective" },
+  { key: "company.email", label: "Company — Email Resmi", value: "info@ruang-karya.co.id" },
+  { key: "company.phone", label: "Company — Nomor Kontak / WhatsApp", value: "" },
+  { key: "company.linkedinUrl", label: "Company — URL LinkedIn", value: "" },
+  { key: "company.githubUrl", label: "Company — URL GitHub", value: "" },
+  { key: "company.instagramUrl", label: "Company — URL Instagram", value: "" },
 ];

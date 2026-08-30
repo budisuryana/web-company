@@ -10,6 +10,7 @@ export const CMS_ROUTES = {
   products: `${CMS_BASE_PATH}/products`,
   productNew: `${CMS_BASE_PATH}/products/new`,
   productEdit: (id: string | number) => `${CMS_BASE_PATH}/products/${id}`,
+  inbox: `${CMS_BASE_PATH}/inbox`,
   content: `${CMS_BASE_PATH}/content`,
   users: `${CMS_BASE_PATH}/users`,
 };

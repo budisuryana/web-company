@@ -2,6 +2,7 @@
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { ArrowUpRight, Menu, X } from "lucide-react";
 import { Link, useLocation } from "wouter";
+import { BrandLockup, CHEVRON_BODY, CHEVRON_NOTCH } from "@/components/BrandLockup";
 import { trpc } from "@/lib/trpc";
 import { CMS_BASE_PATH } from "@/const";
 
@@ -16,8 +17,8 @@ const navItems = [
 export function BrandMark({ className = "" }: { className?: string }) {
   return (
     <svg className={`brand-mark ${className}`} viewBox="0 0 48 48" aria-hidden="true">
-      <path d="M7 9h10l7 17L31 9h10L29 39h-9L7 9Z" fill="currentColor" />
-      <path d="m24 26 5.4 13h-9L24 26Z" fill="#F05A43" />
+      <path d={CHEVRON_BODY} fill="currentColor" />
+      <path d={CHEVRON_NOTCH} fill="var(--accent)" />
     </svg>
   );
 }
@@ -35,43 +36,18 @@ export function Brand({
   showTagline?: boolean;
   size?: "default" | "large";
 }) {
-  if (logoUrl) {
-    return (
-      <Link
-        href="/"
-        className="inline-flex flex-col items-start justify-center gap-1 pt-2.5 pb-1 text-left transition-opacity hover:opacity-90"
-        aria-label="Beranda"
-      >
+  return (
+    <Link href="/" className="brand-link" aria-label="Beranda">
+      {logoUrl ? (
         <img
           src={logoUrl}
           alt={companyName}
-          className={
-            size === "large"
-              ? "h-14 sm:h-16 max-h-20 w-auto max-w-[320px] object-contain"
-              : "h-10 sm:h-11 md:h-12 max-h-12 w-auto max-w-[280px] object-contain"
-          }
+          className={size === "large" ? "brand-logo is-large" : "brand-logo"}
         />
-        {showTagline && tagline && (
-          <span className="mt-0.5 text-xs font-semibold tracking-tight text-slate-500">
-            {tagline}
-          </span>
-        )}
-      </Link>
-    );
-  }
-
-  const parts = companyName.trim().split(/\s+/);
-  const part1 = parts[0] || "Workshop";
-  const part2 = parts.slice(1).join(" ") || "";
-
-  return (
-    <Link href="/" className="brand-lockup" aria-label="Beranda">
-      <BrandMark />
-      <span className="brand-wordmark">
-        <b>{part1}</b>
-        {part2 && <b>{part2}</b>}
-      </span>
-      <i className="brand-index-slash" />
+      ) : (
+        <BrandLockup name={companyName} variant="duo" size={size} />
+      )}
+      {showTagline && tagline && <span className="brand-tagline">{tagline}</span>}
     </Link>
   );
 }

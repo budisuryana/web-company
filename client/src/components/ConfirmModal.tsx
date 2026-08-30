@@ -37,21 +37,21 @@ export default function ConfirmModal({
 
   return (
     <AlertDialog open={open} onOpenChange={onOpenChange}>
-      <AlertDialogContent className="max-w-md rounded-none border-2 border-[#102239] bg-[#fffdf8] p-6 shadow-2xl">
+      <AlertDialogContent className="admin-card max-w-md border border-[var(--line)] bg-[var(--card)] p-6 shadow-2xl">
         <AlertDialogHeader className="text-left">
           <div className="flex items-center gap-3">
             <span
               className={`grid h-10 w-10 shrink-0 place-items-center rounded-full ${
-                isDanger ? "bg-red-50 text-[#f05a43]" : "bg-[#f6f0e6] text-[#102239]"
+                isDanger ? "bg-red-50 text-[var(--accent)]" : "bg-[var(--paper)] text-[var(--ink)]"
               }`}
             >
               {isDanger ? <AlertTriangle size={20} /> : <ShieldAlert size={20} />}
             </span>
-            <AlertDialogTitle className="font-[DM_Serif_Display] text-2xl tracking-tight text-[#102239]">
+            <AlertDialogTitle className="admin-display text-2xl tracking-tight text-[var(--ink)]">
               {title}
             </AlertDialogTitle>
           </div>
-          <AlertDialogDescription className="mt-3 text-sm leading-6 text-slate-600">
+          <AlertDialogDescription className="mt-3 text-sm leading-6 text-[var(--ink-soft)]">
             {description}
           </AlertDialogDescription>
         </AlertDialogHeader>
@@ -60,7 +60,7 @@ export default function ConfirmModal({
           <AlertDialogCancel
             disabled={isPending}
             onClick={() => onOpenChange(false)}
-            className="m-0 h-10 rounded-none border border-slate-300 bg-white px-4 text-xs font-extrabold text-[#102239] hover:bg-slate-50"
+            className="m-0 h-10 rounded-none border border-[var(--line-strong)] bg-white px-4 text-xs font-extrabold text-[var(--ink)] hover:bg-[var(--warm-2)]"
           >
             {cancelLabel}
           </AlertDialogCancel>
@@ -72,8 +72,8 @@ export default function ConfirmModal({
             }}
             className={`m-0 h-10 rounded-none px-5 text-xs font-extrabold text-white transition-colors ${
               isDanger
-                ? "bg-[#f05a43] hover:bg-[#d94833]"
-                : "bg-[#102239] hover:bg-[#1b3457]"
+                ? "bg-[var(--accent)] hover:bg-[var(--purple-60)]"
+                : "bg-[var(--ink)] hover:bg-[var(--cool-80)]"
             }`}
           >
             {confirmLabel}

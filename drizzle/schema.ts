@@ -3,10 +3,12 @@ import { index, integer, jsonb, pgEnum, pgTable, serial, text, timestamp, varcha
 
 export const productStatuses = ["active", "planned", "retired"] as const;
 export const publicationStatuses = ["draft", "published"] as const;
+export const submissionStatuses = ["new", "read", "archived"] as const;
 
 export const userRoleEnum = pgEnum("user_role", ["user", "admin"]);
 export const productStatusEnum = pgEnum("product_status", productStatuses);
 export const publicationStatusEnum = pgEnum("publication_status", publicationStatuses);
+export const submissionStatusEnum = pgEnum("submission_status", submissionStatuses);
 
 export const users = pgTable("users", {
   id: serial("id").primaryKey(),
@@ -99,6 +101,24 @@ export const pageViews = pgTable("page_views", {
   index("page_views_country_idx").on(table.countryCode),
 ]);
 
+/** Contact form submissions. The public form used to only open a mailto: draft, so every
+    enquiry depended on the visitor having a working mail client and no record was kept. */
+export const contactSubmissions = pgTable("contact_submissions", {
+  id: varchar("id", { length: 40 }).primaryKey(),
+  name: varchar("name", { length: 180 }).notNull(),
+  email: varchar("email", { length: 320 }).notNull(),
+  company: varchar("company", { length: 180 }),
+  message: text("message").notNull(),
+  status: submissionStatusEnum("status").default("new").notNull(),
+  ip: varchar("ip", { length: 45 }),
+  userAgent: varchar("userAgent", { length: 500 }),
+  createdAt: timestamp("createdAt", { withTimezone: true }).defaultNow().notNull(),
+  handledAt: timestamp("handledAt", { withTimezone: true }),
+}, (table) => [
+  index("contact_submissions_created_idx").on(table.createdAt),
+  index("contact_submissions_status_idx").on(table.status),
+]);
+
 export type User = typeof users.$inferSelect;
 export type InsertUser = typeof users.$inferInsert;
 export type Product = typeof products.$inferSelect;
@@ -108,3 +128,6 @@ export type SiteContent = typeof siteContent.$inferSelect;
 export type ActivityLog = typeof activityLogs.$inferSelect;
 export type PageView = typeof pageViews.$inferSelect;
 export type InsertPageView = typeof pageViews.$inferInsert;
+export type ContactSubmission = typeof contactSubmissions.$inferSelect;
+export type InsertContactSubmission = typeof contactSubmissions.$inferInsert;
+export type SubmissionStatus = (typeof submissionStatuses)[number];

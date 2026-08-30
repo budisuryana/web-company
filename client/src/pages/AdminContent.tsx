@@ -93,7 +93,7 @@ async function processLogoImage(file: File): Promise<{ dataUrl: string; fileName
   });
 }
 
-const tabTriggerClass = "rounded-none border-b-2 border-transparent px-2 pb-3 pt-2 text-xs font-extrabold uppercase tracking-[.14em] text-slate-400 transition-colors hover:text-[#102239] data-[state=active]:border-[#f05a43] data-[state=active]:bg-transparent data-[state=active]:text-[#102239] data-[state=active]:shadow-none";
+const tabTriggerClass = "admin-tab flex-none px-2 pb-3 pt-2 text-xs font-extrabold uppercase tracking-[.14em] text-[var(--cool-40)] transition-colors hover:text-[var(--ink)] data-[state=active]:text-[var(--ink)]";
 
 const tabMeta: Record<string, { title: string; desc: string }> = {
   company: {
@@ -299,55 +299,55 @@ export default function AdminContent() {
   return (
     <AdminGuard>
       <div className="space-y-6">
-        <div className="flex flex-wrap items-end justify-between gap-4 border-b border-slate-900/15 pb-6">
+        <div className="flex flex-wrap items-end justify-between gap-4 border-b border-[var(--line)] pb-6">
           <div>
-            <span className="font-mono text-xs font-bold uppercase tracking-widest text-[#f05a43]">
+            <span className="font-mono text-xs font-bold uppercase tracking-widest text-[var(--accent)]">
               Pengaturan &amp; Konten
             </span>
-            <h1 className="mt-1 font-[DM_Serif_Display] text-4xl text-[#102239]">Profil &amp; Konten Situs</h1>
-            <p className="mt-1 text-xs text-slate-500">
+            <h1 className="mt-1 admin-display text-4xl text-[var(--ink)]">Profil &amp; Konten Situs</h1>
+            <p className="mt-1 text-xs text-[var(--ink-soft)]">
               Kelola profil perusahaan, logo teks, alamat, kontak, dan seluruh copy publik dalam satu formulir terpadu.
             </p>
           </div>
           <div className="relative">
-            <Search size={14} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+            <Search size={14} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[var(--cool-40)]" />
             <input
               type="text"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Cari teks atau key…"
-              className="h-9 w-60 border border-slate-900/20 bg-[#fffdf8] pl-9 pr-3 text-xs text-[#102239] outline-none transition-colors focus:border-[#f05a43]"
+              className="h-9 w-60 border border-[var(--line-strong)] bg-[var(--card)] pl-9 pr-3 text-xs text-[var(--ink)] outline-none transition-colors focus:border-[var(--accent)]"
             />
           </div>
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="mt-6 w-full">
-          <TabsList className="mb-6 h-auto w-full justify-start gap-8 rounded-none border-b-2 border-[#102239] bg-transparent p-0">
+          <TabsList className="mb-6 h-auto w-full max-w-full justify-start gap-8 overflow-x-auto rounded-none border-b-2 border-[var(--ink)] bg-transparent p-0">
             <TabsTrigger value="company" className={tabTriggerClass}>
-              Profil Perusahaan <span className="ml-1.5 rounded-full bg-slate-200 px-1.5 py-0.5 text-[10px] text-slate-700">{tabCounts.company}</span>
+              Profil Perusahaan <span className="ml-1.5 rounded-full bg-[var(--cool-10)] px-1.5 py-0.5 text-[10px] text-[var(--ink)]">{tabCounts.company}</span>
             </TabsTrigger>
             <TabsTrigger value="home" className={tabTriggerClass}>
-              Home Page <span className="ml-1.5 rounded-full bg-slate-200 px-1.5 py-0.5 text-[10px] text-slate-700">{tabCounts.home}</span>
+              Home Page <span className="ml-1.5 rounded-full bg-[var(--cool-10)] px-1.5 py-0.5 text-[10px] text-[var(--ink)]">{tabCounts.home}</span>
             </TabsTrigger>
             <TabsTrigger value="about" className={tabTriggerClass}>
-              About Page <span className="ml-1.5 rounded-full bg-slate-200 px-1.5 py-0.5 text-[10px] text-slate-700">{tabCounts.about}</span>
+              About Page <span className="ml-1.5 rounded-full bg-[var(--cool-10)] px-1.5 py-0.5 text-[10px] text-[var(--ink)]">{tabCounts.about}</span>
             </TabsTrigger>
             <TabsTrigger value="contact" className={tabTriggerClass}>
-              Contact Page <span className="ml-1.5 rounded-full bg-slate-200 px-1.5 py-0.5 text-[10px] text-slate-700">{tabCounts.contact}</span>
+              Contact Page <span className="ml-1.5 rounded-full bg-[var(--cool-10)] px-1.5 py-0.5 text-[10px] text-[var(--ink)]">{tabCounts.contact}</span>
             </TabsTrigger>
             <TabsTrigger value="all" className={tabTriggerClass}>
-              Semua Konten <span className="ml-1.5 rounded-full bg-slate-200 px-1.5 py-0.5 text-[10px] text-slate-700">{tabCounts.all}</span>
+              Semua Konten <span className="ml-1.5 rounded-full bg-[var(--cool-10)] px-1.5 py-0.5 text-[10px] text-[var(--ink)]">{tabCounts.all}</span>
             </TabsTrigger>
           </TabsList>
 
           {contentQuery.isLoading ? (
-            <div className="flex items-center gap-2 py-16 text-sm text-slate-500">
+            <div className="flex items-center gap-2 py-16 text-sm text-[var(--ink-soft)]">
               <Loader2 className="h-4 w-4 animate-spin" /> Memuat daftar konten yang dapat diedit…
             </div>
           ) : filteredItems.length === 0 ? (
-            <div className="w-full border border-slate-900/15 bg-white p-12 text-center text-slate-500">
-              <FileText className="mx-auto mb-3 h-8 w-8 text-slate-400" />
-              <p className="text-sm font-semibold text-[#102239]">Tidak ada konten yang sesuai dengan filter.</p>
+            <div className="w-full admin-card border border-[var(--line)] bg-white p-12 text-center text-[var(--ink-soft)]">
+              <FileText className="mx-auto mb-3 h-8 w-8 text-[var(--cool-40)]" />
+              <p className="text-sm font-semibold text-[var(--ink)]">Tidak ada konten yang sesuai dengan filter.</p>
               {search && <p className="mt-1 text-xs">Coba kata kunci pencarian yang lain.</p>}
             </div>
           ) : (
@@ -357,36 +357,36 @@ export default function AdminContent() {
                   e.preventDefault();
                   void handleSaveCurrentTab();
                 }}
-                className="w-full overflow-hidden border border-slate-900/15 bg-white shadow-sm"
+                className="w-full overflow-hidden admin-card border border-[var(--line)] bg-white shadow-sm"
               >
                 {/* Form Header */}
-                <div className="border-b border-slate-900/10 px-6 py-5">
-                  <h2 className="font-[DM_Serif_Display] text-3xl text-[#102239]">{currentMeta.title}</h2>
-                  <p className="mt-1 text-xs text-slate-500">{currentMeta.desc}</p>
+                <div className="border-b border-[var(--line)] px-6 py-5">
+                  <h2 className="admin-display text-3xl text-[var(--ink)]">{currentMeta.title}</h2>
+                  <p className="mt-1 text-xs text-[var(--ink-soft)]">{currentMeta.desc}</p>
                 </div>
 
                 {/* Logo Uploader Card (Visible on Company Tab) */}
                 {activeTab === "company" && (
-                  <div className="border-b border-slate-900/10 bg-[#faf8f5]/60 p-6">
+                  <div className="border-b border-[var(--line)] bg-[var(--warm-2)] p-6">
                     <div className="flex flex-wrap items-center justify-between gap-6">
                       <div className="flex items-center gap-5">
-                        <div className="grid h-16 w-24 place-items-center rounded border border-slate-900/15 bg-white p-2 shadow-inner">
+                        <div className="grid h-16 w-24 place-items-center rounded admin-card border border-[var(--line)] bg-white p-2 shadow-inner">
                           {logoUrl ? (
                             <img src={logoUrl} alt="Logo Preview" className="max-h-12 max-w-full object-contain" />
                           ) : (
-                            <div className="flex flex-col items-center gap-1 text-slate-400">
+                            <div className="flex flex-col items-center gap-1 text-[var(--cool-40)]">
                               <BrandMark className="h-7 w-7" />
                               <span className="text-[9px] font-bold">Logo Vektor</span>
                             </div>
                           )}
                         </div>
                         <div>
-                          <h3 className="text-sm font-extrabold text-[#102239]">Logo Gambar Perusahaan (Opsional)</h3>
-                          <p className="mt-0.5 text-xs text-slate-500">
+                          <h3 className="text-sm font-extrabold text-[var(--ink)]">Logo Gambar Perusahaan (Opsional)</h3>
+                          <p className="mt-0.5 text-xs text-[var(--ink-soft)]">
                             Unggah file logo gambar (PNG, SVG, JPG, WebP). Jika kosong, situs akan menggunakan logo ikon bawaan.
                           </p>
                           {logoUrl && (
-                            <p className="mt-1 max-w-sm truncate font-mono text-[10px] text-slate-400">
+                            <p className="mt-1 max-w-sm truncate font-mono text-[10px] text-[var(--cool-40)]">
                               {logoUrl}
                             </p>
                           )}
@@ -403,7 +403,7 @@ export default function AdminContent() {
                             <Trash2 size={13} /> Hapus Logo
                           </button>
                         )}
-                        <label className="inline-flex cursor-pointer items-center gap-2 bg-[#102239] px-4 py-2 text-xs font-extrabold text-[#fffdf8] transition-transform duration-150 hover:-translate-y-0.5 disabled:opacity-50">
+                        <label className="inline-flex cursor-pointer items-center gap-2 bg-[var(--ink)] px-4 py-2 text-xs font-extrabold text-[var(--lightest)] transition-transform duration-150 hover:-translate-y-0.5 disabled:opacity-50">
                           {isUploadingLogo ? <Loader2 size={14} className="animate-spin" /> : <UploadCloud size={14} />}
                           {logoUrl ? "Ganti Logo" : "Unggah Logo"}
                           <input
@@ -437,22 +437,22 @@ export default function AdminContent() {
                           isLong ? "md:col-span-2" : "md:col-span-1"
                         } ${
                           isModified
-                            ? "border-[#f05a43]/50 bg-[#fffdfa]"
-                            : "border-slate-900/10 bg-[#faf8f5]/40 hover:border-slate-900/20"
+                            ? "border-[var(--purple-20)] bg-[var(--card)]"
+                            : "border-[var(--line)] bg-[var(--warm-2)] hover:border-[var(--line-strong)]"
                         }`}
                         key={item.key}
                       >
                         <div className="mb-2 flex items-center justify-between gap-2">
-                          <label htmlFor={`field-${item.key}`} className="text-xs font-extrabold text-[#102239]">
+                          <label htmlFor={`field-${item.key}`} className="text-xs font-extrabold text-[var(--ink)]">
                             {formatCleanLabel(item.label)}
                           </label>
                           <div className="flex items-center gap-1.5">
                             {isModified && (
-                              <span className="rounded bg-[#fff0e9] px-1.5 py-0.5 text-[9px] font-extrabold uppercase tracking-wide text-[#c44735]">
+                              <span className="rounded bg-[var(--purple-5)] px-1.5 py-0.5 text-[9px] font-extrabold uppercase tracking-wide text-[var(--purple-60)]">
                                 Diedit
                               </span>
                             )}
-                            <code className="hidden text-[10px] text-slate-400 sm:inline">{item.key}</code>
+                            <code className="hidden text-[10px] text-[var(--cool-40)] sm:inline">{item.key}</code>
                           </div>
                         </div>
 
@@ -467,8 +467,8 @@ export default function AdminContent() {
                                 [item.key]: event.target.value,
                               }))
                             }
-                            className={`w-full resize-y border bg-[#fffdf8] p-2.5 text-sm leading-6 text-[#102239] outline-none transition-colors focus:border-[#f05a43] ${
-                              isModified ? "border-[#f05a43]/60" : "border-slate-900/20"
+                            className={`w-full resize-y border bg-[var(--card)] p-2.5 text-sm leading-6 text-[var(--ink)] outline-none transition-colors focus:border-[var(--accent)] ${
+                              isModified ? "border-[var(--purple-30)]" : "border-[var(--line-strong)]"
                             }`}
                           />
                         ) : (
@@ -482,8 +482,8 @@ export default function AdminContent() {
                                 [item.key]: event.target.value,
                               }))
                             }
-                            className={`h-10 w-full border bg-[#fffdf8] px-3 text-sm text-[#102239] outline-none transition-colors focus:border-[#f05a43] ${
-                              isModified ? "border-[#f05a43]/60" : "border-slate-900/20"
+                            className={`h-10 w-full border bg-[var(--card)] px-3 text-sm text-[var(--ink)] outline-none transition-colors focus:border-[var(--accent)] ${
+                              isModified ? "border-[var(--purple-30)]" : "border-[var(--line-strong)]"
                             }`}
                           />
                         )}
@@ -493,14 +493,14 @@ export default function AdminContent() {
                 </div>
 
                 {/* Form Sticky Footer Bar */}
-                <div className="flex flex-wrap items-center justify-between gap-3 border-t border-slate-900/15 bg-[#f6f0e6] px-6 py-4">
-                  <div className="text-xs font-semibold text-slate-600">
+                <div className="flex flex-wrap items-center justify-between gap-3 border-t border-[var(--line)] bg-[var(--paper)] px-6 py-4">
+                  <div className="text-xs font-semibold text-[var(--ink-soft)]">
                     {modifiedKeys.length > 0 ? (
-                      <span className="text-[#c44735]">
+                      <span className="text-[var(--purple-60)]">
                         <b className="font-extrabold">{modifiedKeys.length}</b> kolom teks telah diubah
                       </span>
                     ) : (
-                      <span className="text-slate-500">Semua data pada tab ini tersimpan</span>
+                      <span className="text-[var(--ink-soft)]">Semua data pada tab ini tersimpan</span>
                     )}
                   </div>
                   <div className="flex items-center gap-3">
@@ -509,7 +509,7 @@ export default function AdminContent() {
                         type="button"
                         disabled={isSaving}
                         onClick={handleResetCurrentTab}
-                        className="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-bold text-slate-600 transition-colors hover:text-[#102239] disabled:opacity-50"
+                        className="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-bold text-[var(--ink-soft)] transition-colors hover:text-[var(--ink)] disabled:opacity-50"
                       >
                         <RotateCcw size={13} /> Batalkan
                       </button>
@@ -519,8 +519,8 @@ export default function AdminContent() {
                       disabled={isSaving || modifiedKeys.length === 0}
                       className={`inline-flex items-center gap-2 px-5 py-2.5 text-xs font-extrabold transition-all disabled:cursor-not-allowed disabled:opacity-40 ${
                         modifiedKeys.length > 0
-                          ? "bg-[#f05a43] text-white shadow hover:bg-[#d94833]"
-                          : "bg-[#102239] text-[#fffdf8]"
+                          ? "bg-[var(--accent)] text-white shadow hover:bg-[var(--purple-60)]"
+                          : "bg-[var(--ink)] text-[var(--lightest)]"
                       }`}
                     >
                       {isSaving ? (

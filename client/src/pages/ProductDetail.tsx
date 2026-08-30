@@ -59,9 +59,28 @@ export default function ProductDetail() {
             </span>
             <h1>{product.heroHeadline}</h1>
             <p>{product.fullDescription}</p>
-            <Link href="/contact" className="button button-ink">
-              Diskusikan {product.name} <ArrowUpRight size={17} />
-            </Link>
+            {/* The app URL lives in the CMS (product field "URL aplikasi produk").
+                Until it is filled there is nothing to try yet, so the contact
+                route stays primary rather than guessing a domain. */}
+            {product.demoUrl ? (
+              <div className="hero-actions">
+                <a
+                  href={product.demoUrl}
+                  className="button button-ink"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  Coba {product.name} <ArrowUpRight size={17} />
+                </a>
+                <Link href="/contact" className="text-link">
+                  Diskusikan {product.name} <ArrowUpRight size={15} />
+                </Link>
+              </div>
+            ) : (
+              <Link href="/contact" className="button button-ink">
+                Diskusikan {product.name} <ArrowUpRight size={17} />
+              </Link>
+            )}
           </div>
           <div className="detail-hero-visual">
             <span className="visual-index">[ {product.name} / pratinjau produk ]</span>
@@ -146,7 +165,7 @@ export default function ProductDetail() {
               </span>
               {product.screenshots[0] ? (
                 <img
-                  className="w-full border border-slate-800/20 bg-white object-cover shadow-xl"
+                  className="w-full rounded-2xl border border-[rgba(22,19,30,.12)] bg-white object-cover shadow-xl"
                   src={product.screenshots[0].url}
                   alt={product.screenshots[0].alt || `Screenshot ${product.name}`}
                 />
@@ -169,7 +188,7 @@ export default function ProductDetail() {
             <div className="mt-6 grid gap-5 sm:grid-cols-2">
               {product.screenshots.slice(1).map((screenshot) => (
                 <img
-                  className="w-full border border-slate-800/20 bg-white object-cover shadow-lg"
+                  className="w-full rounded-2xl border border-[rgba(22,19,30,.12)] bg-white object-cover shadow-lg"
                   key={screenshot.id}
                   src={screenshot.url}
                   alt={screenshot.alt || `Screenshot ${product.name}`}

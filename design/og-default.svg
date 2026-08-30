@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="1200" viewBox="0 0 1200 1200">
+  <rect width="1200" height="1200" fill="#16131E"/>
+  <rect x="0" y="285" width="1200" height="8" fill="#7A56E0"/>
+  <g transform="translate(96,339) scale(2.1)">
+    <path d="M8 10h10l6 16 7-16h10L29 38h-9L8 10Z" fill="#FCF9F5"/>
+    <path d="m24 26 5 12h-9l4-12Z" fill="#7A56E0"/>
+  </g>
+  <text x="96" y="680" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" font-size="86" font-weight="700" fill="#FCF9F5">Ruang Karya</text>
+  <text x="96" y="748" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" font-size="34" font-weight="400" fill="#A79FBB">Perangkat lunak terpadu untuk alur kerja yang terus bergerak.</text>
+  <rect x="96" y="795" width="120" height="6" rx="3" fill="#7A56E0"/>
+</svg>

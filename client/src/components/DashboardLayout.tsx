@@ -5,7 +5,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarInset, SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarProvider, SidebarTrigger, useSidebar } from "@/components/ui/sidebar";
 import { CMS_BASE_PATH, CMS_ROUTES, startLogin } from "@/const";
 import { useIsMobile } from "@/hooks/useMobile";
-import { Boxes, ExternalLink, FileText, LayoutDashboard, LogOut, PanelLeft, UsersRound } from "lucide-react";
+import { Boxes, ExternalLink, FileText, Inbox, LayoutDashboard, LogOut, PanelLeft, UsersRound } from "lucide-react";
 import { CSSProperties, useEffect, useRef, useState } from "react";
 import { useLocation } from "wouter";
 import { DashboardLayoutSkeleton } from "./DashboardLayoutSkeleton";
@@ -14,6 +14,7 @@ import { Button } from "./ui/button";
 const menuItems = [
   { icon: LayoutDashboard, label: "Ringkasan", path: CMS_ROUTES.dashboard },
   { icon: Boxes, label: "Katalog Produk", path: CMS_ROUTES.products },
+  { icon: Inbox, label: "Kotak Masuk", path: CMS_ROUTES.inbox },
   { icon: FileText, label: "Profil & Konten", path: CMS_ROUTES.content },
   { icon: UsersRound, label: "Manajemen Pengguna", path: CMS_ROUTES.users },
   { icon: ExternalLink, label: "Lihat Situs Publik", path: "/" },
@@ -71,7 +72,7 @@ function DashboardLayoutContent({ children, setSidebarWidth }: { children: React
             </button>
             {!isCollapsed && (
               <div>
-                <span className="block font-[DM_Serif_Display] text-lg leading-none tracking-tight">Workshop CMS</span>
+                <span className="block admin-display text-lg leading-none tracking-tight">Workshop CMS</span>
                 <span className="mt-1 block text-[9px] font-extrabold uppercase tracking-[.14em] text-muted-foreground">Product publishing</span>
               </div>
             )}
@@ -114,9 +115,9 @@ function DashboardLayoutContent({ children, setSidebarWidth }: { children: React
       </Sidebar>
       <div className={`absolute right-0 top-0 h-full w-1 cursor-col-resize hover:bg-primary/20 ${isCollapsed ? "hidden" : ""}`} onMouseDown={() => setIsResizing(true)} style={{ zIndex: 50 }} />
     </div>
-    <SidebarInset className="bg-[#f6f0e6]">
+    <SidebarInset className="bg-[var(--paper)]">
       {isMobile && (
-        <div className="sticky top-0 z-40 flex h-14 items-center border-b bg-[#f6f0e6]/95 px-2 backdrop-blur">
+        <div className="sticky top-0 z-40 flex h-14 items-center border-b bg-[rgba(252,249,245,.95)] px-2 backdrop-blur">
           <SidebarTrigger className="h-9 w-9 rounded-lg" />
           <span className="ml-2 text-sm font-bold">{activeMenuItem?.label ?? "CMS"}</span>
         </div>

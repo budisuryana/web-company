@@ -24,7 +24,7 @@ export default function Products() {
             </h1>
           </div>
           <p>
-            Produk terfokus yang dirancang untuk menyelesaikan area kerja yang sering kehilangan kejelasan: SDM, alokasi keputusan, manajemen tugas, dokumen, dan produksi konten.
+            Setiap produk di halaman ini sudah dipublikasikan dan bisa digunakan hari ini. Kami merilis ketika sebuah alur kerja benar-benar selesai, bukan ketika idenya terdengar menarik.
           </p>
         </section>
 

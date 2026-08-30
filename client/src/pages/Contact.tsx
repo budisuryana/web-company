@@ -1,6 +1,6 @@
-/** Design system: Software Almanac — Contact page in Indonesian with dynamic database content and Bandung location. */
-import { type FormEvent } from "react";
-import { ArrowUpRight, Mail, MapPin } from "lucide-react";
+/** Contact page: enquiries are saved to the CMS inbox rather than handed off to a mailto: draft. */
+import { useState, type FormEvent } from "react";
+import { AlertCircle, ArrowUpRight, Check, Loader2, Mail, MapPin } from "lucide-react";
 import SiteShell from "@/components/SiteShell";
 import { trpc } from "@/lib/trpc";
 
@@ -15,15 +15,21 @@ export default function Contact() {
   const email = content["company.email"] ?? "hello@workshopcollective.co";
   const address = content["company.address"] ?? "Bandung, Jawa Barat · Indonesia";
 
+  const [sent, setSent] = useState(false);
+  const submit = trpc.registry.public.submitContact.useMutation({
+    onSuccess: () => setSent(true),
+  });
+
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const data = new FormData(event.currentTarget);
-    const companyName = content["company.name"] ?? "Workshop Collective";
-    const subject = encodeURIComponent(`Inquiry ${companyName} — ${String(data.get("company") || data.get("name"))}`);
-    const body = encodeURIComponent(
-      `Nama: ${data.get("name")}\nEmail: ${data.get("email")}\nPerusahaan / Tim: ${data.get("company")}\n\nPesan:\n${data.get("message")}`
-    );
-    window.location.href = `mailto:${email}?subject=${subject}&body=${body}`;
+    submit.mutate({
+      name: String(data.get("name") ?? "").trim(),
+      email: String(data.get("email") ?? "").trim(),
+      company: String(data.get("company") ?? "").trim() || undefined,
+      message: String(data.get("message") ?? "").trim(),
+      botField: String(data.get("botField") ?? ""),
+    });
   };
 
   return (
@@ -68,10 +74,23 @@ export default function Contact() {
           </aside>
 
           {/* Form */}
+          {sent ? (
+            <div className="contact-form contact-sent" role="status" aria-live="polite">
+              <span className="sent-badge"><Check size={16} /></span>
+              <h2>Pesan Anda sudah kami terima.</h2>
+              <p>
+                Terima kasih sudah menghubungi kami. Tim kami akan membaca dan membalas ke alamat
+                email yang Anda tulis. Biasanya dalam satu hingga dua hari kerja.
+              </p>
+              <button type="button" className="button button-outline" onClick={() => { setSent(false); submit.reset(); }}>
+                Kirim pesan lain
+              </button>
+            </div>
+          ) : (
           <form className="contact-form" onSubmit={handleSubmit}>
             <div className="form-heading">
               <span>01 / Pesan Anda</span>
-              <p>Isi informasi dasar di bawah ini. Aplikasi email Anda akan otomatis terbuka dengan draf pesan siap kirim.</p>
+              <p>Isi informasi dasar di bawah ini. Pesan Anda langsung masuk ke tim kami — tidak perlu membuka aplikasi email.</p>
             </div>
 
             <label>
@@ -99,10 +118,29 @@ export default function Contact() {
               />
             </label>
 
-            <button className="button button-ink" type="submit">
-              Siapkan Email <ArrowUpRight size={17} />
+            {/* Honeypot — off-screen and skipped by tab order; only bots fill it. */}
+            <input className="bot-field" type="text" name="botField" tabIndex={-1} autoComplete="off" aria-hidden="true" />
+
+            {submit.isError && (
+              <p className="form-error" role="alert">
+                <AlertCircle size={15} />
+                {submit.error.message || "Pesan gagal terkirim. Coba lagi sebentar."}
+              </p>
+            )}
+
+            <button className="button button-ink" type="submit" disabled={submit.isPending}>
+              {submit.isPending ? (
+                <>
+                  <Loader2 size={17} className="animate-spin" /> Mengirim…
+                </>
+              ) : (
+                <>
+                  Kirim Pesan <ArrowUpRight size={17} />
+                </>
+              )}
             </button>
           </form>
+          )}
         </section>
       </main>
     </SiteShell>
