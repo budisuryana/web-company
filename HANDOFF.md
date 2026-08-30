@@ -1,7 +1,7 @@
-# HANDOFF — Workshop Collective (Lokal)
+# HANDOFF — Ruang Karya (web company)
 
 Catatan semua perubahan & keputusan agar pekerjaan tidak diulang dari awal.
-Terakhir diperbarui: 2026-08-24.
+Terakhir diperbarui: 2026-08-30.
 
 ---
 
@@ -25,8 +25,9 @@ Terakhir diperbarui: 2026-08-24.
 | `.env` lain | `JWT_SECRET` (random string), `VITE_APP_ID=local-workshop-collective` (**wajib non-empty!**), `OAUTH_SERVER_URL=` kosong, `OWNER_OPEN_ID=` kosong | |
 
 ### Gotcha .env
-- `VITE_APP_ID` kosong → session JWT gagal validasi (`Session payload missing required fields`), login tampak gagal padahal cookie ter-set.
+- ~~`VITE_APP_ID` kosong → session JWT gagal validasi~~ — **sudah diperbaiki di kode (2026-08-30)**, lihat log §9. `createSessionToken` kini selalu menulis `appId` non-kosong, jadi `VITE_APP_ID` hanya perlu diisi kalau memang memakai OAuth Manus.
 - `tsx watch` TIDAK me-reload saat `.env` berubah → restart manual dev server.
+- ⚠️ **Cek `DATABASE_URL` sebelum `pnpm test`.** Kalau `.env` menunjuk ke Supabase produksi, enam file test akan menulis ke sana — termasuk `seedPolicy.test.ts` yang memanggil `ensureDefaultAdmin()`. File yang menyentuh DB: `auth.logout`, `auth.role`, `registry.router`, `registry.slug`, `seedPolicy`, `userManagement.router`.
 
 ---
 
@@ -71,13 +72,19 @@ Tujuan: akses CMS tanpa deploy (OAuth Manus tidak tersedia lokal).
 - Role `user` sengaja bisa dipilih untuk menguji tampilan "access denied".
 
 ### Bootstrap admin di DB (manual, sekali)
-Dibutuhkan karena aturan bisnis "minimal satu administrator":
+Dibutuhkan karena aturan bisnis "minimal satu administrator".
+
+**Cara sekarang (2026-08-30):** `pnpm admin:create` — password diminta tanpa echo, di-hash dengan
+`hashPassword` yang sama, menolak username/email/openId yang sudah ada. Jangan lagi INSERT manual.
+
+INSERT SQL lama di bawah ini disimpan hanya sebagai catatan sejarah; ia tidak menulis `passwordHash`
+sehingga akun hasilnya tidak bisa dipakai login kredensial:
 ```sql
 INSERT INTO users ("openId", name, email, "loginMethod", role)
 VALUES ('local-bootstrap-admin', 'Local Admin', 'admin@localhost', 'local', 'admin')
 ON CONFLICT ("openId") DO NOTHING;
 ```
-Sudah dieksekusi di database lokal. (Ingat: nama kolom camelCase WAJIB di-quote di psql.)
+(Ingat: nama kolom camelCase WAJIB di-quote di psql.)
 
 ---
 
@@ -292,3 +299,50 @@ pnpm install && pnpm check && pnpm test
 
 
 
+- **2026-08-30** — Persiapan launch Reconly, SEO, dan bootstrap produksi. Ringkasan satu putaran kerja panjang; detail per-item di bawah.
+
+  **Rebrand & data CMS**
+  - `company.name` → **Ruang Karya** di seluruh permukaan: `client/index.html` (`<title>`, meta description, `lang="id"`), stempel `<b>W</b>` di `Home.tsx` kini mengambil huruf pertama dari `company.name` (jadi `R`), dan `contact.email` diselaraskan ke `info@ruang-karya.co.id`.
+  - `registrySeed.ts` — `siteContentSeed` dikoreksi ke Ruang Karya. Ini **bukan** data demo dan tetap seed di production, jadi nilainya harus benar. `company.phone` dan ketiga URL sosial dikosongkan.
+  - `company.githubUrl` dan `company.instagramUrl` dikosongkan permanen: yang pertama repo pribadi (bukan profil perusahaan), yang kedua mustahil valid (username Instagram tidak menerima tanda hubung). `company.linkedinUrl` juga dikosongkan karena tidak bisa diverifikasi. **`sameAs` boleh kosong — jangan isi URL hanya karena formatnya valid.**
+
+  **SEO (baru — `server/seo.ts`, `server/seoRoutes.ts`)**
+  - Masalah akarnya: aplikasi ini SPA murni, `<div id="root">` kosong. Crawler sosial (WhatsApp, LinkedIn, X) **tidak menjalankan JavaScript**, jadi setiap link yang dibagikan tampil sebagai kartu kosong.
+  - Solusinya bukan SSR: Express menulis ulang `<head>` per-route sebelum menyajikan `index.html`, dan menanam `<h1>` + paragraf ke dalam `#root`. Aman karena klien memakai `createRoot`, bukan `hydrateRoot` — React membuang seed itu saat mount.
+  - Titik pasang: `server/_core/vite.ts`, di jalur dev **dan** produksi. Dibungkus try/catch — kegagalan meta tidak boleh menjatuhkan halaman.
+  - `robots.txt` + `sitemap.xml` digenerate dari DB (`registerSeoRoutes`), jadi unpublish di CMS langsung hilang dari sitemap. Didaftarkan **sebelum** catch-all SPA.
+  - JSON-LD `Organization` + `SoftwareApplication` + `BreadcrumbList`. Kartu OG default: `client/public/og-default.png`, sumber SVG + cara regenerate ada di `design/README.md`.
+  - `SITE_URL` menang kalau diisi; kalau kosong di production jatuh ke `PRODUCTION_SITE_URL = https://ruang-karya.co.id`; di luar production ikut host request.
+
+  **Keamanan seed (`server/seedPolicy.ts` — baru)**
+  - ⚠️ Bug lama: `ensureRegistrySeeded()` berjalan di **setiap request produk publik** dan memanggil `ensureDefaultAdmin()`, yang membuat akun `admin`/`admin123`. Satu pengunjung membuka `/products` di produksi sudah cukup untuk menyalakannya.
+  - `demoSeedAllowed()` sekarang membatasi seed demo ke `development`/`test` saja (atau `ALLOW_DEMO_SEED=true` eksplisit). Environment yang tidak dikenali (`staging`, `prod`, `qa`) **ditolak**, bukan dianggap aman.
+  - `ensureDefaultAdmin()` mengembalikan `"skipped"` **sebelum** query pertama. Seed katalog produk demo ikut digerbangi. Dikunci 8 test di `seedPolicy.test.ts`.
+
+  **CTA produk**
+  - `demoUrl` sudah lama ada di schema, editor CMS, dan validasi — tapi **tidak pernah dirender**. Semua CTA jatuh ke `/contact`, jadi situs tidak bisa mengantar siapa pun ke aplikasinya.
+  - `ProductDetail.tsx` kini merender **`Coba {product.name}`** sebagai tombol primer ke `demoUrl` (`target="_blank"`, `rel="noopener noreferrer"`), `/contact` turun jadi secondary. Nol CSS baru — memakai `.hero-actions` yang sudah ada.
+  - Kalau `demoUrl` kosong, hanya CTA kontak yang tampil. **Jangan hardcode domain tebakan.**
+  - Reconly: `demoUrl = https://reconly.ruang-karya.co.id`. Per 2026-08-30 subdomain itu masih NXDOMAIN.
+  - `Products.tsx` — copy yang menyebut lima domain produk lama dihapus; diganti kalimat yang tidak menyebut produk apa pun supaya tidak bisa basi lagi.
+
+  **Bootstrap produksi (2 CLI baru)**
+  - `pnpm db:seed` (`server/seed.ts`) — INSERT `site_content` hanya untuk key yang belum ada. Tidak pernah UPDATE/DELETE, jadi editan CMS selamat dan run kedua no-op. **Sengaja tidak memakai `ensureRegistrySeeded()`** karena fungsi itu ikut membuat admin demo. Katalog produk tidak di-seed — hanya ada seed katalog pensiun di repo, dan katalog live milik CMS.
+  - `pnpm admin:create` (`server/createAdmin.ts`) — admin pertama. Password dibaca tanpa echo, di-hash dengan `hashPassword` yang ada, menolak duplikat username/email/openId dan password default. Tidak pernah mencetak plaintext.
+  - Keduanya exit 1 tanpa `DATABASE_URL` dan mencetak target ter-mask sebelum menulis.
+
+  **Fix session auth produksi (`e9ef14e`)**
+  - Gejala: login kredensial berhasil, cookie terbit, request berikutnya ditolak `[Auth] Session payload missing required fields`, CMS balik ke halaman login.
+  - Sebab: `verifySession` mewajibkan `openId`, `appId`, `name` non-kosong. `createSessionToken` mengisi `appId` dari `ENV.appId` = `VITE_APP_ID`, yaitu **client id OAuth Manus** — kosong di deployment yang tidak memakai OAuth. Token ditandatangani dengan `appId: ""` lalu ditolak. Lolos di lokal karena `.env` masih menyimpan `VITE_APP_ID` sisa template.
+  - Perbaikan: `SESSION_APP_ID = ENV.appId || "web-company-cms"` di `sdk.ts`, dipakai hanya di jalur signing. `ENV.appId` sendiri **tidak disentuh** supaya `clientId` dan `projectId` OAuth tetap apa adanya. `name` dapat perlakuan sama (fallback ke `openId`). Klaim `appId` tidak pernah dibandingkan dengan apa pun — hanya dicek non-kosong.
+  - ⚠️ Perubahan payload ini **membatalkan cookie sesi lama**. Setelah deploy, semua orang login ulang sekali.
+  - Role tidak pernah ada di token: `authenticateRequest` memuat akun via `getUserByOpenId`, dan `adminProcedure` membaca `ctx.user.role` dari baris DB.
+
+  **Deployment**
+  - ⚠️ Backend **tidak bisa jalan di Vercel apa adanya** — `server/_core/index.ts` memanggil `server.listen()`. Tanpa `vercel.json`/`api/`, Vercel hanya menyajikan frontend statis dan seluruh `/api/trpc/*`, `robots.txt`, `sitemap.xml`, serta injeksi meta ikut mati. Butuh platform yang menjalankan proses Node persisten (Railway dipakai sekarang).
+  - Supabase: pakai **session pooler port 5432**. Transaction pooler (6543) butuh `postgres(url, { prepare: false })` — perubahan kode.
+  - `server/index.ts` adalah entry lama statis-saja yang tidak dirujuk script mana pun. Jangan tertukar jadi entry produksi.
+  - `client/public/__manus__/debug-collector.js` ikut tersalin ke `dist/public/` tapi **inert** — tag `<script>`-nya dev-only (`vite.config.ts` bypass saat production).
+
+  - Verifikasi: `pnpm check` bersih, `pnpm build` sukses. Test: 8 file non-DB / 78 test pass; 6 file penulis-DB sengaja tidak dijalankan karena `.env` menunjuk Supabase produksi.
+  - Commit: `e9ef14e` (fix auth) + `8a8ce06` (CLI bootstrap), branch `fix/credential-session-and-bootstrap-cli`.
