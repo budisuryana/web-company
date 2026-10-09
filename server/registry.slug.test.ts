@@ -33,11 +33,15 @@ afterAll(async () => {
 
 describe("registry slug contract", () => {
   it("rejects creating a product whose slug already exists with a CONFLICT", async () => {
-    const error = await caller.registry.admin.create(productInput("hris")).catch((cause: { code?: string; message?: string }) => cause);
+    // Seed its own occupant rather than relying on demo data (the "hris" sample product
+    // only exists where demo seeding ran, so this failed against any real catalogue).
+    const occupied = `taken-${slugStamp}`;
+    await caller.registry.admin.create(productInput(occupied));
+    const error = await caller.registry.admin.create(productInput(occupied)).catch((cause: { code?: string; message?: string }) => cause);
     expect(error?.code).toBe("CONFLICT");
     expect(String(error?.message)).toContain("already used");
     const remaining = await caller.registry.admin.list();
-    expect(remaining.filter((product) => product.name === "Slug contract verification").length, "no partial record may survive a rejected create").toBe(0);
+    expect(remaining.filter((product) => product.slug === occupied).length, "no partial record may survive a rejected create").toBe(1);
   });
 
   it("allows saving a product that keeps its own slug", async () => {
