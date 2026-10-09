@@ -306,7 +306,12 @@ export default function AdminContent() {
             </span>
             <h1 className="mt-1 admin-display text-4xl text-[var(--ink)]">Profil &amp; Konten Situs</h1>
             <p className="mt-1 text-xs text-[var(--ink-soft)]">
-              Kelola profil perusahaan, logo teks, alamat, kontak, dan seluruh copy publik dalam satu formulir terpadu.
+              Kelola nama perusahaan, logo, dan tautan media sosial.
+            </p>
+            <p className="mt-2 max-w-2xl rounded-md bg-[var(--yellow-2)] px-3 py-2 text-xs text-[var(--yellow-50)]">
+              Sejak versi bilingual (ID/EN), teks halaman publik, email, dan lokasi dikelola di kode
+              (<code>shared/i18n/messages.ts</code> dan <code>shared/site.ts</code>). Field Home, About, Contact,
+              tagline, dan email di sini tidak lagi tampil di situs publik.
             </p>
           </div>
           <div className="relative">
