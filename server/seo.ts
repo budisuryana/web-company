@@ -39,11 +39,19 @@ export interface PageMeta {
   body?: string[];
   /** CMS and admin routes must never be indexed. */
   noindex?: boolean;
+  /** Value for <html lang>. */
+  htmlLang?: string;
+  /** Language versions of this page, emitted as <link rel="alternate" hreflang>. */
+  alternates?: Array<{ hreflang: string; href: string }>;
+  /** The route does not exist: the server answers 404 instead of 200. */
+  notFound?: boolean;
 }
 
 export interface SitemapEntry {
   path: string;
   lastModified?: Date | string | null;
+  /** Language versions of this URL (paths), emitted as xhtml:link alternates. */
+  alternates?: Array<{ hreflang: string; path: string }>;
 }
 
 const HTML_ESCAPES: Record<string, string> = {
@@ -157,6 +165,11 @@ function headTags(meta: PageMeta): string {
   }
 
   if (meta.noindex) lines.push(tag("name", "robots", "noindex, nofollow"));
+  for (const alternate of meta.alternates ?? []) {
+    lines.push(
+      `    <link rel="alternate" hreflang="${escapeHtml(alternate.hreflang)}" href="${escapeHtml(alternate.href)}" />`
+    );
+  }
 
   return [...lines, ...jsonLdBlock(meta.jsonLd)].join("\n");
 }
@@ -178,6 +191,10 @@ function rootSeed(meta: PageMeta): string {
  */
 export function injectMeta(template: string, meta: PageMeta): string {
   let html = template;
+
+  if (meta.htmlLang) {
+    html = html.replace(/<html\b[^>]*>/i, `<html lang="${escapeHtml(meta.htmlLang)}">`);
+  }
 
   html = html.replace(/<title>[\s\S]*?<\/title>/i, `<title>${escapeHtml(meta.title)}</title>`);
 
@@ -213,20 +230,27 @@ export function robotsTxt(siteUrl: string, cmsPath: string): string {
 
 export function sitemapXml(siteUrl: string, entries: SitemapEntry[]): string {
   const origin = siteUrl.replace(/\/+$/, "");
+  const absolute = (path: string) => `${origin}/${path.replace(/^\/+/, "")}`.replace(/\/$/, "") || origin;
+  const hasAlternates = entries.some((entry) => entry.alternates?.length);
   const urls = entries.map((entry) => {
-    const loc = `${origin}/${entry.path.replace(/^\/+/, "")}`.replace(/\/$/, "") || origin;
     const lastmod = toIsoDate(entry.lastModified);
     return [
       "  <url>",
-      `    <loc>${escapeHtml(loc)}</loc>`,
+      `    <loc>${escapeHtml(absolute(entry.path))}</loc>`,
       ...(lastmod ? [`    <lastmod>${lastmod}</lastmod>`] : []),
+      ...(entry.alternates ?? []).map(
+        (alternate) =>
+          `    <xhtml:link rel="alternate" hreflang="${escapeHtml(alternate.hreflang)}" href="${escapeHtml(absolute(alternate.path))}" />`
+      ),
       "  </url>",
     ].join("\n");
   });
 
   return [
     '<?xml version="1.0" encoding="UTF-8"?>',
-    '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">',
+    hasAlternates
+      ? '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">'
+      : '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">',
     ...urls,
     "</urlset>",
     "",

@@ -1,6 +1,11 @@
 /**
  * Route-aware metadata: the database lookups and Express wiring that feed the
  * pure string helpers in `server/seo.ts`.
+ *
+ * Copy comes from the same bilingual dictionary the client renders
+ * (shared/i18n), so the title a crawler sees is the title a visitor sees.
+ * Indonesian lives at "/", English at "/en"; every public page advertises
+ * both through hreflang.
  */
 import type { Express, Request, Response } from "express";
 import {
@@ -8,14 +13,23 @@ import {
   metaDescription,
   robotsTxt,
   sitemapXml,
-  titleDescriptor,
   type JsonLd,
   type PageMeta,
   type SitemapEntry,
 } from "./seo";
 import { getRegistryProductBySlug, listRegistryProducts, listSiteContent } from "./registry";
-
-const LOCALE = "id_ID";
+import { MESSAGES } from "@shared/i18n/messages";
+import { localizeProduct } from "@shared/i18n/products";
+import {
+  HTML_LANG,
+  LEGAL_PAGES_DRAFT,
+  LOCALES,
+  OG_LOCALE,
+  SITE,
+  localizePath,
+  splitLocale,
+  type Locale,
+} from "@shared/site";
 
 /**
  * Where the site lives once deployed.
@@ -24,7 +38,7 @@ const LOCALE = "id_ID";
  * environment variable cannot quietly publish canonical URLs and a sitemap
  * pointing at the wrong host. An explicit SITE_URL always wins over it.
  */
-export const PRODUCTION_SITE_URL = "https://ruang-karya.co.id";
+export const PRODUCTION_SITE_URL = SITE.origin;
 
 /**
  * Fallback card for pages with no image of their own. Regenerated from
@@ -65,7 +79,7 @@ async function siteContentMap(): Promise<Content> {
   }
 }
 
-function organization(content: Content, origin: string): JsonLd {
+function organization(content: Content, origin: string, locale: Locale): JsonLd {
   const sameAs = ["company.instagramUrl", "company.linkedinUrl", "company.githubUrl"]
     .map((key) => content[key]?.trim())
     .filter((value): value is string => Boolean(value));
@@ -75,11 +89,17 @@ function organization(content: Content, origin: string): JsonLd {
   return {
     "@context": "https://schema.org",
     "@type": "Organization",
-    name: content["company.name"] || "Ruang Karya",
+    name: content["company.name"] || SITE.name,
     url: origin,
-    ...(content["company.tagline"] ? { description: content["company.tagline"] } : {}),
+    description: MESSAGES[locale].common.tagline,
+    email: SITE.email,
+    address: {
+      "@type": "PostalAddress",
+      addressLocality: SITE.city,
+      addressRegion: SITE.region[locale],
+      addressCountry: "ID",
+    },
     ...(logo ? { logo } : {}),
-    ...(content["company.email"] ? { email: content["company.email"] } : {}),
     ...(sameAs.length ? { sameAs } : {}),
   };
 }
@@ -102,127 +122,134 @@ function pathOf(url: string): string {
   return pathname.replace(/\/+$/, "") || "/";
 }
 
-/** Builds the metadata for one request URL. Falls back to site defaults on anything unrecognised. */
+/** hreflang set for a page that exists in every locale; x-default points at Indonesian. */
+function alternatesFor(origin: string, path: string): PageMeta["alternates"] {
+  const href = (locale: Locale) => {
+    const localized = localizePath(path, locale);
+    return localized === "/" ? origin : `${origin}${localized}`;
+  };
+  return [
+    ...LOCALES.map((locale) => ({ hreflang: HTML_LANG[locale], href: href(locale) })),
+    { hreflang: "x-default", href: href("id") },
+  ];
+}
+
+const STATIC_PAGES = ["/", "/products", "/about", "/contact"] as const;
+const LEGAL_PAGES = ["/privacy", "/terms"] as const;
+
+/** Builds the metadata for one request URL. Falls back to a 404 for anything unrecognised. */
 export async function resolvePageMeta(url: string, req?: Request): Promise<PageMeta> {
   const origin = siteUrl(req);
   const pathname = pathOf(url);
   const content = await siteContentMap();
-
-  const companyName = content["company.name"] || "Ruang Karya";
-  const tagline = content["company.tagline"] || "Perangkat lunak terpadu untuk alur kerja yang terus bergerak.";
-
-  const base = {
-    locale: LOCALE,
-    siteName: companyName,
-    ogType: "website" as const,
-    canonical: `${origin}${pathname === "/" ? "" : pathname}`,
-  };
+  const companyName = content["company.name"] || SITE.name;
 
   // The CMS is a private workspace; it must never reach an index.
   if (pathname === cmsPath() || pathname.startsWith(`${cmsPath()}/`) || pathname.startsWith("/admin")) {
     return {
-      ...base,
       title: `Panel Admin — ${companyName}`,
-      description: tagline,
+      description: MESSAGES.id.common.tagline,
+      canonical: `${origin}${pathname}`,
+      ogType: "website",
+      locale: OG_LOCALE.id,
+      htmlLang: HTML_LANG.id,
+      siteName: companyName,
       jsonLd: [],
       noindex: true,
     };
   }
 
-  const productMatch = pathname.match(/^\/products\/([^/]+)$/);
+  const { locale, path } = splitLocale(pathname);
+  const t = MESSAGES[locale];
+  const localized = localizePath(path, locale);
+  const canonical = localized === "/" ? origin : `${origin}${localized}`;
+  const base = {
+    locale: OG_LOCALE[locale],
+    htmlLang: HTML_LANG[locale],
+    siteName: companyName,
+    ogType: "website" as const,
+    canonical,
+  };
+  const titled = (title: string) => `${title} — ${companyName}`;
+  const notFound: PageMeta = {
+    ...base,
+    title: titled(t.meta.notFoundTitle),
+    description: t.common.tagline,
+    jsonLd: [],
+    noindex: true,
+    notFound: true,
+  };
+
+  const productMatch = path.match(/^\/products\/([^/]+)$/);
   if (productMatch) {
-    const product = await safeProduct(decodeURIComponent(productMatch[1]));
-    if (product) {
-      const descriptor = titleDescriptor(product.shortDescription);
-      return {
-        ...base,
-        ogType: "article",
-        title: `${product.name} — ${descriptor} | ${companyName}`,
-        description: metaDescription(product.shortDescription),
-        ogImage: ogImageFor(content, origin, product.coverUrl),
-        heading: product.heroHeadline,
-        body: [product.shortDescription, product.problem, product.solution, product.outcome],
-        jsonLd: [
-          {
-            "@context": "https://schema.org",
-            "@type": "SoftwareApplication",
-            name: product.name,
-            description: product.shortDescription,
-            applicationCategory: "BusinessApplication",
-            operatingSystem: "Web",
-            url: base.canonical,
-            inLanguage: "id-ID",
-            ...(product.coverUrl ? { image: absoluteUrl(origin, product.coverUrl) } : {}),
-            publisher: organization(content, origin),
-          },
-          {
-            "@context": "https://schema.org",
-            "@type": "BreadcrumbList",
-            itemListElement: [
-              { "@type": "ListItem", position: 1, name: "Beranda", item: origin },
-              { "@type": "ListItem", position: 2, name: "Produk", item: `${origin}/products` },
-              { "@type": "ListItem", position: 3, name: product.name, item: base.canonical },
-            ],
-          },
-        ],
-      };
+    const record = await safeProduct(decodeURIComponent(productMatch[1]));
+    if (!record) return notFound;
+    const product = localizeProduct(record, locale);
+    return {
+      ...base,
+      ogType: "article",
+      title: `${product.name} — ${product.shortDescription.replace(/\.$/, "")} | ${companyName}`,
+      description: metaDescription(product.fullDescription),
+      ogImage: ogImageFor(content, origin, product.coverUrl),
+      heading: product.heroHeadline,
+      body: [product.fullDescription, product.problem, product.solution, product.outcome],
+      alternates: alternatesFor(origin, path),
+      jsonLd: [
+        {
+          "@context": "https://schema.org",
+          "@type": "SoftwareApplication",
+          name: product.name,
+          description: product.fullDescription,
+          applicationCategory: "BusinessApplication",
+          operatingSystem: "Web",
+          url: canonical,
+          inLanguage: HTML_LANG[locale],
+          ...(product.coverUrl ? { image: absoluteUrl(origin, product.coverUrl) } : {}),
+          publisher: organization(content, origin, locale),
+        },
+        {
+          "@context": "https://schema.org",
+          "@type": "BreadcrumbList",
+          itemListElement: [
+            { "@type": "ListItem", position: 1, name: t.meta.breadcrumbHome, item: `${origin}${localizePath("/", locale) === "/" ? "" : localizePath("/", locale)}` },
+            { "@type": "ListItem", position: 2, name: t.meta.breadcrumbProducts, item: `${origin}${localizePath("/products", locale)}` },
+            { "@type": "ListItem", position: 3, name: product.name, item: canonical },
+          ],
+        },
+      ],
+    };
+  }
+
+  const page = (title: string, description: string, heading: string, body: string[], extra: Partial<PageMeta> = {}): PageMeta => ({
+    ...base,
+    title,
+    description: metaDescription(description),
+    ogImage: ogImageFor(content, origin),
+    heading,
+    body,
+    alternates: alternatesFor(origin, path),
+    jsonLd: [organization(content, origin, locale)],
+    ...extra,
+  });
+
+  switch (path) {
+    case "/":
+      return page(t.meta.homeTitle, t.meta.homeDescription, t.home.title, [t.home.lead]);
+    case "/products":
+      return page(titled(t.meta.productsTitle), t.meta.productsDescription, t.products.title, [t.products.lead]);
+    case "/about":
+      return page(titled(t.meta.aboutTitle), t.meta.aboutDescription, t.about.title, [t.about.lead, ...t.about.story]);
+    case "/contact":
+      return page(titled(t.meta.contactTitle), t.meta.contactDescription, t.contact.title, [t.contact.lead]);
+    case "/privacy":
+    case "/terms": {
+      const doc = path === "/privacy" ? t.legal.privacy : t.legal.terms;
+      // Drafts stay out of the index until the owner approves the text.
+      return page(titled(doc.title), doc.intro, doc.title, [doc.intro], { noindex: LEGAL_PAGES_DRAFT });
     }
-    // Unknown slug: the SPA renders its not-found state, so keep it out of the index.
-    return { ...base, title: `Halaman tidak ditemukan — ${companyName}`, description: tagline, jsonLd: [], noindex: true };
+    default:
+      return notFound;
   }
-
-  if (pathname === "/products") {
-    return {
-      ...base,
-      title: `Produk — ${companyName}`,
-      ogImage: ogImageFor(content, origin),
-      description: metaDescription(
-        content["home.featuredDescription"] ||
-          "Katalog produk perangkat lunak yang dirancang untuk menyelesaikan kendala nyata dalam operasional kerja."
-      ),
-      heading: "Koleksi produk kami",
-      body: [tagline],
-      jsonLd: [organization(content, origin)],
-    };
-  }
-
-  if (pathname === "/about") {
-    return {
-      ...base,
-      title: `Tentang Kami — ${companyName}`,
-      ogImage: ogImageFor(content, origin),
-      description: metaDescription(content["about.heroDescription"] || tagline),
-      heading: content["about.heroTitle"] || "Tentang Kami",
-      body: [content["about.heroDescription"] || tagline, content["about.statement"] || ""].filter(Boolean),
-      jsonLd: [organization(content, origin)],
-    };
-  }
-
-  if (pathname === "/contact") {
-    return {
-      ...base,
-      title: `Kontak — ${companyName}`,
-      ogImage: ogImageFor(content, origin),
-      description: metaDescription(content["contact.intro"] || tagline),
-      heading: content["contact.heroTitle"] || "Kontak",
-      body: [content["contact.intro"] || tagline],
-      jsonLd: [organization(content, origin)],
-    };
-  }
-
-  if (pathname === "/") {
-    return {
-      ...base,
-      title: `${companyName} — ${titleDescriptor(tagline)}`,
-      ogImage: ogImageFor(content, origin),
-      description: metaDescription(content["home.heroDescription"] || tagline),
-      heading: content["home.heroTitle"] || companyName,
-      body: [content["home.heroDescription"] || tagline],
-      jsonLd: [organization(content, origin)],
-    };
-  }
-
-  return { ...base, title: `Halaman tidak ditemukan — ${companyName}`, description: tagline, jsonLd: [], noindex: true };
 }
 
 async function safeProduct(slug: string) {
@@ -233,7 +260,14 @@ async function safeProduct(slug: string) {
   }
 }
 
-const STATIC_ROUTES = ["/", "/products", "/about", "/contact"];
+/** One sitemap entry per locale, each listing every language version of the page. */
+function localizedEntries(path: string, lastModified?: Date | string | null): SitemapEntry[] {
+  const alternates = [
+    ...LOCALES.map((locale) => ({ hreflang: HTML_LANG[locale], path: localizePath(path, locale) })),
+    { hreflang: "x-default", path: localizePath(path, "id") },
+  ];
+  return LOCALES.map((locale) => ({ path: localizePath(path, locale), lastModified, alternates }));
+}
 
 export function registerSeoRoutes(app: Express) {
   app.get("/robots.txt", (req: Request, res: Response) => {
@@ -244,12 +278,13 @@ export function registerSeoRoutes(app: Express) {
   // product in the CMS removes it from the sitemap on the next request.
   app.get("/sitemap.xml", async (req: Request, res: Response) => {
     const origin = siteUrl(req);
-    const entries: SitemapEntry[] = STATIC_ROUTES.map((path) => ({ path }));
+    const pages: string[] = [...STATIC_PAGES, ...(LEGAL_PAGES_DRAFT ? [] : LEGAL_PAGES)];
+    const entries: SitemapEntry[] = pages.flatMap((path) => localizedEntries(path));
 
     try {
       const products = await listRegistryProducts(true);
       for (const product of products) {
-        entries.push({ path: `/products/${product.slug}`, lastModified: product.updatedAt });
+        entries.push(...localizedEntries(`/products/${product.slug}`, product.updatedAt));
       }
     } catch {
       // A database hiccup should still leave the static routes discoverable.
