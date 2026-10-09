@@ -14,7 +14,9 @@ import AdminProductEditor from "./pages/AdminProductEditor";
 import AdminProducts from "./pages/AdminProducts";
 import AdminUsers from "./pages/AdminUsers";
 import Contact from "./pages/Contact";
+import { LocaleProvider } from "./i18n";
 import Home from "./pages/Home";
+import Legal from "./pages/Legal";
 import NotFound from "./pages/NotFound";
 import ProductDetail from "./pages/ProductDetail";
 import Products from "./pages/Products";
@@ -69,14 +71,33 @@ function Router() {
       <Route path={`${CMS_BASE_PATH}/users`} component={AdminUsers} />
       <Route path={CMS_BASE_PATH} component={AdminDashboard} />
 
-      {/* Public Pages */}
+      {/* English: the same public tree nested under /en, so relative links stay in English. */}
+      <Route path="/en" nest>
+        <LocaleProvider locale="en">
+          <PublicRoutes />
+        </LocaleProvider>
+      </Route>
+
+      {/* Indonesian (default), including the 404 catch-all. */}
+      <Route>
+        <LocaleProvider locale="id">
+          <PublicRoutes />
+        </LocaleProvider>
+      </Route>
+    </Switch>
+  );
+}
+
+function PublicRoutes() {
+  return (
+    <Switch>
       <Route path="/" component={Home} />
       <Route path="/products" component={Products} />
       <Route path="/products/:slug" component={ProductDetail} />
       <Route path="/about" component={About} />
       <Route path="/contact" component={Contact} />
-
-      {/* 404 Catch-All */}
+      <Route path="/privacy">{() => <Legal doc="privacy" />}</Route>
+      <Route path="/terms">{() => <Legal doc="terms" />}</Route>
       <Route component={NotFound} />
     </Switch>
   );
