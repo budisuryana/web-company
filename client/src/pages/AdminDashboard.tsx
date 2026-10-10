@@ -1,36 +1,12 @@
 /** CMS overview: concise operational metrics, deep visitor geo-analytics, paginated audit feed, and publishing routines. */
 import { Fragment, useMemo, useState, type ReactNode } from "react";
-import {
-  Activity,
-  ArrowUpRight,
-  BarChart3,
-  Box,
-  ChevronLeft,
-  ChevronRight,
-  Clock3,
-  ExternalLink,
-  Eye,
-  FileText,
-  Inbox,
-  Globe2,
-  Laptop,
-  LayoutDashboard,
-  Loader2,
-  MapPin,
-  Monitor,
-  ShieldCheck,
-  Smartphone,
-  Tablet,
-  TrendingUp,
-  UserCheck,
-  UsersRound,
-} from "lucide-react";
-import { Link } from "wouter";
+import { Activity, ArrowUpRight, BarChart3, Box, Clock3, ExternalLink, Eye, FileText, Globe2, Inbox, Laptop, LayoutDashboard, MapPin, Monitor, Plus, ShieldCheck, Smartphone, Tablet, TrendingUp, UserCheck, UsersRound } from "lucide-react";
+import { Link, useLocation } from "wouter";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { CMS_ROUTES } from "@/const";
 import { trpc } from "@/lib/trpc";
 import { useAdminLocale, useT } from "@/admin/i18n";
-import type { AdminPhrase } from "@/admin/phrases";
+import { Badge, Card, CardHead, EmptyState, LoadingState, PageHead, Pagination, StatCard, btn } from "@/studio/ui";
 
 const activityIcon = (type: string) =>
   type.startsWith("user.")
@@ -77,6 +53,7 @@ export default function AdminDashboard() {
   const { locale } = useAdminLocale();
   const intlLocale = locale === "en" ? "en-GB" : "id-ID";
   const isAdmin = user?.role === "admin";
+  const [, navigate] = useLocation();
   const dashboardQuery = trpc.registry.admin.dashboard.useQuery(undefined, { enabled: isAdmin });
   const inboxCounts = trpc.registry.admin.submissions.counts.useQuery(undefined, { enabled: isAdmin });
   const dashboard = dashboardQuery.data;
@@ -125,654 +102,315 @@ export default function AdminDashboard() {
 
   return (
     <>
-      <div className="w-full">
-        {/* Header Section */}
-        <section className="mb-8 grid gap-6 border-b-2 border-[var(--ink)] pb-8 lg:grid-cols-[1.2fr_.8fr]">
-          <div>
-            <span className="text-[10px] font-extrabold uppercase tracking-[.16em] text-[var(--accent)]">
-              {t("Workshop CMS / Overview")}
-            </span>
-            <h1 className="mt-2 admin-display text-3xl sm:text-4xl leading-tight tracking-tight text-[var(--ink)]">
-              {t("Dashboard &")} <em className="text-[var(--accent)]">{t("Overview.")}</em>
-            </h1>
-            <p className="mt-3 max-w-2xl text-sm leading-6 text-[var(--ink-soft)]">
-              {t("Ringkasan statistik produk, metrik geografis pengunjung (kota, IP, perangkat), dan log aktivitas tim.")}
-            </p>
-          </div>
-          <div className="flex flex-wrap content-end gap-3">
-            <Link
-              href={CMS_ROUTES.productNew}
-              className="inline-flex items-center gap-2 bg-[var(--ink)] px-4 py-3 text-xs font-extrabold text-[var(--lightest)] transition-transform duration-150 hover:-translate-y-0.5"
-            >
-              {t("Add product")} <ArrowUpRight size={14} />
-            </Link>
-            <Link
-              href={CMS_ROUTES.content}
-              className="inline-flex items-center gap-2 border border-[var(--ink)] bg-white px-4 py-3 text-xs font-extrabold text-[var(--ink)] transition-transform duration-150 hover:-translate-y-0.5"
-            >
-              {t("Edit Site Copy")} <FileText size={14} />
-            </Link>
-            <a
-              href="/"
-              target="_blank"
-              rel="noreferrer"
-              className="inline-flex items-center gap-2 border border-[var(--line-strong)] bg-white px-4 py-3 text-xs font-extrabold text-[var(--ink)] transition-transform duration-150 hover:-translate-y-0.5"
-            >
-              {t("Lihat Website Publik")} <ExternalLink size={14} />
-            </a>
-          </div>
-        </section>
-
-        {dashboardQuery.isLoading || !metrics ? (
-          <div className="flex items-center gap-2 py-24 text-sm text-[var(--ink-soft)]">
-            <Loader2 className="h-4 w-4 animate-spin" /> {t("Memuat ringkasan dashboard…")}
-          </div>
-        ) : (
+      <PageHead
+        title={t("Ringkasan")}
+        description={t("Ringkasan statistik produk, metrik geografis pengunjung (kota, IP, perangkat), dan log aktivitas tim.")}
+        actions={
           <>
-            {/* Metric Summary Cards */}
-            <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
-              <StatCard icon={Box} label="Products" value={metrics.products} copy="Total produk terdaftar" />
-              <StatCard
-                icon={LayoutDashboard}
-                label="Published"
-                value={metrics.publishedProducts}
-                copy="Tampil di publik"
-                tone="ink"
-              />
-              <StatCard icon={FileText} label="Drafts" value={metrics.draftProducts} copy="Draf privat" />
-              <StatCard
-                icon={ShieldCheck}
-                label="Administrators"
-                value={metrics.administrators}
-                copy="Akun admin aktif"
-                tone="green"
-              />
-              <StatCard
-                icon={UsersRound}
-                label="Pending accounts"
-                value={metrics.pendingUsers}
-                copy="Menunggu persetujuan"
-                tone={metrics.pendingUsers > 0 ? "alert" : "paper"}
-              />
-              <StatCard
-                icon={Inbox}
-                label="Pesan masuk"
-                value={inboxCounts.data?.unread ?? 0}
-                copy="Belum dibaca"
-                tone={(inboxCounts.data?.unread ?? 0) > 0 ? "alert" : "paper"}
-              />
-            </section>
+            <a href="/" target="_blank" rel="noreferrer" className={btn("ghost")}>
+              <ExternalLink aria-hidden="true" /> {t("Lihat Website Publik")}
+            </a>
+            <Link href={CMS_ROUTES.content} className={btn()}>
+              <FileText aria-hidden="true" /> {t("Edit Site Copy")}
+            </Link>
+            <Link href={CMS_ROUTES.productNew} className={btn("primary")}>
+              <Plus aria-hidden="true" /> {t("Add product")}
+            </Link>
+          </>
+        }
+      />
 
-            {/* Visitor & Traffic Analytics Section */}
-            {visitorAnalytics && (
-              <section className="mt-9">
-                <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-                  <div>
-                    <span className="text-[10px] font-extrabold uppercase tracking-[.14em] text-[var(--accent)]">
-                      {t("Lalu Lintas & Demografi Pengunjung")}
-                    </span>
-                    <h2 className="admin-display text-3xl text-[var(--ink)]">{t("Visitor & Geo-Analytics")}</h2>
-                  </div>
-                  <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-300 bg-emerald-50 px-3 py-1 text-[11px] font-bold text-emerald-800">
-                    <span className="h-2 w-2 animate-pulse rounded-full bg-emerald-500" /> {t("Live GeoIP Tracking")}
-                  </span>
+      {dashboardQuery.isLoading || !metrics ? (
+        <Card>
+          <LoadingState>{t("Memuat ringkasan dashboard…")}</LoadingState>
+        </Card>
+      ) : (
+        <>
+          {/* Metric summary */}
+          <div className="hq-stats three">
+            <StatCard icon={Box} hue="blue" label={t("Products")} value={metrics.products} sub={t("Total produk terdaftar")} href={CMS_ROUTES.products} onNavigate={navigate} />
+            <StatCard icon={LayoutDashboard} hue="green" label={t("Published")} value={metrics.publishedProducts} sub={t("Tampil di publik")} href={CMS_ROUTES.products} onNavigate={navigate} />
+            <StatCard icon={FileText} hue="neutral" label={t("Drafts")} value={metrics.draftProducts} sub={t("Draf privat")} href={CMS_ROUTES.products} onNavigate={navigate} />
+            <StatCard icon={ShieldCheck} hue="teal" label={t("Administrators")} value={metrics.administrators} sub={t("Akun admin aktif")} href={CMS_ROUTES.users} onNavigate={navigate} />
+            <StatCard icon={UsersRound} hue="violet" label={t("Pending accounts")} value={metrics.pendingUsers} sub={t("Menunggu persetujuan")} tone={metrics.pendingUsers > 0 ? "warning" : undefined} href={CMS_ROUTES.users} onNavigate={navigate} />
+            <StatCard icon={Inbox} hue="amber" label={t("Pesan masuk")} value={inboxCounts.data?.unread ?? 0} sub={t("Belum dibaca")} tone={(inboxCounts.data?.unread ?? 0) > 0 ? "warning" : undefined} href={CMS_ROUTES.inbox} onNavigate={navigate} />
+          </div>
+
+          {/* Visitor & traffic analytics */}
+          {visitorAnalytics && (
+            <section className="mt-6" aria-labelledby="visitor-analytics">
+              <div className="hq-section-head">
+                <div className="min-w-0">
+                  <h2 id="visitor-analytics">{t("Visitor & Geo-Analytics")}</h2>
+                  <p>{t("Lalu Lintas & Demografi Pengunjung")}</p>
                 </div>
-
-                {/* 4 Visitor Cards */}
-                <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-                  <article className="admin-card border border-[var(--line)] bg-white p-4 shadow-sm">
-                    <div className="flex items-center justify-between text-[var(--ink-soft)]">
-                      <span className="text-[10px] font-extrabold uppercase tracking-[.12em]">{t("Total Kunjungan")}</span>
-                      <Eye size={16} className="text-[var(--ink)]" />
-                    </div>
-                    <strong className="mt-3 block admin-display text-3xl text-[var(--ink)]">
-                      {visitorAnalytics.totalViews.toLocaleString(intlLocale)}
-                    </strong>
-                    <p className="mt-1 text-[11px] text-[var(--ink-soft)]">{t("Akumulasi tayangan seluruh halaman")}</p>
-                  </article>
-
-                  <article className="admin-card border border-[var(--line)] bg-white p-4 shadow-sm">
-                    <div className="flex items-center justify-between text-[var(--ink-soft)]">
-                      <span className="text-[10px] font-extrabold uppercase tracking-[.12em]">{t("Pengunjung Unik")}</span>
-                      <UserCheck size={16} className="text-[var(--green-50)]" />
-                    </div>
-                    <strong className="mt-3 block admin-display text-3xl text-[var(--ink)]">
-                      {visitorAnalytics.uniqueVisitors.toLocaleString(intlLocale)}
-                    </strong>
-                    <p className="mt-1 text-[11px] text-[var(--ink-soft)]">{t("Total individual unique visitors")}</p>
-                  </article>
-
-                  <article className="admin-card border border-[var(--line)] bg-white p-4 shadow-sm">
-                    <div className="flex items-center justify-between text-[var(--ink-soft)]">
-                      <span className="text-[10px] font-extrabold uppercase tracking-[.12em]">{t("Kunjungan Hari Ini")}</span>
-                      <TrendingUp size={16} className="text-[var(--accent)]" />
-                    </div>
-                    <strong className="mt-3 block admin-display text-3xl text-[var(--accent)]">
-                      {visitorAnalytics.todayViews.toLocaleString(intlLocale)}
-                    </strong>
-                    <p className="mt-1 text-[11px] text-[var(--ink-soft)]">
-                      {t("{count} pengunjung unik hari ini", { count: visitorAnalytics.todayUniques })}
-                    </p>
-                  </article>
-
-                  <article className="admin-card border border-[var(--line)] bg-[var(--ink)] p-4 text-[var(--lightest)] shadow-sm">
-                    <div className="flex items-center justify-between text-white/70">
-                      <span className="text-[10px] font-extrabold uppercase tracking-[.12em]">{t("Pelacakan Lokasi")}</span>
-                      <Globe2 size={16} className="text-[var(--purple-30)]" />
-                    </div>
-                    <strong className="mt-3 block admin-display text-3xl text-[var(--lightest)]">{t("Aktif")}</strong>
-                    <p className="mt-1 text-[11px] text-white/70">{t("Kota, Negara, IP & Device")}</p>
-                  </article>
-                </div>
-
-                {visitorAnalytics.totalViews === 0 ? (
-                  <div className="mt-6 border border-dashed border-[var(--line-strong)] bg-white p-10 text-center shadow-sm">
-                    <Globe2 className="mx-auto h-8 w-8 text-[var(--accent)]" />
-                    <h3 className="mt-4 admin-display text-2xl text-[var(--ink)]">{t("Belum Ada Kunjungan Publik")}</h3>
-                    <p className="mx-auto mt-2 max-w-md text-xs leading-5 text-[var(--ink-soft)]">
-                      {t("Sistem pelacakan real-time sudah aktif. Data statistik, grafik tren 7 hari, asal kota pengunjung, dan log IP akan otomatis tercatat dan muncul saat pengunjung membuka website publik.")}
-                    </p>
-                    <div className="mt-5">
-                      <a
-                        href="/"
-                        target="_blank"
-                        rel="noreferrer"
-                        className="inline-flex items-center gap-2 bg-[var(--ink)] px-4 py-2.5 text-xs font-extrabold text-[var(--lightest)] hover:opacity-90"
-                      >
-                        {t("Buka Website Publik untuk Uji Tracking")} <ExternalLink size={13} />
-                      </a>
-                    </div>
-                  </div>
-                ) : (
-                  <>
-                    {/* Top Cities, Top Pages, Device Breakdown & Trends Grid */}
-                    <div className="mt-4 grid gap-6 lg:grid-cols-3">
-                      {/* Daily Trend Visual Chart */}
-                      <div className="admin-card border border-[var(--line)] bg-white p-5 shadow-sm lg:col-span-2">
-                    <div className="flex items-center justify-between border-b border-[var(--line)] pb-3">
-                      <div>
-                        <h3 className="admin-display text-xl text-[var(--ink)]">{t("Tren Kunjungan 7 Hari Terakhir")}</h3>
-                        <p className="text-[11px] text-[var(--ink-soft)]">{t("Volume page views dan pengunjung unik")}</p>
-                      </div>
-                      <BarChart3 size={18} className="text-[var(--cool-40)]" />
-                    </div>
-
-                    <div className="mt-6 flex h-40 gap-3 pt-4 sm:gap-6">
-                      {visitorAnalytics.dailyTrends.map((trend) => {
-                        const heightPct = Math.max(Math.round((trend.views / maxViews) * 100), 8);
-                        return (
-                          <div key={trend.date} className="group relative flex h-full flex-1 flex-col items-center justify-end gap-2">
-                            <div className="pointer-events-none absolute -top-8 z-10 hidden whitespace-nowrap rounded bg-[var(--ink)] px-2 py-1 text-[10px] font-bold text-white shadow group-hover:block">
-                              {t("{views} views ({uniques} unik)", { views: trend.views, uniques: trend.uniques })}
-                            </div>
-                            <div className="flex w-full max-w-[42px] flex-1 items-end rounded-t bg-[var(--cool-5)] p-0.5">
-                              <div
-                                style={{ height: `${heightPct}%` }}
-                                className="w-full rounded-t bg-[var(--accent)] transition-all duration-300 group-hover:bg-[var(--purple-60)]"
-                              />
-                            </div>
-                            <span className="text-[10px] font-bold text-[var(--ink-soft)]">
-                              {locale === "en"
-                                ? new Intl.DateTimeFormat(intlLocale, { day: "numeric", month: "short", timeZone: "UTC" }).format(new Date(trend.date))
-                                : trend.label}
-                            </span>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </div>
-
-                  {/* Device & Browser Distribution */}
-                  <div className="admin-card border border-[var(--line)] bg-white p-5 shadow-sm">
-                    <div className="flex items-center justify-between border-b border-[var(--line)] pb-3">
-                      <div>
-                        <h3 className="admin-display text-xl text-[var(--ink)]">{t("Perangkat & Browser")}</h3>
-                        <p className="text-[11px] text-[var(--ink-soft)]">{t("Distribusi teknologi pengunjung")}</p>
-                      </div>
-                      <Monitor size={18} className="text-[var(--cool-40)]" />
-                    </div>
-
-                    <div className="mt-4 space-y-3">
-                      <div>
-                        <div className="flex justify-between text-xs font-bold text-[var(--ink)]">
-                          <span className="flex items-center gap-1.5"><Laptop size={13} /> {t("Desktop")}</span>
-                          <span>{Math.round(((visitorAnalytics.deviceBreakdown.desktop || 0) / totalDeviceViews) * 100)}%</span>
-                        </div>
-                        <div className="mt-1 h-2 w-full bg-[var(--cool-5)]">
-                          <div
-                            style={{ width: `${Math.round(((visitorAnalytics.deviceBreakdown.desktop || 0) / totalDeviceViews) * 100)}%` }}
-                            className="h-full bg-[var(--ink)]"
-                          />
-                        </div>
-                      </div>
-
-                      <div>
-                        <div className="flex justify-between text-xs font-bold text-[var(--ink)]">
-                          <span className="flex items-center gap-1.5"><Smartphone size={13} /> {t("Mobile Phone")}</span>
-                          <span>{Math.round(((visitorAnalytics.deviceBreakdown.mobile || 0) / totalDeviceViews) * 100)}%</span>
-                        </div>
-                        <div className="mt-1 h-2 w-full bg-[var(--cool-5)]">
-                          <div
-                            style={{ width: `${Math.round(((visitorAnalytics.deviceBreakdown.mobile || 0) / totalDeviceViews) * 100)}%` }}
-                            className="h-full bg-[var(--accent)]"
-                          />
-                        </div>
-                      </div>
-
-                      <div>
-                        <div className="flex justify-between text-xs font-bold text-[var(--ink)]">
-                          <span className="flex items-center gap-1.5"><Tablet size={13} /> {t("Tablet")}</span>
-                          <span>{Math.round(((visitorAnalytics.deviceBreakdown.tablet || 0) / totalDeviceViews) * 100)}%</span>
-                        </div>
-                        <div className="mt-1 h-2 w-full bg-[var(--cool-5)]">
-                          <div
-                            style={{ width: `${Math.round(((visitorAnalytics.deviceBreakdown.tablet || 0) / totalDeviceViews) * 100)}%` }}
-                            className="h-full bg-[var(--green-50)]"
-                          />
-                        </div>
-                      </div>
-
-                      <div className="pt-2 border-t border-[var(--line)]">
-                        <span className="text-[10px] font-extrabold uppercase tracking-[.1em] text-[var(--cool-40)]">{t("Browser Teratas")}</span>
-                        <div className="mt-2 flex flex-wrap gap-1.5">
-                          {visitorAnalytics.browserBreakdown.map((b) => (
-                            <span key={b.browser} className="inline-block bg-[var(--paper)] px-2 py-1 text-[10px] font-bold text-[var(--ink)]">
-                              {b.browser}: {b.views}
-                            </span>
-                          ))}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Cities & Top Pages 2-Column Grid */}
-                <div className="mt-6 grid gap-6 lg:grid-cols-2">
-                  {/* Top Cities in Indonesia & Global */}
-                  <div className="admin-card border border-[var(--line)] bg-white p-5 shadow-sm">
-                    <div className="flex items-center justify-between border-b border-[var(--line)] pb-3">
-                      <div>
-                        <h3 className="admin-display text-xl text-[var(--ink)]">{t("Lokasi Kota Pengunjung")}</h3>
-                        <p className="text-[11px] text-[var(--ink-soft)]">{t("Asal geografis kota & wilayah terbanyak")}</p>
-                      </div>
-                      <MapPin size={18} className="text-[var(--accent)]" />
-                    </div>
-
-                    <div className="mt-3 divide-y divide-[var(--line)]">
-                      {visitorAnalytics.topCities.length === 0 ? (
-                        <p className="py-6 text-center text-xs text-[var(--cool-40)]">{t("Belum ada data lokasi tercatat.")}</p>
-                      ) : (
-                        visitorAnalytics.topCities.map((c, idx) => (
-                          <div key={`${c.city}-${idx}`} className="flex items-center justify-between py-2.5 text-xs">
-                            <div className="flex items-center gap-2 overflow-hidden pr-2">
-                              <span className="grid h-5 w-5 shrink-0 place-items-center rounded-full bg-[var(--paper)] text-[10px] font-extrabold text-[var(--ink)]">
-                                {idx + 1}
-                              </span>
-                              <span className="font-bold text-[var(--ink)]">{c.city}</span>
-                              <span className="text-[10px] text-[var(--cool-40)]">({c.country})</span>
-                            </div>
-                            <div className="flex items-center gap-3">
-                              <span className="font-mono text-xs font-bold text-[var(--ink)]">{t("{views} views", { views: c.views })}</span>
-                              <span className="rounded bg-[var(--purple-5)] px-1.5 py-0.5 text-[10px] font-extrabold text-[var(--accent)]">
-                                {c.percentage}%
-                              </span>
-                            </div>
-                          </div>
-                        ))
-                      )}
-                    </div>
-                  </div>
-
-                  {/* Top Visited Pages */}
-                  <div className="admin-card border border-[var(--line)] bg-white p-5 shadow-sm">
-                    <div className="flex items-center justify-between border-b border-[var(--line)] pb-3">
-                      <div>
-                        <h3 className="admin-display text-xl text-[var(--ink)]">{t("Halaman Paling Populer")}</h3>
-                        <p className="text-[11px] text-[var(--ink-soft)]">{t("Top 5 URL yang paling sering diakses publik")}</p>
-                      </div>
-                      <Eye size={18} className="text-[var(--cool-40)]" />
-                    </div>
-
-                    <div className="mt-3 divide-y divide-[var(--line)]">
-                      {visitorAnalytics.topPages.length === 0 ? (
-                        <p className="py-6 text-center text-xs text-[var(--cool-40)]">{t("Belum ada kunjungan tercatat.")}</p>
-                      ) : (
-                        visitorAnalytics.topPages.map((page, idx) => (
-                          <div key={page.path} className="flex items-center justify-between py-2.5 text-xs">
-                            <div className="flex items-center gap-2 overflow-hidden pr-2">
-                              <span className="grid h-5 w-5 shrink-0 place-items-center rounded-full bg-[var(--cool-5)] text-[10px] font-extrabold text-[var(--ink)]">
-                                {idx + 1}
-                              </span>
-                              <span className="truncate font-bold text-[var(--ink)]">{page.path}</span>
-                            </div>
-                            <div className="shrink-0 text-right">
-                              <span className="font-extrabold text-[var(--accent)]">{page.views}</span>{" "}
-                              <span className="text-[10px] text-[var(--cool-40)]">{t("views")}</span>
-                            </div>
-                          </div>
-                        ))
-                      )}
-                    </div>
-                  </div>
-                </div>
-
-                {/* Live Visitor Feed (Detailed Table with IP, City, Device, Time) */}
-                <div className="mt-6 overflow-hidden admin-card border border-[var(--line)] bg-white shadow-sm">
-                  <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[var(--line)] px-5 py-4">
-                    <div>
-                      <h3 className="admin-display text-2xl text-[var(--ink)]">{t("Live Visitor Log (Detail Pengunjung)")}</h3>
-                      <p className="mt-0.5 text-xs text-[var(--ink-soft)]">
-                        {t("Catatan riwayat kunjungan real-time dengan informasi IP Address, Kota, dan Perangkat.")}
-                      </p>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <span className="text-[11px] font-semibold text-[var(--cool-40)]">{t("Tampilkan:")}</span>
-                      <select
-                        value={visitorFeedPageSize}
-                        onChange={(e) => {
-                          setVisitorFeedPageSize(Number(e.target.value));
-                          setVisitorFeedPage(1);
-                        }}
-                        className="border border-[var(--line-strong)] bg-[var(--card)] px-2 py-1 text-xs font-bold text-[var(--ink)] outline-none"
-                      >
-                        <option value={5}>{t("{count} / hal", { count: 5 })}</option>
-                        <option value={10}>{t("{count} / hal", { count: 10 })}</option>
-                        <option value={20}>{t("{count} / hal", { count: 20 })}</option>
-                      </select>
-                    </div>
-                  </div>
-
-                  <div className="overflow-x-auto">
-                    <table className="w-full text-left text-xs">
-                      <thead className="border-b border-[var(--line)] bg-[var(--warm-2)] text-[10px] font-extrabold uppercase tracking-[.12em] text-[var(--ink-soft)]">
-                        <tr>
-                          <th className="py-3 pl-5 pr-3">{t("Waktu")}</th>
-                          <th className="px-3 py-3">{t("IP Address")}</th>
-                          <th className="px-3 py-3">{t("Lokasi (Kota, Negara)")}</th>
-                          <th className="px-3 py-3">{t("Halaman Dikunjungi")}</th>
-                          <th className="px-3 py-3">{t("Perangkat & Browser")}</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-[var(--line)]">
-                        {paginatedVisitors.length === 0 ? (
-                          <tr>
-                            <td colSpan={5} className="py-8 text-center text-[var(--cool-40)]">
-                              {t("Belum ada data kunjungan.")}
-                            </td>
-                          </tr>
-                        ) : (
-                          paginatedVisitors.map((v) => {
-                            const DevIcon = deviceIcon(v.deviceType);
-                            return (
-                              <tr key={v.id} className="transition-colors hover:bg-[var(--warm-2)]">
-                                <td className="whitespace-nowrap py-3 pl-5 pr-3 font-semibold text-[var(--ink-soft)]">
-                                  {formatDetailedTime(v.createdAt, intlLocale)}
-                                </td>
-                                <td className="whitespace-nowrap px-3 py-3 font-mono text-[11px] font-bold text-[var(--ink)]">
-                                  {v.ip || "127.0.0.1"}
-                                </td>
-                                <td className="whitespace-nowrap px-3 py-3 font-bold text-[var(--ink)]">
-                                  <span className="flex items-center gap-1.5">
-                                    <MapPin size={12} className="text-[var(--accent)]" />
-                                    {v.city || "Jakarta"}, <span className="font-normal text-[var(--ink-soft)]">{v.country || "Indonesia"}</span>
-                                  </span>
-                                </td>
-                                <td className="px-3 py-3 font-medium text-[var(--ink)]">
-                                  <span className="rounded bg-[var(--cool-5)] px-2 py-0.5 font-mono text-[11px]">
-                                    {v.path}
-                                  </span>
-                                </td>
-                                <td className="whitespace-nowrap px-3 py-3 text-[var(--ink-soft)]">
-                                  <span className="flex items-center gap-1.5">
-                                    <DevIcon size={13} className="text-[var(--cool-40)]" />
-                                    {v.deviceType || "Desktop"} • {v.browser || "Chrome"} ({v.os || "macOS"})
-                                  </span>
-                                </td>
-                              </tr>
-                            );
-                          })
-                        )}
-                      </tbody>
-                    </table>
-                  </div>
-
-                  {/* Visitor Feed Pagination Bar */}
-                  <div className="flex flex-wrap items-center justify-between gap-3 border-t border-[var(--line)] bg-[var(--warm-2)] px-5 py-3 text-xs text-[var(--ink-soft)]">
-                    <div>
-                      {withNodes(t("Menampilkan {from}–{to} dari {total} kunjungan log"), {
-                        from: (
-                          <b className="text-[var(--ink)]">
-                            {totalVisitorItems === 0 ? 0 : (visitorFeedPage - 1) * visitorFeedPageSize + 1}
-                          </b>
-                        ),
-                        to: (
-                          <b className="text-[var(--ink)]">
-                            {Math.min(visitorFeedPage * visitorFeedPageSize, totalVisitorItems)}
-                          </b>
-                        ),
-                        total: <b className="text-[var(--ink)]">{totalVisitorItems}</b>,
-                      })}
-                    </div>
-
-                    <div className="flex items-center gap-2">
-                      <button
-                        type="button"
-                        disabled={visitorFeedPage <= 1}
-                        onClick={() => setVisitorFeedPage((p) => Math.max(p - 1, 1))}
-                        className="inline-flex h-7 items-center gap-1 border border-[var(--line-strong)] bg-white px-2.5 text-xs font-bold text-[var(--ink)] transition-colors hover:bg-[var(--warm-2)] disabled:cursor-not-allowed disabled:opacity-40"
-                      >
-                        <ChevronLeft size={13} /> {t("Prev")}
-                      </button>
-
-                      <span className="px-2 text-xs font-semibold text-[var(--ink-soft)]">
-                        {withNodes(t("Hal {page} / {pages}"), {
-                          page: <b className="text-[var(--ink)]">{visitorFeedPage}</b>,
-                          pages: totalVisitorPages,
-                        })}
-                      </span>
-
-                      <button
-                        type="button"
-                        disabled={visitorFeedPage >= totalVisitorPages}
-                        onClick={() => setVisitorFeedPage((p) => Math.min(p + 1, totalVisitorPages))}
-                        className="inline-flex h-7 items-center gap-1 border border-[var(--line-strong)] bg-white px-2.5 text-xs font-bold text-[var(--ink)] transition-colors hover:bg-[var(--warm-2)] disabled:cursor-not-allowed disabled:opacity-40"
-                      >
-                        {t("Next")} <ChevronRight size={13} />
-                      </button>
-                    </div>
-                  </div>
-                </div>
-                  </>
-                )}
-              </section>
-            )}
-
-            {/* Main Content: Recent Activity (with Pagination) + Quick Guide */}
-            <section className="mt-9 grid gap-6 lg:grid-cols-[1.45fr_.55fr]">
-              <div className="overflow-hidden admin-card border border-[var(--line)] bg-white shadow-sm">
-                <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[var(--line)] px-5 py-4">
-                  <div>
-                    <h2 className="admin-display text-3xl text-[var(--ink)]">{t("Recent activity")}</h2>
-                    <p className="mt-0.5 text-xs text-[var(--ink-soft)]">{t("Log riwayat perubahan produk, konten, dan akun.")}</p>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <span className="text-[11px] font-semibold text-[var(--cool-40)]">{t("Tampilkan:")}</span>
-                    <select
-                      value={activityPageSize}
-                      onChange={(e) => {
-                        setActivityPageSize(Number(e.target.value));
-                        setActivityPage(1);
-                      }}
-                      className="border border-[var(--line-strong)] bg-[var(--card)] px-2 py-1 text-xs font-bold text-[var(--ink)] outline-none"
-                    >
-                      <option value={5}>{t("{count} / hal", { count: 5 })}</option>
-                      <option value={10}>{t("{count} / hal", { count: 10 })}</option>
-                      <option value={20}>{t("{count} / hal", { count: 20 })}</option>
-                    </select>
-                  </div>
-                </div>
-
-                {recentActivity.length === 0 ? (
-                  <div className="p-12 text-center">
-                    <Clock3 className="mx-auto h-7 w-7 text-[var(--accent)]" />
-                    <h3 className="mt-4 admin-display text-2xl text-[var(--ink)]">{t("Belum ada aktivitas.")}</h3>
-                    <p className="mx-auto mt-2 max-w-sm text-xs leading-5 text-[var(--ink-soft)]">
-                      {t("Perubahan produk, konten situs, dan role pengguna akan otomatis tercatat di sini.")}
-                    </p>
-                  </div>
-                ) : (
-                  <div>
-                    <div className="divide-y divide-[var(--line)]">
-                      {paginatedActivity.map((activity) => {
-                        const Icon = activityIcon(activity.eventType);
-                        return (
-                          <article
-                            className="flex items-center gap-4 px-5 py-3.5 transition-colors hover:bg-[var(--warm-2)]"
-                            key={activity.id}
-                          >
-                            <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-[var(--paper)] text-[var(--ink)]">
-                              <Icon size={15} />
-                            </span>
-                            <div className="min-w-0 flex-1">
-                              <p className="truncate text-xs font-bold text-[var(--ink)]">{activity.summary}</p>
-                              <p className="mt-0.5 text-[11px] text-[var(--ink-soft)]">
-                                {activity.actorName || activity.actorOpenId}{" "}
-                                <span className="mx-1 text-[var(--cool-20)]">•</span> {formatWhen(activity.createdAt, intlLocale)}
-                              </p>
-                            </div>
-                            <span className="hidden text-[9px] font-extrabold uppercase tracking-[.1em] text-[var(--cool-40)] sm:block">
-                              {activity.eventType.replace(".", " · ")}
-                            </span>
-                          </article>
-                        );
-                      })}
-                    </div>
-
-                    {/* Pagination Bar */}
-                    <div className="flex flex-wrap items-center justify-between gap-3 border-t border-[var(--line)] bg-[var(--warm-2)] px-5 py-3 text-xs text-[var(--ink-soft)]">
-                      <div>
-                        {withNodes(t("Menampilkan {from}–{to} dari {total} aktivitas"), {
-                          from: (
-                            <b className="text-[var(--ink)]">
-                              {totalActivityItems === 0 ? 0 : (activityPage - 1) * activityPageSize + 1}
-                            </b>
-                          ),
-                          to: (
-                            <b className="text-[var(--ink)]">
-                              {Math.min(activityPage * activityPageSize, totalActivityItems)}
-                            </b>
-                          ),
-                          total: <b className="text-[var(--ink)]">{totalActivityItems}</b>,
-                        })}
-                      </div>
-
-                      <div className="flex items-center gap-2">
-                        <button
-                          type="button"
-                          disabled={activityPage <= 1}
-                          onClick={() => setActivityPage((p) => Math.max(p - 1, 1))}
-                          className="inline-flex h-7 items-center gap-1 border border-[var(--line-strong)] bg-white px-2.5 text-xs font-bold text-[var(--ink)] transition-colors hover:bg-[var(--warm-2)] disabled:cursor-not-allowed disabled:opacity-40"
-                        >
-                          <ChevronLeft size={13} /> {t("Prev")}
-                        </button>
-
-                        <span className="px-2 text-xs font-semibold text-[var(--ink-soft)]">
-                          {withNodes(t("Hal {page} / {pages}"), {
-                            page: <b className="text-[var(--ink)]">{activityPage}</b>,
-                            pages: totalActivityPages,
-                          })}
-                        </span>
-
-                        <button
-                          type="button"
-                          disabled={activityPage >= totalActivityPages}
-                          onClick={() => setActivityPage((p) => Math.min(p + 1, totalActivityPages))}
-                          className="inline-flex h-7 items-center gap-1 border border-[var(--line-strong)] bg-white px-2.5 text-xs font-bold text-[var(--ink)] transition-colors hover:bg-[var(--warm-2)] disabled:cursor-not-allowed disabled:opacity-40"
-                        >
-                          {t("Next")} <ChevronRight size={13} />
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                )}
+                <Badge tone="success" dot pulse>
+                  {t("Live GeoIP Tracking")}
+                </Badge>
               </div>
 
-              {/* Sidebar: Akses Cepat CMS */}
-              <aside className="space-y-4">
-                <div className="admin-card border border-[var(--line)] bg-white p-5 shadow-sm">
-                  <span className="text-[10px] font-extrabold uppercase tracking-[.14em] text-[var(--cool-40)]">
-                    {t("Akses Cepat CMS")}
-                  </span>
-                  <div className="mt-3 divide-y divide-[var(--line)] text-xs">
-                    <Link
-                      href={CMS_ROUTES.products}
-                      className="flex items-center justify-between py-2.5 font-bold text-[var(--ink)] transition-colors hover:text-[var(--accent)]"
-                    >
-                      <span>{t("Katalog Produk Registry")}</span>
-                      <ArrowUpRight size={13} className="text-[var(--cool-40)]" />
-                    </Link>
-                    <Link
-                      href={CMS_ROUTES.inbox}
-                      className="flex items-center justify-between py-2.5 font-bold text-[var(--ink)] transition-colors hover:text-[var(--accent)]"
-                    >
-                      <span>{t("Kotak Masuk Kontak")}</span>
-                      <ArrowUpRight size={13} className="text-[var(--cool-40)]" />
-                    </Link>
-                    <Link
-                      href={CMS_ROUTES.content}
-                      className="flex items-center justify-between py-2.5 font-bold text-[var(--ink)] transition-colors hover:text-[var(--accent)]"
-                    >
-                      <span>{t("Site Content & Copy Editor")}</span>
-                      <ArrowUpRight size={13} className="text-[var(--cool-40)]" />
-                    </Link>
-                    <Link
-                      href={CMS_ROUTES.users}
-                      className="flex items-center justify-between py-2.5 font-bold text-[var(--ink)] transition-colors hover:text-[var(--accent)]"
-                    >
-                      <span>{t("Manajemen User & Peran")}</span>
-                      <ArrowUpRight size={13} className="text-[var(--cool-40)]" />
-                    </Link>
-                  </div>
-                </div>
-              </aside>
-            </section>
-          </>
-        )}
-      </div>
-    </>
-  );
-}
+              <div className="hq-stats">
+                <StatCard icon={Eye} hue="blue" label={t("Total Kunjungan")} value={visitorAnalytics.totalViews.toLocaleString(intlLocale)} sub={t("Akumulasi tayangan seluruh halaman")} />
+                <StatCard icon={UserCheck} hue="green" label={t("Pengunjung Unik")} value={visitorAnalytics.uniqueVisitors.toLocaleString(intlLocale)} sub={t("Total individual unique visitors")} />
+                <StatCard icon={TrendingUp} hue="teal" label={t("Kunjungan Hari Ini")} value={visitorAnalytics.todayViews.toLocaleString(intlLocale)} sub={t("{count} pengunjung unik hari ini", { count: visitorAnalytics.todayUniques })} />
+                <StatCard icon={Globe2} hue="violet" label={t("Pelacakan Lokasi")} value={t("Aktif")} sub={t("Kota, Negara, IP & Device")} />
+              </div>
 
-function StatCard({
-  icon: Icon,
-  label,
-  value,
-  copy,
-  tone = "paper",
-}: {
-  icon: typeof Box;
-  label: AdminPhrase;
-  value: number;
-  copy: AdminPhrase;
-  tone?: "paper" | "ink" | "green" | "alert";
-}) {
-  const t = useT();
-  const styles =
-    tone === "ink"
-      ? "border-[var(--ink)] bg-[var(--ink)] text-[var(--lightest)]"
-      : tone === "green"
-        ? "border-[var(--green-50)] bg-[var(--green-5)] text-[var(--green-60)]"
-        : tone === "alert"
-          ? "border-[var(--yellow-30)] bg-[var(--yellow-10)] text-[var(--ink)]"
-          : "border-[var(--line)] bg-white text-[var(--ink)]";
-  return (
-    <article className={`admin-card border p-4 ${styles}`}>
-      <div className="flex items-start justify-between">
-        <span className="text-[10px] font-extrabold uppercase tracking-[.13em] opacity-70">{t(label)}</span>
-        <Icon size={17} />
-      </div>
-      <strong className="mt-4 block admin-display text-4xl leading-none">{value}</strong>
-      <p className="mt-2 text-xs leading-5 opacity-70">{t(copy)}</p>
-    </article>
+              {visitorAnalytics.totalViews === 0 ? (
+                <Card>
+                  <EmptyState
+                    icon={Globe2}
+                    title={t("Belum Ada Kunjungan Publik")}
+                    action={
+                      <a href="/" target="_blank" rel="noreferrer" className={btn("primary", "sm")}>
+                        {t("Buka Website Publik untuk Uji Tracking")} <ExternalLink aria-hidden="true" />
+                      </a>
+                    }
+                  >
+                    {t("Sistem pelacakan real-time sudah aktif. Data statistik, grafik tren 7 hari, asal kota pengunjung, dan log IP akan otomatis tercatat dan muncul saat pengunjung membuka website publik.")}
+                  </EmptyState>
+                </Card>
+              ) : (
+                <>
+                  <div className="grid gap-4 lg:grid-cols-3">
+                    {/* Daily trend */}
+                    <Card className="lg:col-span-2">
+                      <CardHead icon={BarChart3} hue="blue" title={t("Tren Kunjungan 7 Hari Terakhir")} sub={t("Volume page views dan pengunjung unik")} as="h3" />
+                      <div className="hq-card-body">
+                        <div className="hq-bars">
+                          {visitorAnalytics.dailyTrends.map((trend) => {
+                            const heightPct = Math.max(Math.round((trend.views / maxViews) * 100), 8);
+                            const day =
+                              locale === "en"
+                                ? new Intl.DateTimeFormat(intlLocale, { day: "numeric", month: "short", timeZone: "UTC" }).format(new Date(trend.date))
+                                : trend.label;
+                            return (
+                              <div key={trend.date} className="hq-bar" tabIndex={0} aria-label={`${day}: ${t("{views} views ({uniques} unik)", { views: trend.views, uniques: trend.uniques })}`}>
+                                <span className="hq-bar-tip">{t("{views} views ({uniques} unik)", { views: trend.views, uniques: trend.uniques })}</span>
+                                <span className="hq-bar-track">
+                                  <i style={{ height: `${heightPct}%` }} />
+                                </span>
+                                <span className="hq-bar-label">{day}</span>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    </Card>
+
+                    {/* Devices & browsers */}
+                    <Card>
+                      <CardHead icon={Monitor} hue="teal" title={t("Perangkat & Browser")} sub={t("Distribusi teknologi pengunjung")} as="h3" />
+                      <div className="hq-card-body flex flex-col gap-3">
+                        {([
+                          [Laptop, t("Desktop"), visitorAnalytics.deviceBreakdown.desktop, "accent"],
+                          [Smartphone, t("Mobile Phone"), visitorAnalytics.deviceBreakdown.mobile, "teal"],
+                          [Tablet, t("Tablet"), visitorAnalytics.deviceBreakdown.tablet, "violet"],
+                        ] as const).map(([DeviceIcon, label, views, color]) => {
+                          const pct = Math.round(((views || 0) / totalDeviceViews) * 100);
+                          return (
+                            <div key={label}>
+                              <div className="flex items-center justify-between text-[12.5px]">
+                                <span className="flex items-center gap-1.5 font-medium text-[var(--hq-text-primary)]">
+                                  <DeviceIcon size={14} aria-hidden="true" /> {label}
+                                </span>
+                                <span className="hq-tnum hq-muted">{pct}%</span>
+                              </div>
+                              <div className={`hq-progress ${color} mt-1.5`}>
+                                <i style={{ width: `${pct}%` }} />
+                              </div>
+                            </div>
+                          );
+                        })}
+                        <div className="border-t border-[var(--hq-border-subtle)] pt-3">
+                          <span className="hq-overline">{t("Browser Teratas")}</span>
+                          <div className="mt-2 flex flex-wrap gap-1.5">
+                            {visitorAnalytics.browserBreakdown.map((b) => (
+                              <Badge key={b.browser} tone="outline">
+                                {b.browser}: <span className="hq-tnum">{b.views}</span>
+                              </Badge>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                    </Card>
+                  </div>
+
+                  <div className="mt-4 grid gap-4 lg:grid-cols-2">
+                    {/* Top cities */}
+                    <Card>
+                      <CardHead icon={MapPin} hue="violet" title={t("Lokasi Kota Pengunjung")} sub={t("Asal geografis kota & wilayah terbanyak")} as="h3" />
+                      {visitorAnalytics.topCities.length === 0 ? (
+                        <EmptyState icon={MapPin} title={t("Belum ada data lokasi tercatat.")} />
+                      ) : (
+                        visitorAnalytics.topCities.map((c, idx) => (
+                          <div key={`${c.city}-${idx}`} className="hq-list-row">
+                            <span className="hq-rank">{idx + 1}</span>
+                            <span className="hq-t min-w-0 truncate">{c.city}</span>
+                            <span className="hq-m">{c.country}</span>
+                            <span className="ml-auto flex items-center gap-2">
+                              <span className="hq-tnum hq-muted text-[12px]">{t("{views} views", { views: c.views })}</span>
+                              <Badge tone="accent">{c.percentage}%</Badge>
+                            </span>
+                          </div>
+                        ))
+                      )}
+                    </Card>
+
+                    {/* Top pages */}
+                    <Card>
+                      <CardHead icon={Eye} hue="amber" title={t("Halaman Paling Populer")} sub={t("Top 5 URL yang paling sering diakses publik")} as="h3" />
+                      {visitorAnalytics.topPages.length === 0 ? (
+                        <EmptyState icon={Eye} title={t("Belum ada kunjungan tercatat.")} />
+                      ) : (
+                        visitorAnalytics.topPages.map((page, idx) => (
+                          <div key={page.path} className="hq-list-row">
+                            <span className="hq-rank">{idx + 1}</span>
+                            <span className="hq-mono min-w-0 truncate text-[var(--hq-text-primary)]">{page.path}</span>
+                            <span className="ml-auto shrink-0 text-[12px]">
+                              <b className="hq-tnum font-medium text-[var(--hq-text-primary)]">{page.views}</b> <span className="hq-faint">{t("views")}</span>
+                            </span>
+                          </div>
+                        ))
+                      )}
+                    </Card>
+                  </div>
+
+                  {/* Live visitor log */}
+                  <Card className="mt-4">
+                    <CardHead icon={Activity} hue="blue" title={t("Live Visitor Log (Detail Pengunjung)")} sub={t("Catatan riwayat kunjungan real-time dengan informasi IP Address, Kota, dan Perangkat.")} as="h3" />
+                    <div className="hq-table-wrap">
+                      <table className="hq-table">
+                        <thead>
+                          <tr>
+                            <th>{t("Waktu")}</th>
+                            <th>{t("IP Address")}</th>
+                            <th>{t("Lokasi (Kota, Negara)")}</th>
+                            <th>{t("Halaman Dikunjungi")}</th>
+                            <th>{t("Perangkat & Browser")}</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {paginatedVisitors.length === 0 ? (
+                            <tr>
+                              <td colSpan={5} className="py-8 text-center">
+                                {t("Belum ada data kunjungan.")}
+                              </td>
+                            </tr>
+                          ) : (
+                            paginatedVisitors.map((v) => {
+                              const DevIcon = deviceIcon(v.deviceType);
+                              return (
+                                <tr key={v.id}>
+                                  <td className="whitespace-nowrap hq-tnum">{formatDetailedTime(v.createdAt, intlLocale)}</td>
+                                  <td className="whitespace-nowrap hq-mono strong">{v.ip || "127.0.0.1"}</td>
+                                  <td className="whitespace-nowrap">
+                                    <span className="flex items-center gap-1.5">
+                                      <MapPin size={12} className="text-[var(--hq-text-tertiary)]" aria-hidden="true" />
+                                      <span className="font-medium text-[var(--hq-text-primary)]">{v.city || "Jakarta"},</span> {v.country || "Indonesia"}
+                                    </span>
+                                  </td>
+                                  <td>
+                                    <code className="hq-code">{v.path}</code>
+                                  </td>
+                                  <td className="whitespace-nowrap">
+                                    <span className="flex items-center gap-1.5">
+                                      <DevIcon size={13} className="text-[var(--hq-text-tertiary)]" aria-hidden="true" />
+                                      {v.deviceType || "Desktop"} · {v.browser || "Chrome"} ({v.os || "macOS"})
+                                    </span>
+                                  </td>
+                                </tr>
+                              );
+                            })
+                          )}
+                        </tbody>
+                      </table>
+                    </div>
+                    <Pagination
+                      summary={withNodes(t("Menampilkan {from}–{to} dari {total} kunjungan log"), {
+                        from: <b>{totalVisitorItems === 0 ? 0 : (visitorFeedPage - 1) * visitorFeedPageSize + 1}</b>,
+                        to: <b>{Math.min(visitorFeedPage * visitorFeedPageSize, totalVisitorItems)}</b>,
+                        total: <b>{totalVisitorItems}</b>,
+                      })}
+                      page={visitorFeedPage}
+                      pages={totalVisitorPages}
+                      pageSize={visitorFeedPageSize}
+                      onPage={setVisitorFeedPage}
+                      onPageSize={(size) => {
+                        setVisitorFeedPageSize(size);
+                        setVisitorFeedPage(1);
+                      }}
+                    />
+                  </Card>
+                </>
+              )}
+            </section>
+          )}
+
+          {/* Recent activity + quick access */}
+          <section className="mt-6 grid gap-4 lg:grid-cols-[minmax(0,1fr)_320px]">
+            <Card>
+              <CardHead icon={Clock3} hue="violet" title={t("Recent activity")} sub={t("Log riwayat perubahan produk, konten, dan akun.")} />
+              {recentActivity.length === 0 ? (
+                <EmptyState icon={Clock3} title={t("Belum ada aktivitas.")}>
+                  {t("Perubahan produk, konten situs, dan role pengguna akan otomatis tercatat di sini.")}
+                </EmptyState>
+              ) : (
+                <>
+                  {paginatedActivity.map((activity) => {
+                    const Icon = activityIcon(activity.eventType);
+                    return (
+                      <article className="hq-list-row" key={activity.id}>
+                        <span className="hq-fi" aria-hidden="true">
+                          <Icon size={12} />
+                        </span>
+                        <div className="min-w-0 flex-1">
+                          <div className="hq-t truncate">{activity.summary}</div>
+                          <div className="hq-m">
+                            {activity.actorName || activity.actorOpenId} · {formatWhen(activity.createdAt, intlLocale)}
+                          </div>
+                        </div>
+                        <code className="hq-code hidden sm:inline-flex">{activity.eventType}</code>
+                      </article>
+                    );
+                  })}
+                  <Pagination
+                    summary={withNodes(t("Menampilkan {from}–{to} dari {total} aktivitas"), {
+                      from: <b>{totalActivityItems === 0 ? 0 : (activityPage - 1) * activityPageSize + 1}</b>,
+                      to: <b>{Math.min(activityPage * activityPageSize, totalActivityItems)}</b>,
+                      total: <b>{totalActivityItems}</b>,
+                    })}
+                    page={activityPage}
+                    pages={totalActivityPages}
+                    pageSize={activityPageSize}
+                    onPage={setActivityPage}
+                    onPageSize={(size) => {
+                      setActivityPageSize(size);
+                      setActivityPage(1);
+                    }}
+                  />
+                </>
+              )}
+            </Card>
+
+            <Card as="div" className="self-start">
+              <CardHead icon={LayoutDashboard} hue="teal" title={t("Akses Cepat CMS")} />
+              {([
+                [CMS_ROUTES.products, t("Katalog Produk Registry"), Box],
+                [CMS_ROUTES.inbox, t("Kotak Masuk Kontak"), Inbox],
+                [CMS_ROUTES.content, t("Site Content & Copy Editor"), FileText],
+                [CMS_ROUTES.users, t("Manajemen User & Peran"), UsersRound],
+              ] as const).map(([href, label, Icon]) => (
+                <Link key={href} href={href} className="hq-list-row">
+                  <Icon size={15} className="text-[var(--hq-text-tertiary)]" aria-hidden="true" />
+                  <span className="hq-t flex-1">{label}</span>
+                  <ArrowUpRight size={14} className="text-[var(--hq-text-tertiary)]" aria-hidden="true" />
+                </Link>
+              ))}
+            </Card>
+          </section>
+        </>
+      )}
+    </>
   );
 }
