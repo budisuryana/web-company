@@ -1,7 +1,7 @@
 /** CMS: bilingual (EN/ID) site copy with code defaults, live on save, plus the company logo, phone and social links. */
-import { ChangeEvent, useMemo, useState, type ReactNode } from "react";
+import { ChangeEvent, useMemo, useState } from "react";
 import type { inferRouterOutputs } from "@trpc/server";
-import { FileText, Globe, Loader2, RotateCcw, Save, Search, Trash2, Undo2, UploadCloud } from "lucide-react";
+import { Building2, Check, FileText, Globe, Loader2, OctagonAlert, RotateCcw, Save, Search, Trash2, Undo2, UploadCloud } from "lucide-react";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { BrandMark } from "@/components/SiteShell";
@@ -10,6 +10,7 @@ import { toast } from "sonner";
 import { CONTENT_SECTIONS, fieldLabel, validateContent, type ContentSection } from "@shared/i18n/editable";
 import { useAdminLocale, useT, type Translate } from "@/admin/i18n";
 import type { AdminPhrase } from "@/admin/phrases";
+import { Badge, Button, Card, CardHead, EmptyState, ErrorState, LoadingState, PageHead, btn } from "@/studio/ui";
 import type { AppRouter } from "../../../server/routers";
 
 type RouterOutputs = inferRouterOutputs<AppRouter>;
@@ -99,8 +100,6 @@ async function processLogoImage(file: File): Promise<{ dataUrl: string; fileName
     reader.readAsDataURL(file);
   });
 }
-
-const tabTriggerClass = "admin-tab flex-none px-2 pb-3 pt-2 text-xs font-extrabold uppercase tracking-[.14em] text-[var(--cool-40)] transition-colors hover:text-[var(--ink)] data-[state=active]:text-[var(--ink)]";
 
 type Locale = "en" | "id";
 type Entry = RouterOutputs["content"]["admin"]["list"][number];
@@ -305,197 +304,173 @@ export default function AdminContent() {
 
   return (
     <>
-      <div className="min-w-0 max-w-full space-y-6">
-        <div className="flex flex-wrap items-end justify-between gap-4 border-b border-[var(--line)] pb-6">
-          <div>
-            <span className="font-mono text-xs font-bold uppercase tracking-widest text-[var(--accent)]">{t("Konten Situs · EN / ID")}</span>
-            <h1 className="mt-1 admin-display text-4xl text-[var(--ink)]">{t("Profil & Konten Situs")}</h1>
-            <p className="mt-1 text-xs text-[var(--ink-soft)]">
-              {t("Edit teks website dalam bahasa Inggris dan Indonesia. Kolom yang belum diubah memakai teks bawaan.")}
-            </p>
-            <p className="mt-2 inline-flex max-w-2xl items-center gap-2 rounded-md bg-[var(--blue-5)] px-3 py-2 text-xs font-semibold text-[var(--blue-60)]" role="note">
-              <Globe size={14} aria-hidden="true" /> {t("Perubahan yang disimpan langsung tampil di website publik.")}
-            </p>
-          </div>
-          <div className="relative">
-            <Search size={14} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[var(--cool-40)]" />
+      <PageHead
+        title={t("Profil & Konten")}
+        description={t("Edit teks website dalam bahasa Inggris dan Indonesia. Kolom yang belum diubah memakai teks bawaan.")}
+        actions={
+          <span className="hq-input-icon w-full sm:w-64">
+            <Search aria-hidden="true" />
             <label htmlFor="content-search" className="sr-only">{t("Cari konten")}</label>
-            <input
-              id="content-search"
-              type="search"
-              value={search}
-              onChange={(event) => setSearch(event.target.value)}
-              placeholder={t("Cari teks atau key…")}
-              className="h-9 w-60 border border-[var(--line-strong)] bg-[var(--card)] pl-9 pr-3 text-xs text-[var(--ink)] outline-none transition-colors focus:border-[var(--accent)]"
-            />
-          </div>
-        </div>
+            <input id="content-search" type="search" value={search} onChange={(event) => setSearch(event.target.value)} placeholder={t("Cari teks atau key…")} className="hq-input" />
+          </span>
+        }
+      />
+      <div className="hq-banner info mb-4" role="note">
+        <Globe aria-hidden="true" /> {t("Perubahan yang disimpan langsung tampil di website publik.")}
+      </div>
 
-        <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as TabId)} className="mt-6 w-full min-w-0">
-          <TabsList className="mb-6 h-auto w-full max-w-full justify-start gap-8 overflow-x-auto rounded-none border-b-2 border-[var(--ink)] bg-transparent p-0">
-            {TABS.map((tab) => (
-              <TabsTrigger key={tab.id} value={tab.id} className={tabTriggerClass}>
-                {t(tab.title)}
-                <span className="ml-1.5 rounded-full bg-[var(--cool-10)] px-1.5 py-0.5 text-[10px] text-[var(--ink)]">{tabCounts[tab.id] ?? 0}</span>
-              </TabsTrigger>
-            ))}
-          </TabsList>
+      <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as TabId)} className="w-full min-w-0 gap-0">
+        <TabsList className="hq-tabs">
+          {TABS.map((tab) => (
+            <TabsTrigger key={tab.id} value={tab.id} className="hq-tab">
+              {t(tab.title)}
+              <span className="hq-n">{tabCounts[tab.id] ?? 0}</span>
+            </TabsTrigger>
+          ))}
+        </TabsList>
 
-          {entriesQuery.isLoading ? (
-            <div className="flex items-center gap-2 py-16 text-sm text-[var(--ink-soft)]">
-              <Loader2 className="h-4 w-4 animate-spin" /> {t("Memuat konten…")}
-            </div>
-          ) : entriesQuery.isError ? (
-            <div className="admin-card border border-red-200 bg-red-50 p-6 text-sm text-red-800" role="alert">
-              {t("Konten tidak dapat dimuat: {error}", { error: entriesQuery.error.message })}
-            </div>
-          ) : (
-            <form
-              onSubmit={(event) => {
-                event.preventDefault();
-                void handleSave();
-              }}
-              className="w-full overflow-hidden admin-card border border-[var(--line)] bg-white shadow-sm"
-            >
-              <div className="border-b border-[var(--line)] px-6 py-5">
-                <h2 className="admin-display text-3xl text-[var(--ink)]">{t(currentTab.title)}</h2>
-                <p className="mt-1 text-xs text-[var(--ink-soft)]">{t(currentTab.desc)}</p>
-              </div>
+        {entriesQuery.isLoading ? (
+          <Card>
+            <LoadingState>{t("Memuat konten…")}</LoadingState>
+          </Card>
+        ) : entriesQuery.isError ? (
+          <Card>
+            <ErrorState onRetry={() => void entriesQuery.refetch()}>{t("Konten tidak dapat dimuat: {error}", { error: entriesQuery.error.message })}</ErrorState>
+          </Card>
+        ) : (
+          <form
+            onSubmit={(event) => {
+              event.preventDefault();
+              void handleSave();
+            }}
+            className="min-w-0"
+          >
+            <Card>
+              <CardHead icon={currentTab.id === "company" ? Building2 : FileText} hue={currentTab.id === "company" ? "violet" : "blue"} title={t(currentTab.title)} sub={t(currentTab.desc)} />
 
               {activeTab === "company" && (
-                <div className="border-b border-[var(--line)] bg-[var(--warm-2)] p-6">
-                  <div className="flex flex-wrap items-center justify-between gap-6">
-                    <div className="flex items-center gap-5">
-                      <div className="grid h-16 w-24 place-items-center rounded admin-card border border-[var(--line)] bg-white p-2 shadow-inner">
-                        {logoUrl ? (
-                          <img src={logoUrl} alt={t("Pratinjau logo")} className="max-h-12 max-w-full object-contain" />
-                        ) : (
-                          <div className="flex flex-col items-center gap-1 text-[var(--ink)]">
-                            <BrandMark className="h-7 w-7" />
-                            <span className="text-[9px] font-bold text-[var(--cool-40)]">{t("Logo bawaan")}</span>
-                          </div>
-                        )}
-                      </div>
-                      <div>
-                        <h3 className="text-sm font-extrabold text-[var(--ink)]">{t("Logo gambar (opsional)")}</h3>
-                        <p className="mt-0.5 text-xs text-[var(--ink-soft)]">
-                          {t("Jika kosong, website memakai logo NUSAKARYA bawaan. Unggahan menggantikan logo di header dan data mesin pencari.")}
-                        </p>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      {logoUrl && (
-                        <button
-                          type="button"
-                          disabled={isUploadingLogo}
-                          onClick={() => void handleLogoRemove()}
-                          className="inline-flex items-center gap-1.5 border border-red-200 bg-white px-3 py-2 text-xs font-bold text-red-700 hover:bg-red-50 disabled:opacity-50"
-                        >
-                          <Trash2 size={13} /> {t("Hapus logo")}
-                        </button>
-                      )}
-                      <label className="inline-flex cursor-pointer items-center gap-2 bg-[var(--ink)] px-4 py-2 text-xs font-extrabold text-[var(--lightest)]">
-                        {isUploadingLogo ? <Loader2 size={14} className="animate-spin" /> : <UploadCloud size={14} />}
-                        {logoUrl ? t("Ganti logo") : t("Unggah logo")}
-                        <input type="file" accept="image/*" className="hidden" disabled={isUploadingLogo} onChange={(event) => void handleLogoUpload(event)} />
-                      </label>
-                    </div>
+                <div className="hq-logo-block">
+                  <div className="hq-logo-preview">
+                    {logoUrl ? (
+                      <img src={logoUrl} alt={t("Pratinjau logo")} />
+                    ) : (
+                      <span className="flex flex-col items-center gap-1">
+                        <BrandMark className="h-7 w-7" />
+                        <span className="hq-faint text-[10.5px]">{t("Logo bawaan")}</span>
+                      </span>
+                    )}
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <div className="font-medium text-[var(--hq-text-primary)]">{t("Logo gambar (opsional)")}</div>
+                    <div className="hq-hint mt-0.5">{t("Jika kosong, website memakai logo NUSAKARYA bawaan. Unggahan menggantikan logo di header dan data mesin pencari.")}</div>
+                  </div>
+                  <div className="flex flex-wrap items-center gap-2">
+                    {logoUrl && (
+                      <Button variant="danger" size="sm" icon={Trash2} disabled={isUploadingLogo} onClick={() => void handleLogoRemove()}>
+                        {t("Hapus logo")}
+                      </Button>
+                    )}
+                    <label className={btn("primary", "sm")}>
+                      {isUploadingLogo ? <Loader2 className="hq-spin" aria-hidden="true" /> : <UploadCloud aria-hidden="true" />}
+                      {logoUrl ? t("Ganti logo") : t("Unggah logo")}
+                      <input type="file" accept="image/*" disabled={isUploadingLogo} onChange={(event) => void handleLogoUpload(event)} />
+                    </label>
                   </div>
                 </div>
               )}
 
-              <div className="divide-y divide-[var(--line)]">
-                {groups.map((group) => (
-                  <section key={group.id} aria-label={group.title || t(currentTab.title)} className="space-y-4 p-6">
-                    {group.title && <h3 className="text-xs font-extrabold uppercase tracking-[.14em] text-[var(--accent)]">{group.title}</h3>}
-                    {group.items.length === 0 && (
-                      <p className="py-8 text-center text-sm text-[var(--ink-soft)]">
-                        <FileText className="mx-auto mb-2 h-6 w-6 text-[var(--cool-40)]" /> {t("Tidak ada konten yang cocok dengan pencarian.")}
-                      </p>
-                    )}
-                    {group.items.map((entry) => (
-                      <FieldRow
-                        key={entry.key}
-                        entry={entry}
-                        drafts={drafts}
-                        problems={problems}
-                        resetting={resetting}
-                        t={t}
-                        adminLocale={adminLocale}
-                        onChange={(locale, value) => setDrafts((current) => ({ ...current, [draftKey(entry.key, locale)]: value }))}
-                        onReset={(locale) => void handleReset(entry, locale)}
-                      />
-                    ))}
-                  </section>
-                ))}
+              {groups.map((group) => (
+                <section key={group.id} aria-label={group.title || t(currentTab.title)} className="hq-content-group">
+                  {group.title && <h3 className="hq-overline">{group.title}</h3>}
+                  {group.items.length === 0 && <EmptyState icon={FileText} title={t("Tidak ada konten yang cocok dengan pencarian.")} />}
+                  {group.items.map((entry) => (
+                    <FieldRow
+                      key={entry.key}
+                      entry={entry}
+                      drafts={drafts}
+                      problems={problems}
+                      resetting={resetting}
+                      t={t}
+                      adminLocale={adminLocale}
+                      onChange={(locale, value) => setDrafts((current) => ({ ...current, [draftKey(entry.key, locale)]: value }))}
+                      onReset={(locale) => void handleReset(entry, locale)}
+                    />
+                  ))}
+                </section>
+              ))}
 
-                {activeTab === "company" && (
-                  <section aria-label={t("Kontak & media sosial")} className="space-y-4 p-6">
-                    <h3 className="text-xs font-extrabold uppercase tracking-[.14em] text-[var(--accent)]">{t("Kontak & media sosial")}</h3>
-                    <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                      {PROFILE_KEYS.map((item) => {
-                        const value = profileDrafts[item.key] ?? legacyValues[item.key] ?? "";
-                        const problem = problems[item.key];
-                        return (
-                          <div key={item.key} className="rounded border border-[var(--line)] bg-[var(--warm-2)] p-4">
-                            <label htmlFor={`profile-${item.key}`} className="text-xs font-extrabold text-[var(--ink)]">{t(item.label)}</label>
-                            <input
-                              id={`profile-${item.key}`}
-                              type={item.key === "company.phone" ? "tel" : "url"}
-                              value={value}
-                              placeholder={item.placeholder}
-                              onChange={(event) => setProfileDrafts((current) => ({ ...current, [item.key]: event.target.value }))}
-                              aria-invalid={Boolean(problem)}
-                              className={`mt-2 h-10 w-full border bg-[var(--card)] px-3 text-sm text-[var(--ink)] outline-none focus:border-[var(--accent)] ${problem ? "border-red-500" : "border-[var(--line-strong)]"}`}
-                            />
-                            <p className={`mt-1.5 text-[11px] ${problem ? "text-red-700" : "text-[var(--ink-soft)]"}`}>{problem ?? t(item.hint)}</p>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </section>
+              {activeTab === "company" && (
+                <section aria-label={t("Kontak & media sosial")} className="hq-content-group">
+                  <h3 className="hq-overline">{t("Kontak & media sosial")}</h3>
+                  <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+                    {PROFILE_KEYS.map((item) => {
+                      const value = profileDrafts[item.key] ?? legacyValues[item.key] ?? "";
+                      const problem = problems[item.key];
+                      return (
+                        <div key={item.key} className="hq-copy-row hq-field">
+                          <label htmlFor={`profile-${item.key}`} className="hq-copy-title">{t(item.label)}</label>
+                          <input
+                            id={`profile-${item.key}`}
+                            type={item.key === "company.phone" ? "tel" : "url"}
+                            value={value}
+                            placeholder={item.placeholder}
+                            onChange={(event) => setProfileDrafts((current) => ({ ...current, [item.key]: event.target.value }))}
+                            aria-invalid={Boolean(problem)}
+                            className="hq-input"
+                          />
+                          {problem ? (
+                            <span className="hq-error">
+                              <OctagonAlert aria-hidden="true" />
+                              {problem}
+                            </span>
+                          ) : (
+                            <span className="hq-hint">{t(item.hint)}</span>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </section>
+              )}
+            </Card>
+
+            <div className="hq-savebar">
+              <div className="hq-status-wrap" aria-live="polite">
+                {pendingCount > 0 ? (
+                  <span className={`hq-status ${hasProblems ? "warn" : "dirty"}`}>
+                    <span className="hq-dot" aria-hidden="true" />
+                    {t("{count} perubahan belum disimpan", { count: pendingCount })}
+                    {hasProblems && t(" · ada kolom yang perlu diperbaiki")}
+                  </span>
+                ) : (
+                  <span className="hq-status">
+                    <Check size={14} aria-hidden="true" /> {t("Semua perubahan sudah tersimpan.")}
+                  </span>
                 )}
               </div>
-
-              <div className="sticky bottom-0 flex flex-wrap items-center justify-between gap-3 border-t border-[var(--line)] bg-[var(--paper)] px-6 py-4">
-                <div className="text-xs font-semibold text-[var(--ink-soft)]" aria-live="polite">
-                  {pendingCount > 0 ? (
-                    <span className={hasProblems ? "text-red-700" : "text-[var(--purple-60)]"}>
-                      {t("{count} perubahan belum disimpan", { count: pendingCount })}
-                      {hasProblems && t(" · ada kolom yang perlu diperbaiki")}
-                    </span>
-                  ) : (
-                    <span>{t("Semua perubahan sudah tersimpan.")}</span>
-                  )}
-                </div>
-                <div className="flex items-center gap-3">
-                  {pendingCount > 0 && (
-                    <button
-                      type="button"
-                      disabled={isSaving}
-                      onClick={() => {
-                        setDrafts({});
-                        setProfileDrafts({});
-                      }}
-                      className="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-bold text-[var(--ink-soft)] hover:text-[var(--ink)] disabled:opacity-50"
-                    >
-                      <Undo2 size={13} /> {t("Batalkan")}
-                    </button>
-                  )}
-                  <button
-                    type="submit"
-                    disabled={isSaving || pendingCount === 0 || hasProblems}
-                    className="inline-flex items-center gap-2 bg-[var(--ink)] px-5 py-2.5 text-xs font-extrabold text-[var(--lightest)] transition-all disabled:cursor-not-allowed disabled:opacity-40"
+              <div className="ml-auto flex items-center gap-2">
+                {pendingCount > 0 && (
+                  <Button
+                    variant="ghost"
+                    icon={Undo2}
+                    disabled={isSaving}
+                    onClick={() => {
+                      setDrafts({});
+                      setProfileDrafts({});
+                    }}
                   >
-                    {isSaving ? <Loader2 size={14} className="animate-spin" /> : <Save size={14} />}
-                    {isSaving ? t("Menyimpan…") : t("Simpan & tayangkan")}
-                  </button>
-                </div>
+                    {t("Batalkan")}
+                  </Button>
+                )}
+                <button type="submit" disabled={isSaving || pendingCount === 0 || hasProblems} className={btn("primary")}>
+                  {isSaving ? <Loader2 className="hq-spin" aria-hidden="true" /> : <Save aria-hidden="true" />}
+                  {isSaving ? t("Menyimpan…") : t("Simpan & tayangkan")}
+                </button>
               </div>
-            </form>
-          )}
-        </Tabs>
-      </div>
+            </div>
+          </form>
+        )}
+      </Tabs>
     </>
   );
 }
@@ -521,12 +496,12 @@ function FieldRow({
 }) {
   const locales = entry.shared ? LOCALES.slice(0, 1) : LOCALES;
   return (
-    <div className="rounded border border-[var(--line)] bg-[var(--warm-2)] p-4">
-      <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-        <span className="text-xs font-extrabold text-[var(--ink)]">{fieldLabel(entry.label, adminLocale)}</span>
-        <code className="text-[10px] text-[var(--cool-40)]">{entry.key}</code>
+    <div className="hq-copy-row">
+      <div className="hq-copy-head">
+        <span className="hq-copy-title">{fieldLabel(entry.label, adminLocale)}</span>
+        <code className="hq-copy-key">{entry.key}</code>
       </div>
-      <div className={`grid grid-cols-1 gap-4 ${entry.shared ? "" : "lg:grid-cols-2"}`}>
+      <div className={`grid grid-cols-1 gap-3 ${entry.shared ? "" : "lg:grid-cols-2"}`}>
         {locales.map(({ id: locale, label }) => {
           const slotKey = draftKey(entry.key, locale);
           const slot = entry.values[entry.shared ? "en" : locale];
@@ -535,49 +510,46 @@ function FieldRow({
           const dirty = value !== stored;
           const problem = problems[slotKey];
           const fieldId = `field-${locale}-${entry.key}`;
-          const inputClass = `w-full border bg-[var(--card)] text-sm text-[var(--ink)] outline-none transition-colors focus:border-[var(--accent)] ${
-            problem ? "border-red-500" : dirty ? "border-[var(--purple-30)]" : "border-[var(--line-strong)]"
-          }`;
+          const inputClass = `hq-input ${dirty || slot.override !== null ? "changed" : ""}`;
           return (
-            <div key={locale} className="flex flex-col gap-1.5">
+            <div key={locale} className="hq-field">
               <div className="flex flex-wrap items-center justify-between gap-2">
-                <label htmlFor={fieldId} className="text-[11px] font-bold uppercase tracking-wide text-[var(--ink-soft)]">
+                <label htmlFor={fieldId} className="hq-label inline-flex items-center gap-1.5">
+                  <span className="hq-lang-tag">{entry.shared ? "EN · ID" : locale.toUpperCase()}</span>
                   {entry.shared ? t("EN & ID (sama untuk kedua bahasa)") : t(label)}
                 </label>
                 <span className="flex items-center gap-1.5">
                   {dirty ? (
-                    <Badge tone="purple">{t("Belum disimpan")}</Badge>
+                    <Badge tone="warning" dot>{t("Belum disimpan")}</Badge>
                   ) : slot.override !== null ? (
-                    <Badge tone="blue">{t("Diubah")}</Badge>
+                    <Badge tone="accent">{t("Diubah")}</Badge>
                   ) : (
-                    <Badge tone="neutral">{t("Bawaan")}</Badge>
+                    <Badge>{t("Bawaan")}</Badge>
                   )}
                   {slot.override !== null && (
-                    <button
-                      type="button"
-                      onClick={() => onReset(locale)}
-                      disabled={resetting === slotKey}
-                      className="inline-flex items-center gap-1 text-[11px] font-bold text-[var(--ink-soft)] underline-offset-2 hover:text-[var(--ink)] hover:underline disabled:opacity-50"
-                    >
-                      {resetting === slotKey ? <Loader2 size={11} className="animate-spin" /> : <RotateCcw size={11} />} {t("Reset to Default")}
-                    </button>
+                    <Button variant="ghost" size="sm" icon={resetting === slotKey ? Loader2 : RotateCcw} disabled={resetting === slotKey} onClick={() => onReset(locale)}>
+                      {t("Reset to Default")}
+                    </Button>
                   )}
                 </span>
               </div>
               {entry.multiline ? (
-                <textarea id={fieldId} rows={3} value={value} onChange={(event) => onChange(locale, event.target.value)} aria-invalid={Boolean(problem)} aria-describedby={`${fieldId}-help`} className={`${inputClass} resize-y p-2.5 leading-6`} />
+                <textarea id={fieldId} rows={3} value={value} onChange={(event) => onChange(locale, event.target.value)} aria-invalid={Boolean(problem)} aria-describedby={`${fieldId}-help`} className={inputClass} />
               ) : (
-                <input id={fieldId} type={entry.format === "email" ? "email" : "text"} value={value} onChange={(event) => onChange(locale, event.target.value)} aria-invalid={Boolean(problem)} aria-describedby={`${fieldId}-help`} className={`${inputClass} h-10 px-3`} />
+                <input id={fieldId} type={entry.format === "email" ? "email" : "text"} value={value} onChange={(event) => onChange(locale, event.target.value)} aria-invalid={Boolean(problem)} aria-describedby={`${fieldId}-help`} className={inputClass} />
               )}
-              <div id={`${fieldId}-help`} className="flex flex-wrap items-start justify-between gap-2 text-[11px]">
+              <div id={`${fieldId}-help`} className="flex flex-wrap items-start justify-between gap-2 text-[12px] leading-4">
                 {problem ? (
-                  <span className="text-red-700">{problem}</span>
+                  <span className="hq-error">
+                    <OctagonAlert aria-hidden="true" />
+                    {problem}
+                  </span>
                 ) : slot.override !== null || dirty ? (
-                  <span className="text-[var(--ink-soft)]">{t("Bawaan: {text}", { text: slot.default })}</span>
+                  <span className="hq-hint min-w-0 flex-1">{t("Bawaan: {text}", { text: slot.default })}</span>
                 ) : (
-                  <span className="text-[var(--ink-soft)]">{t("Kosongkan kolom untuk kembali ke teks bawaan.")}</span>
+                  <span className="hq-hint">{t("Kosongkan kolom untuk kembali ke teks bawaan.")}</span>
                 )}
-                <span className={value.trim().length > entry.max ? "font-bold text-red-700" : "text-[var(--cool-40)]"}>
+                <span className={`hq-tnum ${value.trim().length > entry.max ? "font-semibold text-[var(--hq-danger)]" : "hq-faint"}`}>
                   {value.trim().length}/{entry.max}
                 </span>
               </div>
@@ -587,13 +559,4 @@ function FieldRow({
       </div>
     </div>
   );
-}
-
-function Badge({ tone, children }: { tone: "purple" | "blue" | "neutral"; children: ReactNode }) {
-  const tones = {
-    purple: "bg-[var(--purple-5)] text-[var(--purple-60)]",
-    blue: "bg-[var(--blue-5)] text-[var(--blue-60)]",
-    neutral: "bg-[var(--cool-10)] text-[var(--ink-soft)]",
-  };
-  return <span className={`rounded px-1.5 py-0.5 text-[9px] font-extrabold uppercase tracking-wide ${tones[tone]}`}>{children}</span>;
 }

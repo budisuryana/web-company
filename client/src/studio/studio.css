@@ -638,3 +638,12 @@ html[data-studio] .hq-card-head > .min-w-0 { flex: 1 1 0; }
   html[data-studio] .hq-users td { border: 0; padding: 3px 14px; text-align: left; }
   html[data-studio] .hq-users td.num { text-align: left; padding-top: 8px; }
 }
+
+/* ---------- site content ---------- */
+html[data-studio] .hq-content-group { display: flex; flex-direction: column; gap: 10px; padding: 14px; border-top: 1px solid var(--hq-border-subtle); }
+html[data-studio] .hq-card-head + .hq-content-group { border-top: 0; }
+html[data-studio] .hq-content-group h3.hq-overline { margin: 2px 0 0; font-weight: 500; letter-spacing: 0.06em; font-size: 11px; line-height: 16px; }
+html[data-studio] .hq-logo-block { display: flex; flex-wrap: wrap; align-items: center; gap: 14px; padding: 14px; border-bottom: 1px solid var(--hq-border-subtle); background: var(--hq-bg-subtle); }
+html[data-studio] .hq-logo-preview { width: 96px; height: 64px; flex: none; display: grid; place-items: center; padding: 8px; border: 1px solid var(--hq-border-subtle); border-radius: var(--hq-radius-lg); background: var(--hq-bg-surface); color: var(--hq-text-primary); }
+html[data-studio] .hq-logo-preview img { max-height: 48px; max-width: 100%; object-fit: contain; }
+html[data-studio] .hq-status { display: inline-flex; align-items: center; gap: 6px; }
