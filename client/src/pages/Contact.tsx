@@ -1,6 +1,6 @@
 /** Contact page: enquiries are saved to the CMS inbox rather than handed off to a mailto: draft. */
 import { useState, type FormEvent } from "react";
-import { AlertCircle, ArrowUpRight, Check, Clock, Loader2, Mail, MapPin } from "lucide-react";
+import { AlertCircle, ArrowUpRight, Check, Loader2, Mail, MapPin } from "lucide-react";
 import { Link, useSearch } from "wouter";
 import SiteShell from "@/components/SiteShell";
 import { useDocumentTitle, useMessages } from "@/i18n";
@@ -59,12 +59,7 @@ export default function Contact() {
               <span>{t.contact.locationLabel}</span>
               <p>
                 <MapPin size={16} aria-hidden="true" /> {t.common.location}
-                <br />
-                {t.contact.locationNote}
               </p>
-            </div>
-            <div className="contact-aside-note">
-              <Clock size={16} aria-hidden="true" /> {t.contact.responseNote}
             </div>
           </aside>
 

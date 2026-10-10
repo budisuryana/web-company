@@ -3,9 +3,11 @@
  * English copy (the products table is single-language) and how each
  * product's primary call to action behaves.
  *
- * Indonesian copy is the CMS record itself. English entries are faithful
- * translations of that record — when the CMS text changes, update these too.
- * A product without an entry here falls back to its CMS text in every locale.
+ * Indonesian copy is the CMS record itself, except where `id` rewords a CMS
+ * field in plainer language for business readers (the production record is
+ * left untouched). English entries are faithful translations of that record —
+ * when the CMS text changes, update these too. A product without an entry
+ * here falls back to its CMS text in every locale.
  */
 import type { Locale } from "../site";
 
@@ -29,11 +31,21 @@ type ProductCopy = {
   workflowSteps: Array<{ title: string; copy: string }>;
 };
 
-type ProductPresentation = { cta: ProductCtaMode; en?: ProductCopy };
+type ProductPresentation = { cta: ProductCtaMode; id?: Partial<ProductCopy>; en?: ProductCopy };
 
 export const PRODUCT_PRESENTATION: Record<string, ProductPresentation> = {
   reconly: {
     cta: "app",
+    id: {
+      capabilities: [
+        "Perbandingan dua file data",
+        "Pemetaan kolom yang fleksibel",
+        "Pencocokan yang mengabaikan huruf kapital dan spasi tepi",
+        "Toleransi angka dan tanggal",
+        "Deteksi data hilang dan duplikat",
+        "Ekspor hasil rekonsiliasi",
+      ],
+    },
     en: {
       category: "Finance",
       shortDescription: "Reconcile two data sources quickly, accurately, and in a reviewable way.",
@@ -51,7 +63,7 @@ export const PRODUCT_PRESENTATION: Record<string, ProductPresentation> = {
       capabilities: [
         "Two-file data comparison",
         "Flexible column mapping",
-        "Exact, case-insensitive, and trimmed matching",
+        "Matching that ignores capitalisation and stray spaces",
         "Numeric and date tolerances",
         "Missing and duplicate record detection",
         "Reconciliation result export",
@@ -109,9 +121,8 @@ export function productCtaMode(slug: string): ProductCtaMode {
   return PRODUCT_PRESENTATION[slug]?.cta ?? "app";
 }
 
-/** Returns the product with its copy in `locale`; Indonesian (and unknown products) use the CMS record as-is. */
+/** Returns the product with its copy in `locale`; unknown products use the CMS record as-is. */
 export function localizeProduct<T extends { slug: string } & ProductCopy>(product: T, locale: Locale): T {
-  if (locale === "id") return product;
-  const en = PRODUCT_PRESENTATION[product.slug]?.en;
-  return en ? { ...product, ...en } : product;
+  const copy = PRODUCT_PRESENTATION[product.slug]?.[locale];
+  return copy ? { ...product, ...copy } : product;
 }

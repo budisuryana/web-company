@@ -24,7 +24,7 @@ const id = {
       "Reconly dan KaryaPeople — aplikasi SaaS untuk tim finance dan HR yang ingin operasional lebih teratur.",
     aboutTitle: "Tentang Kami",
     aboutDescription:
-      "Ruang Karya adalah studio software di Bandung yang membangun dan mengoperasikan aplikasi SaaS untuk operasional bisnis.",
+      "Ruang Karya adalah perusahaan pengembang software bisnis dan produk SaaS di Bandung yang membangun dan mengoperasikan aplikasi untuk operasional bisnis.",
     contactTitle: "Kontak",
     contactDescription:
       "Hubungi Ruang Karya untuk demo produk, pertanyaan seputar Reconly dan KaryaPeople, atau kebutuhan software bisnis.",
@@ -105,7 +105,7 @@ const id = {
       },
       {
         title: "Workflow multi-agent",
-        body: "Untuk pekerjaan besar, beberapa sesi Claude Code dapat mengerjakan bagian berbeda secara paralel — misalnya penulisan kode, review, dan pengujian — lalu hasilnya kami gabungkan dan periksa.",
+        body: "Dalam pengembangan internal, pekerjaan yang lebih besar kami bagi ke beberapa agent Claude Code yang bekerja paralel — misalnya untuk penulisan kode, review, dan pengujian. Hasilnya kami gabungkan dan periksa sebelum dipakai.",
       },
       {
         title: "Persetujuan manusia sebelum rilis",
@@ -152,12 +152,12 @@ const id = {
   },
   about: {
     eyebrow: "Tentang Kami",
-    title: "Studio software yang membangun SaaS untuk operasional bisnis.",
+    title: "Perusahaan pengembang software bisnis dan produk SaaS.",
     lead:
       "Ruang Karya merancang, membangun, dan mengoperasikan aplikasi SaaS untuk pekerjaan yang membutuhkan ketelitian — keuangan, SDM, dan administrasi operasional.",
     storyTitle: "Apa yang kami kerjakan",
     story: [
-      "Ruang Karya adalah studio produk software independen yang berbasis di Bandung, Indonesia. Kami membangun produk sendiri dan mengoperasikannya sebagai layanan SaaS.",
+      "Ruang Karya adalah perusahaan pengembang software bisnis dan produk SaaS yang berbasis di Bandung, Indonesia. Kami membangun produk sendiri dan mengoperasikannya sebagai layanan SaaS.",
       "Saat ini kami mengoperasikan dua produk: Reconly untuk rekonsiliasi data dan KaryaPeople untuk pengelolaan karyawan, kehadiran, cuti, rekrutmen, dan payroll. Kami juga terbuka untuk diskusi kebutuhan software bisnis yang lebih spesifik.",
     ],
     factsTitle: "Profil singkat",
@@ -198,8 +198,6 @@ const id = {
       "Tertarik menggunakan Reconly atau KaryaPeople, ingin menjadwalkan demo, atau membutuhkan software bisnis khusus? Kirim pesan kepada kami.",
     emailLabel: "Email",
     locationLabel: "Lokasi",
-    locationNote: "Bekerja jarak jauh lintas zona waktu.",
-    responseNote: "Kami biasanya membalas dalam satu hingga dua hari kerja.",
     formEyebrow: "Kirim pesan",
     formLead: "Pesan Anda langsung masuk ke tim kami — tidak perlu membuka aplikasi email.",
     demoFormEyebrow: (name: string) => `Permintaan demo ${name}`,
@@ -220,7 +218,7 @@ const id = {
     sending: "Mengirim…",
     errorFallback: "Pesan gagal terkirim. Coba lagi sebentar.",
     sentTitle: "Pesan Anda sudah kami terima.",
-    sentBody: "Terima kasih. Kami akan membalas ke alamat email yang Anda tulis, biasanya dalam satu hingga dua hari kerja.",
+    sentBody: "Terima kasih. Kami akan membalas ke alamat email yang Anda tulis.",
     sendAnother: "Kirim pesan lain",
   },
   notFound: {
@@ -390,7 +388,7 @@ const en: Messages = {
       "Reconly and KaryaPeople — SaaS applications for finance and HR teams who want better-run operations.",
     aboutTitle: "About Us",
     aboutDescription:
-      "Ruang Karya is a software studio in Bandung, Indonesia that builds and operates SaaS applications for business operations.",
+      "Ruang Karya is a business software and SaaS product company in Bandung, Indonesia that builds and operates applications for business operations.",
     contactTitle: "Contact",
     contactDescription:
       "Contact Ruang Karya for a product demo, questions about Reconly and KaryaPeople, or business software needs.",
@@ -471,7 +469,7 @@ const en: Messages = {
       },
       {
         title: "Multi-agent workflows",
-        body: "For larger tasks, several Claude Code sessions can work on different parts in parallel — for example coding, review, and testing — and we then combine and check the results.",
+        body: "In our internal development, larger tasks are split across several Claude Code agents working in parallel — for example on coding, review, and testing. We combine and check the results before they are used.",
       },
       {
         title: "Human approval before release",
@@ -517,12 +515,12 @@ const en: Messages = {
   },
   about: {
     eyebrow: "About Us",
-    title: "A software studio building SaaS for business operations.",
+    title: "A business software and SaaS product company.",
     lead:
       "Ruang Karya designs, builds, and operates SaaS applications for work that demands precision — finance, HR, and operational administration.",
     storyTitle: "What we do",
     story: [
-      "Ruang Karya is an independent software product studio based in Bandung, Indonesia. We build our own products and operate them as SaaS.",
+      "Ruang Karya is a business software and SaaS product company based in Bandung, Indonesia. We build our own products and operate them as SaaS.",
       "We currently operate two products: Reconly for data reconciliation and KaryaPeople for employee records, attendance, leave, recruitment, and payroll. We are also open to discussing more specific business software needs.",
     ],
     factsTitle: "At a glance",
@@ -563,8 +561,6 @@ const en: Messages = {
       "Interested in Reconly or KaryaPeople, want to schedule a demo, or need custom business software? Send us a message.",
     emailLabel: "Email",
     locationLabel: "Location",
-    locationNote: "Working remotely across time zones.",
-    responseNote: "We usually reply within one to two business days.",
     formEyebrow: "Send a message",
     formLead: "Your message goes straight to our team — no email app needed.",
     demoFormEyebrow: (name: string) => `${name} demo request`,
@@ -585,7 +581,7 @@ const en: Messages = {
     sending: "Sending…",
     errorFallback: "Your message could not be sent. Please try again shortly.",
     sentTitle: "We have received your message.",
-    sentBody: "Thank you. We will reply to the email address you provided, usually within one to two business days.",
+    sentBody: "Thank you. We will reply to the email address you provided.",
     sendAnother: "Send another message",
   },
   notFound: {

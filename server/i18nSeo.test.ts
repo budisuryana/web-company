@@ -126,6 +126,11 @@ describe("copy", () => {
       expect(JSON.stringify(MESSAGES[locale].home)).not.toMatch(/terintegrasi dengan Claude API|integrated with the Claude API/i);
     }
   });
+
+  it("drops the unverified response-time and remote-work claims", () => {
+    const text = JSON.stringify(MESSAGES);
+    expect(text).not.toMatch(/hari kerja|business days|zona waktu|time zones/i);
+  });
 });
 
 describe("product presentation", () => {
@@ -143,9 +148,19 @@ describe("product presentation", () => {
     workflowSteps: [{ title: "id", copy: "id" }],
   };
 
-  it("leaves Indonesian as the CMS record and swaps in English copy", () => {
-    expect(localizeProduct(record, "id")).toBe(record);
+  it("keeps the CMS text in Indonesian apart from plain-language rewording, and swaps in English copy", () => {
+    const id = localizeProduct(record, "id");
+    expect(id.heroHeadline).toBe(record.heroHeadline);
+    expect(id.capabilities).toEqual(PRODUCT_PRESENTATION.reconly.id?.capabilities);
     expect(localizeProduct(record, "en").heroHeadline).toBe(PRODUCT_PRESENTATION.reconly.en?.heroHeadline);
+  });
+
+  it("keeps Indonesian and English capability lists the same length", () => {
+    for (const presentation of Object.values(PRODUCT_PRESENTATION)) {
+      if (presentation.id?.capabilities && presentation.en) {
+        expect(presentation.id.capabilities.length).toBe(presentation.en.capabilities.length);
+      }
+    }
   });
 
   it("falls back to the CMS record for products without a translation", () => {
