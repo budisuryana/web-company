@@ -4,12 +4,11 @@ import {
   AlertDialogCancel,
   AlertDialogContent,
   AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { AlertTriangle, ShieldAlert } from "lucide-react";
+import { Loader2, ShieldAlert, ShieldCheck, TriangleAlert } from "lucide-react";
 import { useT } from "@/admin/i18n";
+import { Tile, btn } from "@/studio/ui";
 
 export type ConfirmModalProps = {
   open: boolean;
@@ -23,6 +22,7 @@ export type ConfirmModalProps = {
   isPending?: boolean;
 };
 
+/** Confirmation dialog in the NUSAKARYA HQ modal pattern: tinted icon, title, body, and a footer with the decision. */
 export default function ConfirmModal({
   open,
   onOpenChange,
@@ -35,35 +35,23 @@ export default function ConfirmModal({
   isPending = false,
 }: ConfirmModalProps) {
   const t = useT();
-  const isDanger = variant === "danger";
+  const tile =
+    variant === "danger"
+      ? { icon: TriangleAlert, hue: "red" as const }
+      : variant === "warning"
+        ? { icon: ShieldAlert, hue: "amber" as const }
+        : { icon: ShieldCheck, hue: "blue" as const };
 
   return (
     <AlertDialog open={open} onOpenChange={onOpenChange}>
-      <AlertDialogContent className="admin-card max-w-md border border-[var(--line)] bg-[var(--card)] p-6 shadow-2xl">
-        <AlertDialogHeader className="text-left">
-          <div className="flex items-center gap-3">
-            <span
-              className={`grid h-10 w-10 shrink-0 place-items-center rounded-full ${
-                isDanger ? "bg-red-50 text-[var(--accent)]" : "bg-[var(--paper)] text-[var(--ink)]"
-              }`}
-            >
-              {isDanger ? <AlertTriangle size={20} /> : <ShieldAlert size={20} />}
-            </span>
-            <AlertDialogTitle className="admin-display text-2xl tracking-tight text-[var(--ink)]">
-              {title}
-            </AlertDialogTitle>
-          </div>
-          <AlertDialogDescription className="mt-3 text-sm leading-6 text-[var(--ink-soft)]">
-            {description}
-          </AlertDialogDescription>
-        </AlertDialogHeader>
-
-        <AlertDialogFooter className="mt-6 flex flex-row items-center justify-end gap-3 sm:space-x-0">
-          <AlertDialogCancel
-            disabled={isPending}
-            onClick={() => onOpenChange(false)}
-            className="m-0 h-10 rounded-none border border-[var(--line-strong)] bg-white px-4 text-xs font-extrabold text-[var(--ink)] hover:bg-[var(--warm-2)]"
-          >
+      <AlertDialogContent className="hq-modal">
+        <div className="hq-modal-head">
+          <Tile icon={tile.icon} hue={tile.hue} />
+          <AlertDialogTitle>{title}</AlertDialogTitle>
+        </div>
+        <AlertDialogDescription className="hq-modal-body">{description}</AlertDialogDescription>
+        <div className="hq-modal-foot">
+          <AlertDialogCancel disabled={isPending} onClick={() => onOpenChange(false)} className={btn("default", "md", "m-0")}>
             {cancelLabel ?? t("Batal")}
           </AlertDialogCancel>
           <AlertDialogAction
@@ -72,15 +60,12 @@ export default function ConfirmModal({
               e.preventDefault();
               onConfirm();
             }}
-            className={`m-0 h-10 rounded-none px-5 text-xs font-extrabold text-white transition-colors ${
-              isDanger
-                ? "bg-[var(--accent)] hover:bg-[var(--purple-60)]"
-                : "bg-[var(--ink)] hover:bg-[var(--cool-80)]"
-            }`}
+            className={btn(variant === "danger" ? "danger" : "primary", "md", "m-0")}
           >
+            {isPending && <Loader2 className="hq-spin" aria-hidden="true" />}
             {confirmLabel ?? t("Konfirmasi")}
           </AlertDialogAction>
-        </AlertDialogFooter>
+        </div>
       </AlertDialogContent>
     </AlertDialog>
   );

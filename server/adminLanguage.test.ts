@@ -48,6 +48,8 @@ describe("admin phrase dictionaries", () => {
       ...readdirSync(path.join(root, "pages")).filter((name) => name.startsWith("Admin")).map((name) => path.join(root, "pages", name)),
       path.join(root, "components/DashboardLayout.tsx"),
       path.join(root, "components/ProductTranslations.tsx"),
+      path.join(root, "components/ConfirmModal.tsx"),
+      ...readdirSync(path.join(root, "studio")).filter((name) => name.endsWith(".tsx")).map((name) => path.join(root, "studio", name)),
     ];
     const missing: string[] = [];
     for (const file of files) {
