@@ -693,3 +693,15 @@ em { font-style:normal; color:var(--accent); }
   .footer-bottom { align-items:flex-start; }
   .fact-list>div { grid-template-columns:1fr; gap:2px; }
 }
+
+/* Final polish: keep the phone header to one line; tablets get a 2-up AI grid */
+@media (max-width:520px) {
+  .site-header .brand-tagline { display:none; }
+}
+@media (min-width:601px) and (max-width:900px) {
+  .ai-grid { grid-template-columns:repeat(2,minmax(0,1fr)); }
+}
+/* The mobile menu styles its nav links large; the language switch inside it keeps its pill look */
+@media (max-width:900px) {
+  .mobile-menu .lang-switch a { display:inline-block; padding:5px 8px; border-bottom:0; font-family:var(--mono); font-size:11px; }
+}
