@@ -519,3 +519,41 @@ html[data-studio] .hq-mob-only { display: none; }
   /* Toasts sit above the tab bar. */
   html[data-studio] [data-sonner-toaster][data-y-position="bottom"] { bottom: calc(72px + env(safe-area-inset-bottom)) !important; }
 }
+
+/* ============================================================
+   Sign-in (HQ login): form card left, product panel right; one column on phones.
+   ============================================================ */
+html[data-studio] .hq-login { min-height: 100vh; min-height: 100dvh; display: grid; grid-template-columns: 1fr 1fr; background: var(--hq-bg-canvas); color: var(--hq-text-primary); }
+html[data-studio] .hq-login-l { display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 64px 24px 40px; position: relative; }
+html[data-studio] .hq-login-tools { position: absolute; top: 16px; right: 16px; display: flex; gap: 8px; align-items: center; }
+html[data-studio] .hq-login-card { width: min(380px, 100%); }
+html[data-studio] .hq-login-brand { display: flex; align-items: center; gap: 10px; color: var(--hq-text-primary); text-decoration: none; }
+html[data-studio] .hq-login-brand .hq-brand-mark { width: 32px; height: 32px; border-radius: 8px; background: var(--hq-text-primary); color: var(--hq-bg-surface); }
+html[data-studio] .hq-login-eyebrow { display: inline-flex; align-items: center; gap: 6px; margin-top: 24px; font-size: 11px; line-height: 16px; font-weight: 500; letter-spacing: 0.06em; text-transform: uppercase; color: var(--hq-accent); }
+html[data-studio] .hq-login-eyebrow.denied { color: var(--hq-danger); }
+html[data-studio] .hq-login-eyebrow svg { width: 13px; height: 13px; }
+html[data-studio] .hq-login-card h1 { font-size: 24px; line-height: 30px; letter-spacing: -0.02em; margin: 6px 0 4px; font-weight: 600; }
+html[data-studio] .hq-login-notes { display: grid; gap: 8px; margin-top: 24px; padding-top: 16px; border-top: 1px solid var(--hq-border-subtle); font-size: 12px; line-height: 16px; color: var(--hq-text-tertiary); }
+html[data-studio] .hq-login-notes span { display: flex; gap: 8px; align-items: flex-start; }
+html[data-studio] .hq-login-notes svg { width: 14px; height: 14px; flex: none; margin-top: 1px; color: var(--hq-success); }
+html[data-studio] .hq-login-dev { margin-top: 10px; padding: 10px 12px; border: 1px dashed var(--hq-border-default); border-radius: var(--hq-radius-md); background: var(--hq-bg-subtle); font-size: 12px; line-height: 16px; color: var(--hq-text-secondary); }
+html[data-studio] .hq-login-dev code { font-size: 12px; color: var(--hq-text-primary); }
+html[data-studio] .hq-login-r { border-left: 1px solid var(--hq-border-subtle); background: var(--hq-bg-surface); position: relative; overflow: hidden; display: flex; flex-direction: column; justify-content: flex-end; padding: 40px; }
+html[data-studio] .hq-login-grid {
+  position: absolute; inset: 0;
+  background-image: linear-gradient(var(--hq-border-subtle) 1px, transparent 1px), linear-gradient(90deg, var(--hq-border-subtle) 1px, transparent 1px);
+  background-size: 32px 32px;
+  mask-image: radial-gradient(ellipse at 60% 40%, #000 0%, transparent 70%); -webkit-mask-image: radial-gradient(ellipse at 60% 40%, #000 0%, transparent 70%);
+}
+html[data-studio] .hq-login-preview { position: absolute; left: 40px; right: -60px; top: 14%; display: flex; flex-direction: column; gap: 10px; }
+html[data-studio] .hq-login-preview-row { padding: 10px 12px; display: flex; align-items: center; gap: 10px; max-width: calc(100% - 20px); }
+html[data-studio] .hq-login-foot { position: relative; z-index: 1; max-width: 440px; }
+html[data-studio] .hq-login-foot h2 { font-size: 20px; line-height: 28px; margin: 0; font-weight: 600; letter-spacing: -0.01em; }
+html[data-studio] .hq-gate-loading { min-height: 100vh; display: flex; align-items: center; justify-content: center; gap: 10px; color: var(--hq-text-secondary); background: var(--hq-bg-canvas); }
+html[data-studio] .hq-gate-loading svg { width: 18px; height: 18px; }
+@media (max-width: 860px) {
+  html[data-studio] .hq-login { grid-template-columns: minmax(0, 1fr); }
+  html[data-studio] .hq-login-r { display: none; }
+  html[data-studio] .hq-login-l { justify-content: flex-start; padding: 72px 16px 32px; }
+}
+html[data-studio] .hq-login-card .hq-login-body { margin: 0 0 24px; color: var(--hq-text-secondary); }

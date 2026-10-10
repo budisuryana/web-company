@@ -1,87 +1,86 @@
 /** CMS access gate: manual credentials authentication (username/email & password) with secure session handling. */
 import { useState, type FormEvent, type ReactNode } from "react";
-import { ArrowRight, ChevronRight, Eye, EyeOff, KeyRound, Loader2, Lock, LockKeyhole, LogOut, Mail, ShieldAlert, ShieldCheck, Sparkles, User } from "lucide-react";
+import { Boxes, ChevronRight, Eye, EyeOff, FileText, Inbox, KeyRound, Loader2, LockKeyhole, LogOut, Moon, OctagonAlert, ShieldAlert, ShieldCheck, Sun, UsersRound } from "lucide-react";
 import { Link } from "wouter";
-import { BrandLockup } from "@/components/BrandLockup";
-import CmsIllustration from "@/components/CmsIllustration";
+import { BrandSymbol } from "@/components/BrandLockup";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { CMS_BASE_PATH } from "@/const";
 import { trpc } from "@/lib/trpc";
 import { SITE } from "@shared/site";
 import { toast } from "sonner";
 import { AdminLanguageSwitch, useAdminDocumentLang, useT } from "@/admin/i18n";
+import { useStudioAppearance } from "@/studio/theme";
+import { Badge, Button, Tile, btn, type Hue } from "@/studio/ui";
 
+/** Sign-in and access screens in the NUSAKARYA HQ login layout: form card on the left, product panel on the right. */
 function AccessFrame({ eyebrow, title, body, children, denied = false }: { eyebrow: string; title: ReactNode; body: string; children: ReactNode; denied?: boolean }) {
   const companyName = SITE.name;
   const t = useT();
+  const { theme, setTheme } = useStudioAppearance();
   useAdminDocumentLang();
 
   return (
-    <main className="min-h-screen overflow-hidden bg-[var(--paper)] text-[var(--ink)]">
-      <div className="grid min-h-screen lg:grid-cols-[1.02fr_.98fr]">
-        {/* Brand panel */}
-        <section className="relative flex min-h-[46vh] flex-col justify-between overflow-hidden bg-[var(--ink)] px-7 py-8 text-[var(--warm-20)] sm:px-12 sm:py-12">
-          <div className="pointer-events-none absolute -right-32 -top-36 h-96 w-96 rounded-full bg-[var(--purple-80)] opacity-40 blur-3xl" />
-          <div className="pointer-events-none absolute -bottom-40 -left-28 h-96 w-96 rounded-full bg-[var(--teal-80)] opacity-35 blur-3xl" />
-
-          <div className="relative flex items-center justify-between gap-4">
-            <Link href="/" className="text-[var(--lightest)] transition-opacity hover:opacity-85">
-              <BrandLockup name={companyName} variant="duo" />
-            </Link>
-            <span className="font-[family-name:var(--mono)] text-[10px] font-semibold uppercase tracking-[.16em] text-[var(--warm-40)]">
-              {t("Panel Admin")}
+    <main className="hq-login">
+      <section className="hq-login-l">
+        <div className="hq-login-tools">
+          <AdminLanguageSwitch compact />
+          <Button variant="ghost" size="sm" icon={theme === "dark" ? Sun : Moon} onClick={() => setTheme(theme === "dark" ? "light" : "dark")}>
+            {theme === "dark" ? t("Terang") : t("Gelap")}
+          </Button>
+        </div>
+        <div className="hq-login-card">
+          <Link href="/" className="hq-login-brand">
+            <span className="hq-brand-mark">
+              <BrandSymbol />
+            </span>
+            <span>
+              <span className="block text-[14px] font-semibold leading-4">Workshop CMS</span>
+              <span className="hq-faint block text-[11px] leading-[14px]">{t("Panel Admin {company}", { company: companyName })}</span>
+            </span>
+          </Link>
+          <span className={`hq-login-eyebrow ${denied ? "denied" : ""}`}>
+            {denied ? <ShieldAlert aria-hidden="true" /> : <LockKeyhole aria-hidden="true" />}
+            {eyebrow}
+          </span>
+          <h1>{title}</h1>
+          <p className="hq-login-body">{body}</p>
+          {children}
+          <div className="hq-login-notes">
+            <span>
+              <ShieldCheck aria-hidden="true" />
+              {t("Pemeriksaan peran dijalankan di server untuk setiap tindakan CMS.")}
+            </span>
+            <span>
+              <LockKeyhole aria-hidden="true" />
+              {t("Sesi Anda diverifikasi sebelum data produk atau pengguna dibuka.")}
             </span>
           </div>
+        </div>
+      </section>
 
-          <div className="relative my-10 lg:my-0">
-            <CmsIllustration className="mx-auto w-full max-w-[440px]" />
-          </div>
-
-          <div className="relative">
-            <span className="inline-flex items-center gap-2 font-[family-name:var(--mono)] text-[10px] font-semibold uppercase tracking-[.17em] text-[var(--lime-30)]">
-              <Sparkles size={13} /> {t("Ruang kerja privat")}
-            </span>
-            <p className="mt-4 max-w-md admin-display text-2xl leading-tight text-[var(--lightest)] sm:text-[27px]">
-              {t("Kelola katalog produk dan seluruh konten situs")} <em className="text-[var(--lime-30)]">{t("dari satu tempat.")}</em>
-            </p>
-            <div className="mt-7 flex flex-wrap gap-x-7 gap-y-2 border-t border-white/12 pt-5 font-[family-name:var(--mono)] text-[11px] text-[var(--warm-40)]">
-              <span>{t("Katalog Produk")}</span>
-              <span>{t("Profil & Konten")}</span>
-              <span>{t("Kotak Masuk")}</span>
-              <span>{t("Kontrol Akses")}</span>
+      <section className="hq-login-r" aria-hidden="true">
+        <div className="hq-login-grid" />
+        <div className="hq-login-preview">
+          {([
+            [Boxes, "blue", t("Katalog Produk"), <Badge tone="success" dot>{t("Published")}</Badge>],
+            [FileText, "teal", t("Profil & Konten"), <Badge tone="accent">EN / ID</Badge>],
+            [Inbox, "amber", t("Kotak Masuk"), <Badge tone="warning" dot>{t("Baru")}</Badge>],
+            [UsersRound, "violet", t("Kontrol Akses"), <Badge tone="review">{t("Administrator")}</Badge>],
+          ] as Array<[typeof Boxes, Hue, string, ReactNode]>).map(([icon, hue, label, badge], index) => (
+            <div key={label} className="hq-card hq-login-preview-row" style={{ width: 420 - index * 14, marginLeft: index * 28, opacity: 1 - index * 0.12 }}>
+              <Tile icon={icon} hue={hue} />
+              <span className="flex-1 font-medium">{label}</span>
+              {badge}
             </div>
-          </div>
-        </section>
-
-        {/* Sign-in panel */}
-        <section className="relative flex items-center px-7 py-12 sm:px-14 lg:px-16">
-          <div className="absolute right-8 top-7 flex items-center gap-4">
-            <span className="hidden font-[family-name:var(--mono)] text-[10px] font-semibold uppercase tracking-[.15em] text-[var(--cool-40)] sm:inline">
-              {t("[ masuk aman ]")}
-            </span>
-            <AdminLanguageSwitch compact />
-          </div>
-          <div className="w-full max-w-lg">
-            <span className={`inline-flex items-center gap-2 font-[family-name:var(--mono)] text-[10px] font-semibold uppercase tracking-[.16em] ${denied ? "text-[var(--red-50)]" : "text-[var(--accent)]"}`}>
-              {denied ? <ShieldAlert size={14} /> : <LockKeyhole size={14} />}
-              {eyebrow}
-            </span>
-            <h1 className="mt-4 admin-display text-[27px] leading-tight text-[var(--ink)] sm:text-4xl">{title}</h1>
-            <p className="mt-4 max-w-md text-sm leading-6 text-[var(--ink-soft)]">{body}</p>
-            <div className="mt-8">{children}</div>
-            <div className="mt-9 grid gap-3 border-t border-[var(--line)] pt-5 text-xs leading-5 text-[var(--ink-soft)] sm:grid-cols-2">
-              <span className="flex gap-2">
-                <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-[var(--green-50)]" />
-                {t("Pemeriksaan peran dijalankan di server untuk setiap tindakan CMS.")}
-              </span>
-              <span className="flex gap-2">
-                <LockKeyhole className="mt-0.5 h-4 w-4 shrink-0 text-[var(--green-50)]" />
-                {t("Sesi Anda diverifikasi sebelum data produk atau pengguna dibuka.")}
-              </span>
-            </div>
-          </div>
-        </section>
-      </div>
+          ))}
+        </div>
+        <div className="hq-login-foot">
+          <div className="hq-overline mb-2.5">{t("Ruang kerja privat")}</div>
+          <h2>
+            {t("Kelola katalog produk dan seluruh konten situs")} {t("dari satu tempat.")}
+          </h2>
+        </div>
+      </section>
     </main>
   );
 }
@@ -120,39 +119,28 @@ function LoginForm() {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
-      {errorMessage && (
-        <div className="flex items-start gap-3 rounded-[var(--r-sm)] border-[1.5px] border-[var(--red-30)] bg-[var(--red-10)] p-3.5 text-xs font-semibold leading-5 text-[var(--red-70)]">
-          <ShieldAlert size={16} className="mt-0.5 shrink-0 text-[var(--red-50)]" />
-          <div>{errorMessage}</div>
-        </div>
-      )}
-
-      <div>
-        <label className="block text-xs font-extrabold uppercase tracking-wide text-[var(--ink)]" htmlFor="usernameOrEmail">
+    <form onSubmit={handleSubmit} className="flex flex-col gap-3.5">
+      <div className="hq-field">
+        <label className="hq-label" htmlFor="usernameOrEmail">
           {t("Username atau Email")}
         </label>
-        <div className="relative mt-1.5">
-          <User size={15} className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-[var(--cool-40)]" />
-          <input
-            id="usernameOrEmail"
-            type="text"
-            required
-            autoComplete="username"
-            value={usernameOrEmail}
-            onChange={(e) => setUsernameOrEmail(e.target.value)}
-            placeholder={t("admin atau email anda")}
-            className="w-full rounded-[var(--r-sm)] border-[1.5px] border-[var(--line-strong)] bg-[var(--card)] py-3 pl-10 pr-3 text-sm text-[var(--ink)] outline-none transition-colors focus:border-[var(--accent)]"
-          />
-        </div>
+        <input
+          id="usernameOrEmail"
+          type="text"
+          required
+          autoComplete="username"
+          value={usernameOrEmail}
+          onChange={(e) => setUsernameOrEmail(e.target.value)}
+          placeholder={t("admin atau email anda")}
+          className="hq-input"
+        />
       </div>
 
-      <div>
-        <label className="block text-xs font-extrabold uppercase tracking-wide text-[var(--ink)]" htmlFor="password">
+      <div className="hq-field">
+        <label className="hq-label" htmlFor="password">
           {t("Password")}
         </label>
-        <div className="relative mt-1.5">
-          <Lock size={15} className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-[var(--cool-40)]" />
+        <div className="relative">
           <input
             id="password"
             type={showPassword ? "text" : "password"}
@@ -161,53 +149,51 @@ function LoginForm() {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             placeholder="••••••••"
-            className="w-full rounded-[var(--r-sm)] border-[1.5px] border-[var(--line-strong)] bg-[var(--card)] py-3 pl-10 pr-10 text-sm text-[var(--ink)] outline-none transition-colors focus:border-[var(--accent)]"
+            className="hq-input pr-9"
+            aria-invalid={errorMessage ? true : undefined}
           />
-          <button
-            type="button"
+          <Button
+            variant="ghost"
+            size="sm"
+            iconOnly
+            icon={showPassword ? EyeOff : Eye}
             tabIndex={-1}
             aria-label={showPassword ? t("Sembunyikan password") : t("Tampilkan password")}
             onClick={() => setShowPassword(!showPassword)}
-            className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--cool-40)] transition-colors hover:text-[var(--ink)]"
-          >
-            {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
-          </button>
+            className="absolute right-[3px] top-[3px]"
+          />
         </div>
+        {errorMessage && (
+          <span className="hq-error" role="alert">
+            <OctagonAlert aria-hidden="true" />
+            {errorMessage}
+          </span>
+        )}
       </div>
 
-      <div className="pt-2">
-        <button
-          type="submit"
-          disabled={loginMutation.isPending}
-          className="group flex w-full items-center justify-center gap-2.5 rounded-[var(--r-pill)] bg-[var(--ink)] py-3.5 text-sm font-bold text-[var(--lightest)] transition-all hover:bg-[var(--cool-80)] active:scale-[.98] disabled:cursor-not-allowed disabled:opacity-60"
-        >
-          {loginMutation.isPending ? (
-            <>
-              <Loader2 size={16} className="animate-spin" />
-              {t("Memeriksa akun…")}
-            </>
-          ) : (
-            <>
-              {t("Masuk ke Panel CMS")} <ArrowRight size={16} className="transition-transform group-hover:translate-x-1" />
-            </>
-          )}
-        </button>
-      </div>
+      <button type="submit" disabled={loginMutation.isPending} className={btn("primary", "lg", "block mt-1")}>
+        {loginMutation.isPending ? (
+          <>
+            <Loader2 className="hq-spin" aria-hidden="true" />
+            {t("Memeriksa akun…")}
+          </>
+        ) : (
+          t("Masuk ke Panel CMS")
+        )}
+      </button>
 
       {import.meta.env.DEV && (
-        <div className="mt-5 rounded-[var(--r-md)] border border-[var(--line)] bg-[var(--warm-2)] p-3.5 text-xs text-[var(--ink-soft)]">
-          <span className="flex items-center gap-1.5 font-bold text-[var(--ink)]">
-            <KeyRound size={13} className="text-[var(--accent)]" /> {t("Kredensial default admin")}
-            <span className="ml-1 rounded-full bg-[var(--yellow-10)] px-2 py-0.5 font-[family-name:var(--mono)] text-[9px] font-semibold uppercase tracking-[.1em] text-[var(--ink)]">
-              {t("hanya dev")}
-            </span>
+        <div className="hq-login-dev">
+          <span className="flex items-center gap-1.5 font-medium text-[var(--hq-text-primary)]">
+            <KeyRound size={13} aria-hidden="true" /> {t("Kredensial default admin")}
+            <Badge tone="warning" className="ml-1">{t("hanya dev")}</Badge>
           </span>
-          <div className="mt-2 grid grid-cols-2 gap-2 text-[11px]">
+          <div className="mt-2 grid grid-cols-2 gap-2">
             <div>
-              <span className="text-[var(--cool-40)]">Username:</span> <code className="font-bold text-[var(--ink)]">admin</code>
+              <span className="hq-faint">Username:</span> <code>admin</code>
             </div>
             <div>
-              <span className="text-[var(--cool-40)]">Password:</span> <code className="font-bold text-[var(--ink)]">admin123</code>
+              <span className="hq-faint">Password:</span> <code>admin123</code>
             </div>
           </div>
         </div>
@@ -225,11 +211,9 @@ export default function AdminGuard({ children }: { children: ReactNode }) {
 
   if (loading) {
     return (
-      <main className="grid min-h-screen place-items-center bg-[var(--paper)]">
-        <div className="text-center">
-          <span className="inline-block h-8 w-8 animate-spin rounded-full border-2 border-[var(--line-strong)] border-t-[var(--accent)]" />
-          <p className="mt-4 font-[family-name:var(--mono)] text-xs font-semibold uppercase tracking-[.16em] text-[var(--ink)]">{t("Membuka CMS…")}</p>
-        </div>
+      <main className="hq-gate-loading" role="status">
+        <Loader2 className="hq-spin" aria-hidden="true" />
+        <span>{t("Membuka CMS…")}</span>
       </main>
     );
   }
@@ -240,7 +224,7 @@ export default function AdminGuard({ children }: { children: ReactNode }) {
         eyebrow={t("Panel Admin {company}", { company: companyName })}
         title={
           <>
-            {t("Masuk ke")} <em className="text-[var(--accent)]">{t("CMS {company}.", { company: companyName })}</em>
+            {t("Masuk ke")} {t("CMS {company}.", { company: companyName })}
           </>
         }
         body={t("Silakan masukkan username/email dan password administrator untuk mengelola konten dan katalog produk.")}
@@ -257,27 +241,25 @@ export default function AdminGuard({ children }: { children: ReactNode }) {
         eyebrow={t("Akses Membutuhkan Persetujuan")}
         title={
           <>
-            {t("Akun Terhubung,")} <em className="text-[var(--accent)]">{t("Belum Memiliki Izin.")}</em>
+            {t("Akun Terhubung,")} {t("Belum Memiliki Izin.")}
           </>
         }
         body={t("Akun Anda telah terdaftar, namun belum memiliki role administrator. Hubungi administrator yang berwenang untuk menyetujui akses akun ini atau masuk dengan akun admin.")}
       >
-        <div className="flex flex-wrap items-center gap-3">
-          <button
-            type="button"
+        <div className="flex flex-wrap items-center gap-2">
+          <Button
+            variant="primary"
+            size="lg"
+            icon={LogOut}
             onClick={async () => {
               await logout();
               window.location.href = CMS_BASE_PATH;
             }}
-            className="group inline-flex items-center gap-2 rounded-[var(--r-pill)] bg-[var(--ink)] px-6 py-3.5 text-sm font-bold text-[var(--lightest)] transition-transform duration-150 hover:-translate-y-0.5 active:scale-[.97]"
           >
-            <LogOut size={15} /> {t("Keluar & Ganti Akun")}
-          </button>
-          <Link
-            href="/"
-            className="group inline-flex items-center gap-3 rounded-[var(--r-pill)] border-[1.5px] border-[var(--ink)] px-6 py-3.5 text-sm font-bold text-[var(--ink)] transition-transform duration-150 hover:-translate-y-0.5 active:scale-[.97]"
-          >
-            {t("Kembali ke website")} <ChevronRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
+            {t("Keluar & Ganti Akun")}
+          </Button>
+          <Link href="/" className={btn("default", "lg")}>
+            {t("Kembali ke website")} <ChevronRight aria-hidden="true" />
           </Link>
         </div>
       </AccessFrame>
