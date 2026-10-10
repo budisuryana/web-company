@@ -9,7 +9,8 @@ const requiredFields: Array<[keyof ProductFormValues, string]> = [
 
 export function validateProductForm(form: ProductFormValues) {
   const errors: Partial<Record<keyof ProductFormValues, string>> = {};
-  requiredFields.forEach(([field, label]) => { if (!form[field].trim()) errors[field] = `${label} is required.`; });
+  // "Target users" is plural, so it takes "are"; every other label is singular.
+  requiredFields.forEach(([field, label]) => { if (!form[field].trim()) errors[field] = `${label} ${field === "targetUsers" ? "are" : "is"} required.`; });
   if (form.slug.trim() && !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(form.slug.trim())) errors.slug = "Use lowercase letters, numbers, and hyphens only.";
   if (!form.capabilitiesText.split("\n").some((item) => item.trim())) errors.capabilitiesText = "Add at least one key capability.";
   if (!form.workflowText.split("\n").some((item) => item.trim())) errors.workflowText = "Add at least one workflow step.";

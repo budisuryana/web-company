@@ -5,6 +5,7 @@ import { describe, expect, it } from "vitest";
 import { ADMIN_PHRASES, PHRASE_AREAS } from "../client/src/admin/phrases";
 import { translateAdmin } from "../client/src/admin/i18n";
 import { EDITABLE_FIELDS, FIELD_LABEL_PARTS_EN, fieldLabel, validateContent } from "@shared/i18n/editable";
+import { validateProductForm } from "../client/src/lib/productValidation";
 
 const placeholders = (text: string) => [...text.matchAll(/\{(\w+)\}/g)].map((match) => match[1]).sort();
 
@@ -56,6 +57,23 @@ describe("admin phrase dictionaries", () => {
       }
     }
     expect(missing).toEqual([]);
+  });
+});
+
+describe("product form validation messages", () => {
+  const emptyForm = { name: "", slug: "", shortDescription: "", fullDescription: "", heroHeadline: "", problem: "", solution: "", outcome: "", category: "", capabilitiesText: "", targetUsers: "", demoUrl: "", workflowText: "" };
+
+  it("shows the Target users message correctly in both admin languages", () => {
+    const message = validateProductForm(emptyForm).targetUsers!;
+    expect(message).toBe("Target users are required.");
+    expect(translateAdmin("en", message as never)).toBe("Target users are required.");
+    expect(translateAdmin("id", message as never)).toBe("Target pengguna wajib diisi.");
+  });
+
+  it("has an ID/EN dictionary entry for every message the product form can produce", () => {
+    const messages = Object.values(validateProductForm(emptyForm));
+    expect(messages.length).toBeGreaterThan(0);
+    for (const message of messages) expect(ADMIN_PHRASES, message).toHaveProperty([message]);
   });
 });
 

@@ -7,7 +7,7 @@ describe("product form validation", () => {
   it("reports the exact required fields that caused the reported new-product failure", () => {
     const errors = validateProductForm({ ...completeProduct, shortDescription: "", targetUsers: "  " });
     expect(errors.shortDescription).toBe("Short description is required.");
-    expect(errors.targetUsers).toBe("Target users is required.");
+    expect(errors.targetUsers).toBe("Target users are required.");
   });
 
   it("accepts a complete product draft before tRPC submission", () => {

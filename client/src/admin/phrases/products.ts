@@ -171,7 +171,7 @@ export const PRODUCTS_PHRASES = {
   "Problem is required.": { id: "Masalah wajib diisi.", en: "Problem is required." },
   "Solution is required.": { id: "Solusi wajib diisi.", en: "Solution is required." },
   "Outcome is required.": { id: "Hasil wajib diisi.", en: "Outcome is required." },
-  "Target users is required.": { id: "Target pengguna wajib diisi.", en: "Target users is required." },
+  "Target users are required.": { id: "Target pengguna wajib diisi.", en: "Target users are required." },
   "Use lowercase letters, numbers, and hyphens only.": {
     id: "Gunakan hanya huruf kecil, angka, dan tanda hubung.",
     en: "Use lowercase letters, numbers, and hyphens only.",
