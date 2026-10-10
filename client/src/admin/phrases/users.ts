@@ -71,4 +71,6 @@ export const USERS_PHRASES = {
   },
   "Cabut hak akses administrator": { id: "Cabut hak akses administrator", en: "Revoke administrator access" },
   "Cabut Admin": { id: "Cabut Admin", en: "Revoke Admin" },
+  "Peran": { id: "Peran", en: "Role" },
+  "Aksi": { id: "Aksi", en: "Actions" },
 } as const;

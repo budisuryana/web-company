@@ -1,22 +1,12 @@
 /** CMS user management: searchable, role-filtered approval controls for identities that have signed in. */
 import { useMemo, useState } from "react";
-import {
-  Check,
-  ChevronDown,
-  Clock3,
-  Crown,
-  Loader2,
-  Search,
-  ShieldCheck,
-  ShieldOff,
-  UserRoundPlus,
-  UsersRound,
-} from "lucide-react";
+import { Check, Clock3, Crown, Search, ShieldCheck, ShieldOff, UserRoundPlus, UsersRound } from "lucide-react";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { trpc } from "@/lib/trpc";
 import { toast } from "sonner";
 import ConfirmModal from "@/components/ConfirmModal";
 import { useAdminLocale, useT } from "@/admin/i18n";
+import { Badge, Button, Card, CardHead, EmptyState, ErrorState, LoadingState, PageHead, StatCard } from "@/studio/ui";
 
 type RoleFilter = "all" | "admin" | "user" | "owner";
 
@@ -135,236 +125,136 @@ export default function AdminUsers() {
 
   return (
     <>
-      <div className="w-full">
-        {/* Header */}
-        <div className="mb-9 grid gap-6 border-b-2 border-[var(--ink)] pb-8 lg:grid-cols-[1.2fr_.8fr]">
-          <div>
-            <span className="text-[10px] font-extrabold uppercase tracking-[.16em] text-[var(--accent)]">
-              {t("Kontrol Akses")}
-            </span>
-            <h1 className="mt-2 admin-display text-3xl sm:text-4xl leading-tight tracking-tight text-[var(--ink)]">
-              {t("User &")} <em className="text-[var(--accent)]">{t("Access Management.")}</em>
-            </h1>
-            <p className="mt-4 max-w-2xl text-sm leading-6 text-[var(--ink-soft)]">
-              {t("Kelola akun pengguna yang terdaftar, berikan peran Administrator, atau sesuaikan hak akses CMS dengan aman.")}
-            </p>
-          </div>
-          <aside className="admin-card border border-[var(--line)] bg-[var(--ink)] p-5 text-[var(--warm-2)]">
-            <span className="text-[10px] font-extrabold uppercase tracking-[.16em] text-[var(--purple-30)]">
-              {t("Alur Perizinan")}
-            </span>
-            <ol className="mt-4 space-y-3 text-xs leading-5 text-white/75">
-              <li>
-                <b className="mr-2 text-[var(--purple-30)]">01</b>{t("Akun admin dapat mengelola semua produk dan konten situs.")}
-              </li>
-              <li>
-                <b className="mr-2 text-[var(--purple-30)]">02</b>{t("Cari dan atur hak akses akun melalui tabel di bawah.")}
-              </li>
-              <li>
-                <b className="mr-2 text-[var(--purple-30)]">03</b>{t("Akun pemilik (Owner) dan akun aktif terlindungi dari pencabutan.")}
-              </li>
-            </ol>
-          </aside>
-        </div>
+      <PageHead title={t("Manajemen Pengguna")} description={t("Kelola akun pengguna yang terdaftar, berikan peran Administrator, atau sesuaikan hak akses CMS dengan aman.")} />
 
-        {/* Metric Cards */}
-        <div className="mb-6 grid gap-4 sm:grid-cols-3">
-          <Metric icon={UsersRound} label={t("Known accounts")} value={users.length} copy={t("Total akun terdaftar")} />
-          <Metric
-            icon={ShieldCheck}
-            label={t("Administrators")}
-            value={administrators.length}
-            copy={t("Akses admin aktif")}
-            tone="ink"
-          />
-          <Metric
-            icon={Clock3}
-            label={t("Awaiting approval")}
-            value={pendingUsers.length}
-            copy={t("Menunggu persetujuan")}
-            tone={(pendingUsers.length) > 0 ? "alert" : "paper"}
-          />
-        </div>
+      <div className="hq-stats three">
+        <StatCard icon={UsersRound} hue="blue" label={t("Known accounts")} value={users.length} sub={t("Total akun terdaftar")} />
+        <StatCard icon={ShieldCheck} hue="teal" label={t("Administrators")} value={administrators.length} sub={t("Akses admin aktif")} />
+        <StatCard icon={Clock3} hue="amber" label={t("Awaiting approval")} value={pendingUsers.length} sub={t("Menunggu persetujuan")} tone={pendingUsers.length > 0 ? "warning" : undefined} />
+      </div>
 
-        {/* Table Section */}
-        <section className="overflow-hidden admin-card border border-[var(--line)] bg-white shadow-sm">
-          <div className="flex flex-wrap items-end justify-between gap-4 border-b border-[var(--line)] px-5 py-4">
-            <div>
-              <h2 className="admin-display text-3xl text-[var(--ink)]">{t("Daftar Pengguna & Izin")}</h2>
-              <p className="mt-1 text-xs text-[var(--ink-soft)]">
-                {t("Pengguna dengan role admin memiliki kontrol penuh terhadap CMS Workshop.")}
-              </p>
-            </div>
-            <div className="flex flex-wrap gap-2">
-              <label className="relative block">
-                <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--cool-40)]" />
-                <input
-                  value={search}
-                  onChange={(event) => setSearch(event.target.value)}
-                  placeholder={t("Cari nama atau email...")}
-                  className="w-56 admin-card border border-[var(--line)] bg-[var(--card)] py-2 pl-9 pr-3 text-xs text-[var(--ink)] outline-none focus:border-[var(--accent)]"
-                />
-              </label>
-              <label className="relative">
-                <select
-                  value={roleFilter}
-                  onChange={(event) => setRoleFilter(event.target.value as RoleFilter)}
-                  className="appearance-none admin-card border border-[var(--line)] bg-[var(--card)] py-2 pl-3 pr-8 text-xs font-bold text-[var(--ink)] outline-none focus:border-[var(--accent)]"
-                >
-                  <option value="all">{t("Semua Akun")}</option>
-                  <option value="admin">{t("Administrator")}</option>
-                  <option value="user">{t("User Biasa")}</option>
-                  <option value="owner">{t("Project Owner")}</option>
-                </select>
-                <ChevronDown className="pointer-events-none absolute right-2 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--cool-40)]" />
-              </label>
-            </div>
+      <div className="grid items-start gap-4 xl:grid-cols-[minmax(0,1fr)_300px]">
+        <Card>
+          <CardHead
+            icon={UsersRound}
+            hue="blue"
+            title={t("Daftar Pengguna & Izin")}
+            sub={t("Pengguna dengan role admin memiliki kontrol penuh terhadap CMS Workshop.")}
+          />
+          <div className="hq-toolbar">
+            <span className="hq-input-icon w-full sm:w-64">
+              <Search aria-hidden="true" />
+              <input value={search} onChange={(event) => setSearch(event.target.value)} placeholder={t("Cari nama atau email...")} aria-label={t("Cari nama atau email...")} className="hq-input" />
+            </span>
+            <select value={roleFilter} onChange={(event) => setRoleFilter(event.target.value as RoleFilter)} aria-label={t("Peran")} className="hq-select w-auto min-w-[160px]">
+              <option value="all">{t("Semua Akun")}</option>
+              <option value="admin">{t("Administrator")}</option>
+              <option value="user">{t("User Biasa")}</option>
+              <option value="owner">{t("Project Owner")}</option>
+            </select>
           </div>
 
           {usersQuery.isLoading ? (
-            <div className="flex items-center gap-2 p-9 text-sm text-[var(--ink-soft)]">
-              <Loader2 className="h-4 w-4 animate-spin" /> {t("Memuat daftar akun…")}
-            </div>
+            <LoadingState>{t("Memuat daftar akun…")}</LoadingState>
+          ) : usersQuery.isError ? (
+            <ErrorState onRetry={() => void usersQuery.refetch()}>{usersQuery.error.message}</ErrorState>
           ) : filteredUsers.length === 0 ? (
-            <div className="p-10 text-center">
-              <UserRoundPlus className="mx-auto h-8 w-8 text-[var(--accent)]" />
-              <h3 className="mt-4 admin-display text-2xl text-[var(--ink)]">{t("Tidak ada akun yang sesuai.")}</h3>
-              <p className="mx-auto mt-2 max-w-md text-xs leading-5 text-[var(--ink-soft)]">
-                {t("Bersihkan kolom pencarian atau ganti filter role di atas.")}
-              </p>
-            </div>
+            <EmptyState icon={UserRoundPlus} title={t("Tidak ada akun yang sesuai.")}>
+              {t("Bersihkan kolom pencarian atau ganti filter role di atas.")}
+            </EmptyState>
           ) : (
-            <div>
-              {filteredUsers.map((user) => {
-                const label = user.name || user.username || user.email || t("Akun Tanpa Nama");
-                const isSelf = user.openId === currentUser?.openId;
-                const canDemote = user.role === "admin" && !user.isProjectOwner && !isSelf && administrators.length > 1;
+            <div className="hq-table-wrap">
+              <table className="hq-table hq-users">
+                <thead>
+                  <tr>
+                    <th>{t("Pengguna")}</th>
+                    <th>{t("Peran")}</th>
+                    <th>{t("Terakhir login")}</th>
+                    <th className="num">{t("Aksi")}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filteredUsers.map((user) => {
+                    const label = user.name || user.username || user.email || t("Akun Tanpa Nama");
+                    const isSelf = user.openId === currentUser?.openId;
+                    const canDemote = user.role === "admin" && !user.isProjectOwner && !isSelf && administrators.length > 1;
 
-                return (
-                  <article
-                    key={user.openId}
-                    className="grid gap-4 border-b border-[var(--line)] px-5 py-4 last:border-b-0 md:grid-cols-[auto_1fr_auto] md:items-center"
-                  >
-                    <div
-                      className={`grid h-11 w-11 place-items-center rounded-full text-sm font-extrabold ${
-                        user.role === "admin" ? "bg-[var(--ink)] text-[var(--lightest)]" : "bg-[var(--green-5)] text-[var(--green-60)]"
-                      }`}
-                    >
-                      {initials(user.name, user.email, user.openId)}
-                    </div>
-
-                    <div className="min-w-0">
-                      <div className="flex flex-wrap items-center gap-2">
-                        <h3 className="truncate font-semibold text-[var(--ink)]">{label}</h3>
-                        {user.isProjectOwner && (
-                          <span className="inline-flex items-center gap-1 bg-[var(--purple-5)] px-2 py-0.5 text-[9px] font-extrabold uppercase tracking-[.1em] text-[var(--purple-60)]">
-                            <Crown size={10} fill="currentColor" /> {t("Owner")}
-                          </span>
-                        )}
-                        {isSelf && (
-                          <span className="bg-[var(--cool-5)] px-2 py-0.5 text-[9px] font-extrabold uppercase tracking-[.1em] text-[var(--ink-soft)]">
-                            {t("Anda")}
-                          </span>
-                        )}
-                      </div>
-                      <p className="mt-1 truncate text-xs text-[var(--ink-soft)]">
-                        {user.email || t("Tanpa email")} <span className="mx-1 text-[var(--cool-20)]">•</span> {t("Terakhir login")}{" "}
-                        {dateLabel(user.lastSignedIn, intlLocale)}
-                      </p>
-                      <p className="mt-0.5 truncate font-mono text-[10px] text-[var(--cool-40)]">{user.openId}</p>
-                    </div>
-
-                    <div className="flex flex-wrap items-center gap-3 md:justify-end">
-                      <span
-                        className={`inline-flex items-center gap-1 px-2.5 py-1 text-[10px] font-extrabold uppercase tracking-[.12em] ${
-                          user.role === "admin" ? "bg-[var(--green-5)] text-[var(--green-60)]" : "bg-[var(--cool-5)] text-[var(--ink-soft)]"
-                        }`}
-                      >
-                        {user.role === "admin" ? <ShieldCheck size={12} /> : <Clock3 size={12} />}
-                        {user.role === "admin" ? t("Administrator") : t("Standard User")}
-                      </span>
-
-                      {user.role === "user" ? (
-                        <button
-                          disabled={setRole.isPending}
-                          type="button"
-                          onClick={() => promptRoleChange(user.openId, "admin", label)}
-                          className="inline-flex items-center gap-1.5 bg-[var(--ink)] px-3 py-2 text-xs font-extrabold text-[var(--lightest)] transition-opacity hover:opacity-90 disabled:opacity-50"
-                        >
-                          <Check size={13} /> {t("Jadikan Admin")}
-                        </button>
-                      ) : (
-                        <button
-                          disabled={!canDemote || setRole.isPending}
-                          type="button"
-                          onClick={() => promptRoleChange(user.openId, "user", label)}
-                          title={
-                            !canDemote
-                              ? t("Owner, akun Anda sendiri, dan admin terakhir tidak dapat dicabut.")
-                              : t("Cabut hak akses administrator")
-                          }
-                          className="inline-flex items-center gap-1.5 border border-[var(--line-strong)] px-3 py-2 text-xs font-extrabold text-[var(--ink)] transition-colors hover:bg-red-50 hover:text-red-700 disabled:cursor-not-allowed disabled:opacity-35"
-                        >
-                          <ShieldOff size={13} /> {t("Cabut Admin")}
-                        </button>
-                      )}
-                    </div>
-                  </article>
-                );
-              })}
+                    return (
+                      <tr key={user.openId}>
+                        <td>
+                          <div className="flex min-w-0 items-center gap-2.5">
+                            <span className={`hq-avatar ${user.role === "admin" ? "" : "muted"}`} aria-hidden="true">
+                              {initials(user.name, user.email, user.openId)}
+                            </span>
+                            <div className="min-w-0">
+                              <div className="flex flex-wrap items-center gap-1.5">
+                                <span className="truncate font-medium text-[var(--hq-text-primary)]">{label}</span>
+                                {user.isProjectOwner && <Badge tone="warning" icon={Crown}>{t("Owner")}</Badge>}
+                                {isSelf && <Badge tone="outline">{t("Anda")}</Badge>}
+                              </div>
+                              <div className="hq-faint truncate text-[12px]">{user.email || t("Tanpa email")}</div>
+                              <div className="hq-faint hq-mono truncate text-[11px]">{user.openId}</div>
+                            </div>
+                          </div>
+                        </td>
+                        <td>
+                          <Badge tone={user.role === "admin" ? "success" : "neutral"} icon={user.role === "admin" ? ShieldCheck : Clock3}>
+                            {user.role === "admin" ? t("Administrator") : t("Standard User")}
+                          </Badge>
+                        </td>
+                        <td className="whitespace-nowrap hq-tnum">{dateLabel(user.lastSignedIn, intlLocale)}</td>
+                        <td className="num">
+                          {user.role === "user" ? (
+                            <Button size="sm" variant="primary" icon={Check} disabled={setRole.isPending} onClick={() => promptRoleChange(user.openId, "admin", label)}>
+                              {t("Jadikan Admin")}
+                            </Button>
+                          ) : (
+                            <Button
+                              size="sm"
+                              icon={ShieldOff}
+                              disabled={!canDemote || setRole.isPending}
+                              onClick={() => promptRoleChange(user.openId, "user", label)}
+                              title={!canDemote ? t("Owner, akun Anda sendiri, dan admin terakhir tidak dapat dicabut.") : t("Cabut hak akses administrator")}
+                            >
+                              {t("Cabut Admin")}
+                            </Button>
+                          )}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
             </div>
           )}
-        </section>
+        </Card>
 
-        {/* Custom Confirmation Modal */}
-        <ConfirmModal
-          open={confirmModal.open}
-          onOpenChange={(open) => setConfirmModal((prev) => ({ ...prev, open }))}
-          title={confirmModal.title}
-          description={confirmModal.description}
-          confirmLabel={confirmModal.confirmLabel}
-          cancelLabel={t("Batal")}
-          variant={confirmModal.variant}
-          isPending={setRole.isPending}
-          onConfirm={() => {
-            setRole.mutate({
-              openId: confirmModal.openId,
-              role: confirmModal.role,
-            });
-          }}
-        />
+        <Card as="div">
+          <CardHead icon={ShieldCheck} hue="violet" title={t("Alur Perizinan")} as="h3" />
+          <ol className="hq-steps">
+            <li><span>01</span>{t("Akun admin dapat mengelola semua produk dan konten situs.")}</li>
+            <li><span>02</span>{t("Cari dan atur hak akses akun melalui tabel di bawah.")}</li>
+            <li><span>03</span>{t("Akun pemilik (Owner) dan akun aktif terlindungi dari pencabutan.")}</li>
+          </ol>
+        </Card>
       </div>
+
+      <ConfirmModal
+        open={confirmModal.open}
+        onOpenChange={(open) => setConfirmModal((prev) => ({ ...prev, open }))}
+        title={confirmModal.title}
+        description={confirmModal.description}
+        confirmLabel={confirmModal.confirmLabel}
+        cancelLabel={t("Batal")}
+        variant={confirmModal.variant}
+        isPending={setRole.isPending}
+        onConfirm={() => {
+          setRole.mutate({
+            openId: confirmModal.openId,
+            role: confirmModal.role,
+          });
+        }}
+      />
     </>
-  );
-}
-
-function Metric({
-  icon: Icon,
-  label,
-  value,
-  copy,
-  tone = "paper",
-}: {
-  icon: typeof UsersRound;
-  label: string;
-  value: number;
-  copy: string;
-  tone?: "paper" | "ink" | "alert";
-}) {
-  const styles =
-    tone === "ink"
-      ? "border-[var(--ink)] bg-[var(--ink)] text-[var(--lightest)]"
-      : tone === "alert"
-        ? "border-[var(--yellow-30)] bg-[var(--yellow-10)] text-[var(--ink)]"
-        : "border-[var(--line)] bg-white text-[var(--ink)]";
-  return (
-    <div className={`admin-card border p-4 ${styles}`}>
-      <div className="flex items-start justify-between">
-        <span className="text-[10px] font-extrabold uppercase tracking-[.13em] opacity-70">{label}</span>
-        <Icon size={17} />
-      </div>
-      <strong className="mt-4 block admin-display text-4xl leading-none">{value}</strong>
-      <p className="mt-2 text-xs leading-5 opacity-70">{copy}</p>
-    </div>
   );
 }

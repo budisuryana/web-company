@@ -1,6 +1,6 @@
 /** CMS inbox: enquiries submitted from the public contact form, with triage and reply-by-email. */
 import { useMemo, useState } from "react";
-import { Archive, Inbox, Loader2, Mail, MailOpen, RotateCcw, Search, Trash2 } from "lucide-react";
+import { Archive, CalendarDays, Inbox, Mail, MailOpen, RotateCcw, Search, Trash2 } from "lucide-react";
 import ConfirmModal from "@/components/ConfirmModal";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { trpc } from "@/lib/trpc";
@@ -9,6 +9,7 @@ import { formatDistanceToNow } from "date-fns";
 import { enGB, id as idLocale } from "date-fns/locale";
 import { useAdminLocale, useT } from "@/admin/i18n";
 import type { AdminPhrase } from "@/admin/phrases";
+import { Badge, Button, Card, EmptyState, ErrorState, LoadingState, PageHead, StatCard, type Tone } from "@/studio/ui";
 
 type Filter = "new" | "read" | "archived" | "all";
 
@@ -19,15 +20,9 @@ const FILTERS: Array<{ key: Filter; label: AdminPhrase }> = [
   { key: "all", label: "Semua" },
 ];
 
-const STATUS_STYLE: Record<string, string> = {
-  new: "bg-[var(--yellow-10)] text-[var(--ink)]",
-  read: "bg-[var(--green-5)] text-[var(--green-60)]",
-  archived: "bg-[var(--cool-5)] text-[var(--cool-60)]",
-};
+const STATUS_TONE: Record<string, Tone> = { new: "warning", read: "success", archived: "neutral" };
 const STATUS_LABEL: Record<string, AdminPhrase> = { new: "Baru", read: "Dibaca", archived: "Arsip" };
 
-const actionClass =
-  "inline-flex items-center gap-1.5 rounded-full border border-[var(--line)] px-3 py-1.5 text-[11px] font-extrabold text-[var(--ink)] transition-colors hover:bg-[var(--purple-5)] disabled:opacity-40";
 
 export default function AdminInbox() {
   const { user } = useAuth();
@@ -75,132 +70,85 @@ export default function AdminInbox() {
 
   return (
     <>
-      <div className="w-full">
-        <div className="mb-4 flex flex-wrap items-end justify-between gap-x-6 gap-y-3">
-          <div>
-            <span className="text-[10px] font-extrabold uppercase tracking-[.16em] text-[var(--accent)]">{t("Kotak Masuk")}</span>
-            <h1 className="mt-1 admin-display text-3xl leading-tight text-[var(--ink)]">{t("Pesan dari Formulir Kontak")}</h1>
-            <p className="mt-1 text-xs leading-5 text-[var(--ink-soft)]">
-              {t("Setiap pesan yang dikirim melalui halaman Kontak tersimpan di sini. Tandai sudah dibaca atau arsipkan setelah ditindaklanjuti.")}
-            </p>
+      <PageHead
+        title={t("Kotak Masuk")}
+        description={t("Setiap pesan yang dikirim melalui halaman Kontak tersimpan di sini. Tandai sudah dibaca atau arsipkan setelah ditindaklanjuti.")}
+      />
+      {counts && (
+        <div className="hq-stats">
+          <StatCard icon={Mail} hue="amber" label={t("Belum dibaca")} value={counts.unread} tone={counts.unread > 0 ? "warning" : undefined} />
+          <StatCard icon={CalendarDays} hue="blue" label={t("7 hari terakhir")} value={counts.lastSevenDays} />
+        </div>
+      )}
+
+      <Card>
+        <div className="hq-toolbar">
+          <div className="hq-chips" role="group" aria-label={t("Kotak Masuk")}>
+            {FILTERS.map((item) => (
+              <button key={item.key} type="button" className="hq-chip" aria-pressed={filter === item.key} onClick={() => setFilter(item.key)}>
+                {t(item.label)}
+                {item.key === "new" && counts?.unread ? <span className="hq-n">{counts.unread}</span> : null}
+              </button>
+            ))}
           </div>
-          {counts && (
-            <div className="flex gap-3">
-              <div className="admin-card border border-[var(--yellow-30)] bg-[var(--yellow-10)] px-4 py-3">
-                <span className="block text-[9px] font-extrabold uppercase tracking-[.13em] opacity-70">{t("Belum dibaca")}</span>
-                <strong className="mt-1 block admin-display text-2xl leading-none">{counts.unread}</strong>
-              </div>
-              <div className="admin-card border border-[var(--line)] bg-white px-4 py-3">
-                <span className="block text-[9px] font-extrabold uppercase tracking-[.13em] text-[var(--ink-soft)]">{t("7 hari terakhir")}</span>
-                <strong className="mt-1 block admin-display text-2xl leading-none text-[var(--ink)]">{counts.lastSevenDays}</strong>
-              </div>
-            </div>
-          )}
+          <span className="hq-input-icon ml-auto w-full md:w-72">
+            <Search aria-hidden="true" />
+            <input value={search} onChange={(event) => setSearch(event.target.value)} placeholder={t("Cari nama, email, atau isi pesan…")} aria-label={t("Cari nama, email, atau isi pesan…")} className="hq-input" />
+          </span>
         </div>
 
-        <div className="admin-card overflow-hidden border border-[var(--line)] bg-white shadow-sm">
-          <div className="flex flex-wrap items-center gap-3 border-b border-[var(--line)] p-4">
-            <div className="flex flex-wrap gap-2">
-              {FILTERS.map((item) => (
-                <button
-                  key={item.key}
-                  type="button"
-                  onClick={() => setFilter(item.key)}
-                  className={`rounded-full px-3.5 py-1.5 text-[11px] font-extrabold uppercase tracking-[.1em] transition-colors ${
-                    filter === item.key
-                      ? "bg-[var(--ink)] text-[var(--lightest)]"
-                      : "border border-[var(--line)] text-[var(--ink-soft)] hover:bg-[var(--purple-5)]"
-                  }`}
-                >
-                  {t(item.label)}
-                  {item.key === "new" && counts?.unread ? ` (${counts.unread})` : ""}
-                </button>
-              ))}
-            </div>
-            <label className="ml-auto flex h-9 min-w-[210px] flex-1 items-center gap-2 rounded-full border border-[var(--line-strong)] px-3 md:max-w-xs">
-              <Search size={14} className="text-[var(--cool-40)]" />
-              <input
-                value={search}
-                onChange={(event) => setSearch(event.target.value)}
-                placeholder={t("Cari nama, email, atau isi pesan…")}
-                className="w-full bg-transparent text-sm text-[var(--ink)] outline-none"
-              />
-            </label>
-          </div>
-
-          {listQuery.isLoading ? (
-            <div className="flex items-center gap-2 p-10 text-sm text-[var(--ink-soft)]">
-              <Loader2 className="h-4 w-4 animate-spin" /> {t("Memuat pesan…")}
-            </div>
-          ) : filtered.length === 0 ? (
-            <div className="p-12 text-center">
-              <Inbox size={26} className="mx-auto text-[var(--cool-20)]" />
-              <h3 className="mt-4 admin-display text-2xl text-[var(--ink)]">
-                {search.trim() ? t("Tidak ada pesan yang cocok.") : t("Belum ada pesan di kategori ini.")}
-              </h3>
-              <p className="mx-auto mt-2 max-w-md text-xs leading-5 text-[var(--ink-soft)]">
-                {t("Pesan baru dari halaman Kontak akan muncul di sini secara otomatis.")}
-              </p>
-            </div>
-          ) : (
-            <ul className="divide-y divide-[var(--line)]">
-              {filtered.map((row) => (
-                <li key={row.id} className={`p-5 ${row.status === "new" ? "bg-[var(--yellow-10)]/25" : ""}`}>
-                  <div className="flex flex-wrap items-start justify-between gap-x-6 gap-y-2">
-                    <div className="min-w-0">
-                      <div className="flex flex-wrap items-center gap-2">
-                        <strong className="text-base font-extrabold tracking-tight text-[var(--ink)]">{row.name}</strong>
-                        <span className={`rounded-full px-2 py-0.5 text-[9px] font-extrabold uppercase tracking-[.1em] ${STATUS_STYLE[row.status]}`}>
-                          {STATUS_LABEL[row.status] && t(STATUS_LABEL[row.status])}
-                        </span>
-                        {row.company && (
-                          <span className="text-[11px] font-bold text-[var(--ink-soft)]">· {row.company}</span>
-                        )}
-                      </div>
-                      <a
-                        href={`mailto:${row.email}?subject=${encodeURIComponent(`Balasan untuk ${row.name}`)}`}
-                        className="mt-1 inline-flex items-center gap-1.5 font-[family-name:var(--mono)] text-xs text-[var(--accent)] hover:underline"
-                      >
-                        <Mail size={12} /> {row.email}
-                      </a>
-                    </div>
-                    <span className="font-[family-name:var(--mono)] text-[11px] text-[var(--cool-40)]">
-                      {formatDistanceToNow(new Date(row.createdAt), { addSuffix: true, locale: locale === "en" ? enGB : idLocale })}
-                    </span>
+        {listQuery.isLoading ? (
+          <LoadingState>{t("Memuat pesan…")}</LoadingState>
+        ) : listQuery.isError ? (
+          <ErrorState onRetry={() => void listQuery.refetch()}>{listQuery.error.message}</ErrorState>
+        ) : filtered.length === 0 ? (
+          <EmptyState icon={Inbox} title={search.trim() ? t("Tidak ada pesan yang cocok.") : t("Belum ada pesan di kategori ini.")}>
+            {t("Pesan baru dari halaman Kontak akan muncul di sini secara otomatis.")}
+          </EmptyState>
+        ) : (
+          <ul className="hq-msgs">
+            {filtered.map((row) => (
+              <li key={row.id} className={`hq-msg ${row.status === "new" ? "unread" : ""}`}>
+                <div className="flex flex-wrap items-start justify-between gap-x-6 gap-y-1">
+                  <div className="flex min-w-0 flex-wrap items-center gap-2">
+                    <span className="hq-avatar muted" aria-hidden="true">{row.name.trim().charAt(0).toUpperCase() || "?"}</span>
+                    <strong className="hq-msg-name">{row.name}</strong>
+                    {STATUS_LABEL[row.status] && <Badge tone={STATUS_TONE[row.status]} dot={row.status === "new"}>{t(STATUS_LABEL[row.status])}</Badge>}
+                    {row.company && <span className="hq-faint text-[12px]">· {row.company}</span>}
                   </div>
-
-                  <p className="mt-3 max-w-3xl whitespace-pre-wrap text-sm leading-6 text-[var(--ink-soft)]">{row.message}</p>
-
-                  <div className="mt-4 flex flex-wrap gap-2">
-                    {row.status !== "read" && (
-                      <button type="button" disabled={setStatus.isPending} className={actionClass} onClick={() => setStatus.mutate({ id: row.id, status: "read" })}>
-                        <MailOpen size={13} /> {t("Tandai dibaca")}
-                      </button>
-                    )}
-                    {row.status !== "archived" && (
-                      <button type="button" disabled={setStatus.isPending} className={actionClass} onClick={() => setStatus.mutate({ id: row.id, status: "archived" })}>
-                        <Archive size={13} /> {t("Arsipkan")}
-                      </button>
-                    )}
-                    {row.status !== "new" && (
-                      <button type="button" disabled={setStatus.isPending} className={actionClass} onClick={() => setStatus.mutate({ id: row.id, status: "new" })}>
-                        <RotateCcw size={13} /> {t("Kembalikan ke baru")}
-                      </button>
-                    )}
-                    <button
-                      type="button"
-                      className="inline-flex items-center gap-1.5 rounded-full border border-[var(--red-30)] px-3 py-1.5 text-[11px] font-extrabold text-[var(--red-50)] transition-colors hover:bg-[var(--red-30)] hover:text-[var(--ink)]"
-                      onClick={() => setPendingDelete({ id: row.id, name: row.name })}
-                    >
-                      <Trash2 size={13} /> {t("Hapus")}
-                    </button>
-                  </div>
-                </li>
-              ))}
-            </ul>
-          )}
-        </div>
-      </div>
+                  <span className="hq-faint hq-tnum text-[12px]">
+                    {formatDistanceToNow(new Date(row.createdAt), { addSuffix: true, locale: locale === "en" ? enGB : idLocale })}
+                  </span>
+                </div>
+                <a href={`mailto:${row.email}?subject=${encodeURIComponent(`Balasan untuk ${row.name}`)}`} className="hq-link hq-mono mt-1 inline-flex items-center gap-1.5">
+                  <Mail size={12} aria-hidden="true" /> {row.email}
+                </a>
+                <p className="hq-msg-body">{row.message}</p>
+                <div className="flex flex-wrap gap-1.5">
+                  {row.status !== "read" && (
+                    <Button size="sm" icon={MailOpen} disabled={setStatus.isPending} onClick={() => setStatus.mutate({ id: row.id, status: "read" })}>
+                      {t("Tandai dibaca")}
+                    </Button>
+                  )}
+                  {row.status !== "archived" && (
+                    <Button size="sm" icon={Archive} disabled={setStatus.isPending} onClick={() => setStatus.mutate({ id: row.id, status: "archived" })}>
+                      {t("Arsipkan")}
+                    </Button>
+                  )}
+                  {row.status !== "new" && (
+                    <Button size="sm" icon={RotateCcw} disabled={setStatus.isPending} onClick={() => setStatus.mutate({ id: row.id, status: "new" })}>
+                      {t("Kembalikan ke baru")}
+                    </Button>
+                  )}
+                  <Button size="sm" variant="danger" icon={Trash2} onClick={() => setPendingDelete({ id: row.id, name: row.name })}>
+                    {t("Hapus")}
+                  </Button>
+                </div>
+              </li>
+            ))}
+          </ul>
+        )}
+      </Card>
 
       <ConfirmModal
         open={Boolean(pendingDelete)}

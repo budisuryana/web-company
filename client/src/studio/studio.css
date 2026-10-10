@@ -616,3 +616,25 @@ html[data-studio] [role="tabpanel"] { outline: none; }
 @media (max-width: 860px) {
   html[data-studio] .hq-savebar { bottom: calc(68px + env(safe-area-inset-bottom)); }
 }
+
+/* ---------- inbox & users ---------- */
+html[data-studio] .hq-msgs { list-style: none; margin: 0; padding: 0; }
+html[data-studio] .hq-msg { display: flex; flex-direction: column; gap: 4px; padding: 12px 14px; border-bottom: 1px solid var(--hq-border-subtle); }
+html[data-studio] .hq-msg:last-child { border-bottom: 0; }
+html[data-studio] .hq-msg.unread { background: var(--hq-wash-amber); }
+html[data-studio] .hq-msg-name { font-weight: 600; color: var(--hq-text-primary); }
+html[data-studio] .hq-msg .hq-msg-body { margin: 6px 0 8px; max-width: 760px; white-space: pre-wrap; color: var(--hq-text-secondary); }
+html[data-studio] .hq-users td { padding-top: 10px; padding-bottom: 10px; }
+html[data-studio] .hq-steps { list-style: none; margin: 0; padding: 12px 14px; display: flex; flex-direction: column; gap: 10px; font-size: 12.5px; line-height: 18px; color: var(--hq-text-secondary); }
+html[data-studio] .hq-steps li { display: flex; gap: 10px; }
+html[data-studio] .hq-steps span { font: 500 11px/18px var(--hq-font-mono); color: var(--hq-review); flex: none; }
+html[data-studio] .hq-card-head > .min-w-0 { flex: 1 1 0; }
+@media (max-width: 640px) {
+  /* The users table becomes stacked rows so the role and action stay in view. */
+  html[data-studio] .hq-users thead { display: none; }
+  html[data-studio] .hq-users, html[data-studio] .hq-users tbody, html[data-studio] .hq-users tr, html[data-studio] .hq-users td { display: block; }
+  html[data-studio] .hq-users tr { padding: 10px 0; border-bottom: 1px solid var(--hq-border-subtle); }
+  html[data-studio] .hq-users tr:last-child { border-bottom: 0; }
+  html[data-studio] .hq-users td { border: 0; padding: 3px 14px; text-align: left; }
+  html[data-studio] .hq-users td.num { text-align: left; padding-top: 8px; }
+}
