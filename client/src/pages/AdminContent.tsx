@@ -1,11 +1,17 @@
-import { ChangeEvent, useEffect, useMemo, useState } from "react";
-import { Check, FileText, ImageIcon, Loader2, RotateCcw, Save, Search, Trash2, UploadCloud } from "lucide-react";
+/** CMS: bilingual (EN/ID) site copy with code defaults, live on save, plus the company logo, phone and social links. */
+import { ChangeEvent, useMemo, useState, type ReactNode } from "react";
+import type { inferRouterOutputs } from "@trpc/server";
+import { FileText, Globe, Loader2, RotateCcw, Save, Search, Trash2, Undo2, UploadCloud } from "lucide-react";
 import AdminGuard from "@/pages/AdminGuard";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { BrandMark } from "@/components/SiteShell";
 import { trpc } from "@/lib/trpc";
 import { toast } from "sonner";
+import { CONTENT_SECTIONS, validateContent, type ContentSection } from "@shared/i18n/editable";
+import type { AppRouter } from "../../../server/routers";
+
+type RouterOutputs = inferRouterOutputs<AppRouter>;
 
 async function processLogoImage(file: File): Promise<{ dataUrl: string; fileName: string; contentType: string }> {
   return new Promise((resolve, reject) => {
@@ -95,97 +101,165 @@ async function processLogoImage(file: File): Promise<{ dataUrl: string; fileName
 
 const tabTriggerClass = "admin-tab flex-none px-2 pb-3 pt-2 text-xs font-extrabold uppercase tracking-[.14em] text-[var(--cool-40)] transition-colors hover:text-[var(--ink)] data-[state=active]:text-[var(--ink)]";
 
-const tabMeta: Record<string, { title: string; desc: string }> = {
-  company: {
-    title: "Profil & Identitas Perusahaan",
-    desc: "Nama perusahaan, logo teks (wordmark), logo gambar (opsional), moto footer, alamat kantor Bandung, email resmi, dan media sosial.",
-  },
-  home: {
-    title: "Home Page Copy",
-    desc: "Teks headline, deskripsi hero, dan judul section produk unggulan di halaman utama.",
-  },
-  about: {
-    title: "About Page Copy",
-    desc: "Pernyataan visi, filosofi, dan narasi studio di halaman About.",
-  },
-  contact: {
-    title: "Contact Page Copy",
-    desc: "Teks pengantar dan arahan formulir kontak di halaman Contact.",
-  },
-  all: {
-    title: "Semua Konten & Copy Situs",
-    desc: "Seluruh variabel teks website yang tersimpan di dalam database Product Registry.",
-  },
-};
+type Locale = "en" | "id";
+type Entry = RouterOutputs["content"]["admin"]["list"][number];
+type TabId = ContentSection | "all";
 
-const keyOrder: Record<string, number> = {
-  // Profil Perusahaan (Paling Atas: Nama Perusahaan, Tagline, Kontak, Lokasi, Sosial)
-  "company.name": 1,
-  "company.tagline": 2,
-  "company.email": 3,
-  "company.phone": 4,
-  "company.address": 5,
-  "company.footerMotto": 6,
-  "company.linkedinUrl": 7,
-  "company.githubUrl": 8,
-  "company.instagramUrl": 9,
+const LOCALES: Array<{ id: Locale; label: string }> = [
+  { id: "en", label: "English" },
+  { id: "id", label: "Indonesia" },
+];
 
-  // Home Page
-  "home.heroEyebrow": 1,
-  "home.heroTitle": 2,
-  "home.heroDescription": 3,
-  "home.featuredHeading": 4,
-  "home.featuredDescription": 5,
-  "home.principleHeadline": 6,
-  "home.principleBody": 7,
-  "home.methodHeading": 8,
-  "home.ctaHeadline": 9,
+const TABS: Array<{ id: TabId; title: string; desc: string }> = [
+  { id: "company", title: "Profil Perusahaan", desc: "Nama, tagline, email, lokasi, logo, telepon, dan media sosial." },
+  { id: "home", title: "Home Page", desc: "Hero, bagian produk, cara kami membangun, bagian AI, penutup, dan SEO halaman utama." },
+  { id: "about", title: "About Page", desc: "Hero, cerita perusahaan, prinsip, bagian AI, penutup, dan SEO halaman About." },
+  { id: "contact", title: "Contact Page", desc: "Pengantar, keterangan formulir, pesan setelah terkirim, dan SEO halaman Contact." },
+  { id: "upcoming", title: "In Development", desc: "Judul, pengantar, label status, dan empat produk yang sedang dikembangkan." },
+  { id: "all", title: "Semua Konten", desc: "Seluruh teks yang dapat diedit, termasuk halaman Produk, dikelompokkan per halaman." },
+];
 
-  // About Page
-  "about.heroTitle": 1,
-  "about.heroDescription": 2,
-  "about.statement": 3,
-  "about.gridHeading": 4,
+/** Legacy site_content rows that the public site still reads (social links feed JSON-LD) or that stay internal (phone). */
+const PROFILE_KEYS: Array<{ key: string; label: string; hint: string; placeholder: string }> = [
+  { key: "company.phone", label: "Nomor kontak / WhatsApp", hint: "Disimpan untuk internal, belum ditampilkan di website.", placeholder: "+62…" },
+  { key: "company.linkedinUrl", label: "URL LinkedIn", hint: "Dipakai di data perusahaan untuk mesin pencari (JSON-LD).", placeholder: "https://www.linkedin.com/company/…" },
+  { key: "company.githubUrl", label: "URL GitHub", hint: "Dipakai di data perusahaan untuk mesin pencari (JSON-LD).", placeholder: "https://github.com/…" },
+  { key: "company.instagramUrl", label: "URL Instagram", hint: "Dipakai di data perusahaan untuk mesin pencari (JSON-LD).", placeholder: "https://www.instagram.com/…" },
+];
 
-  // Contact Page
-  "contact.heroTitle": 1,
-  "contact.intro": 2,
-  "contact.city": 3,
-  "contact.email": 4,
-};
+const draftKey = (key: string, locale: Locale) => `${locale}:${key}`;
 
-function formatCleanLabel(label: string): string {
-  return label.replace(/^(Company|Home|About|Contact)\s*—\s*/i, "").trim();
+function storedValue(entry: Entry, locale: Locale): string {
+  const slot = entry.values[entry.shared ? "en" : locale];
+  return slot.override ?? slot.default;
 }
 
 export default function AdminContent() {
   const { user } = useAuth();
   const isAdmin = user?.role === "admin";
-  const contentQuery = trpc.registry.admin.siteContent.useQuery(undefined, { enabled: isAdmin });
   const utils = trpc.useUtils();
-  const [values, setValues] = useState<Record<string, string>>({});
-  const [activeTab, setActiveTab] = useState("company");
-  const [search, setSearch] = useState("");
-  const [isSaving, setIsSaving] = useState(false);
-  const [isUploadingLogo, setIsUploadingLogo] = useState(false);
-
-  const originalItems = contentQuery.data ?? [];
-  const originalValues = useMemo(
-    () => Object.fromEntries(originalItems.map((item) => [item.key, item.value])),
-    [originalItems]
-  );
-
-  useEffect(() => {
-    if (contentQuery.data) {
-      setValues(Object.fromEntries(contentQuery.data.map((item) => [item.key, item.value])));
-    }
-  }, [contentQuery.data]);
-
-  const updateMutation = trpc.registry.admin.updateSiteContent.useMutation();
+  const entriesQuery = trpc.content.admin.list.useQuery(undefined, { enabled: isAdmin });
+  const legacyQuery = trpc.registry.admin.siteContent.useQuery(undefined, { enabled: isAdmin });
+  const updateMutation = trpc.content.admin.update.useMutation();
+  const resetMutation = trpc.content.admin.reset.useMutation();
+  const legacyUpdateMutation = trpc.registry.admin.updateSiteContent.useMutation();
   const uploadLogoMutation = trpc.registry.media.uploadCompanyLogo.useMutation();
   const removeLogoMutation = trpc.registry.media.removeCompanyLogo.useMutation();
 
-  const logoUrl = values["company.logoUrl"] || originalValues["company.logoUrl"] || "";
+  const [activeTab, setActiveTab] = useState<TabId>("company");
+  const [search, setSearch] = useState("");
+  const [drafts, setDrafts] = useState<Record<string, string>>({});
+  const [profileDrafts, setProfileDrafts] = useState<Record<string, string>>({});
+  const [isSaving, setIsSaving] = useState(false);
+  const [resetting, setResetting] = useState<string | null>(null);
+  const [isUploadingLogo, setIsUploadingLogo] = useState(false);
+
+  const entries = entriesQuery.data ?? [];
+  const legacyValues = useMemo(
+    () => Object.fromEntries((legacyQuery.data ?? []).map((item) => [item.key, item.value])),
+    [legacyQuery.data],
+  );
+  const logoUrl = legacyValues["company.logoUrl"] || "";
+
+  const refresh = () =>
+    Promise.all([
+      utils.content.admin.list.invalidate(),
+      utils.content.public.all.invalidate(),
+      utils.registry.admin.siteContent.invalidate(),
+      utils.registry.public.siteContent.invalidate(),
+    ]);
+
+  const visibleEntries = useMemo(() => {
+    const term = search.trim().toLowerCase();
+    return entries.filter((entry) => {
+      if (activeTab !== "all" && entry.section !== activeTab) return false;
+      if (!term) return true;
+      const haystack = [entry.label, entry.key, storedValue(entry, "en"), storedValue(entry, "id")].join(" ").toLowerCase();
+      return haystack.includes(term);
+    });
+  }, [entries, activeTab, search]);
+
+  /** Unsaved edits: every draft that differs from what is stored. */
+  const pending = useMemo(() => {
+    const byKey = new Map(entries.map((entry) => [entry.key, entry]));
+    return Object.entries(drafts)
+      .map(([slot, value]) => {
+        const [locale, ...rest] = slot.split(":");
+        const key = rest.join(":");
+        const entry = byKey.get(key);
+        return entry ? { entry, locale: locale as Locale, value } : null;
+      })
+      .filter((item): item is { entry: Entry; locale: Locale; value: string } => Boolean(item))
+      .filter(({ entry, locale, value }) => value !== storedValue(entry, locale));
+  }, [drafts, entries]);
+
+  const pendingProfile = useMemo(
+    () => Object.entries(profileDrafts).filter(([key, value]) => value.trim() !== (legacyValues[key] ?? "")),
+    [profileDrafts, legacyValues],
+  );
+
+  const problems = useMemo(() => {
+    const result: Record<string, string> = {};
+    for (const { entry, locale, value } of pending) {
+      // An emptied field means "use the default" and is saved as a reset.
+      if (!value.trim()) continue;
+      const problem = validateContent(entry.key, value);
+      if (problem) result[draftKey(entry.key, locale)] = problem;
+    }
+    for (const [key, value] of pendingProfile) {
+      if (key !== "company.phone" && value.trim() && !/^https:\/\/\S+$/.test(value.trim())) result[key] = "Gunakan URL lengkap yang diawali https://";
+    }
+    return result;
+  }, [pending, pendingProfile]);
+
+  const pendingCount = pending.length + pendingProfile.length;
+  const hasProblems = Object.keys(problems).length > 0;
+
+  const handleSave = async () => {
+    if (!pendingCount) return;
+    if (hasProblems) {
+      toast.error("Perbaiki kolom yang ditandai merah sebelum menyimpan.");
+      return;
+    }
+    setIsSaving(true);
+    try {
+      for (const { entry, locale, value } of pending) {
+        const text = value.trim();
+        const slot = entry.values[entry.shared ? "en" : locale];
+        // Saving the default text (or an empty field) removes the override instead of copying the default.
+        if (!text || text === slot.default) {
+          if (slot.override !== null) await resetMutation.mutateAsync({ key: entry.key, locale });
+        } else {
+          await updateMutation.mutateAsync({ key: entry.key, locale, value: text });
+        }
+      }
+      for (const [key, value] of pendingProfile) await legacyUpdateMutation.mutateAsync({ key, value: value.trim() });
+      await refresh();
+      setDrafts({});
+      setProfileDrafts({});
+      toast.success(`${pendingCount} perubahan disimpan dan langsung tampil di website.`);
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Gagal menyimpan perubahan.");
+      await refresh();
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleReset = async (entry: Entry, locale: Locale) => {
+    const slot = draftKey(entry.key, locale);
+    setResetting(slot);
+    try {
+      await resetMutation.mutateAsync({ key: entry.key, locale });
+      setDrafts(({ [slot]: _removed, ...rest }) => rest);
+      await refresh();
+      toast.success(`${entry.label} kembali ke teks bawaan.`);
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Gagal mengembalikan ke teks bawaan.");
+    } finally {
+      setResetting(null);
+    }
+  };
 
   const handleLogoUpload = async (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -193,17 +267,11 @@ export default function AdminContent() {
     try {
       setIsUploadingLogo(true);
       const processed = await processLogoImage(file);
-      const res = await uploadLogoMutation.mutateAsync({
-        fileName: processed.fileName,
-        contentType: processed.contentType,
-        dataUrl: processed.dataUrl,
-      });
-      setValues((prev) => ({ ...prev, "company.logoUrl": res.url }));
-      await utils.registry.admin.siteContent.invalidate();
-      await utils.registry.public.siteContent.invalidate();
-      toast.success("Logo perusahaan berhasil diunggah dan disesuaikan!");
-    } catch (err: unknown) {
-      toast.error(err instanceof Error ? err.message : "Gagal mengunggah logo.");
+      await uploadLogoMutation.mutateAsync({ fileName: processed.fileName, contentType: processed.contentType, dataUrl: processed.dataUrl });
+      await refresh();
+      toast.success("Logo perusahaan berhasil diunggah.");
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Gagal mengunggah logo.");
     } finally {
       setIsUploadingLogo(false);
       event.target.value = "";
@@ -214,337 +282,309 @@ export default function AdminContent() {
     try {
       setIsUploadingLogo(true);
       await removeLogoMutation.mutateAsync();
-      setValues((prev) => ({ ...prev, "company.logoUrl": "" }));
-      await utils.registry.admin.siteContent.invalidate();
-      await utils.registry.public.siteContent.invalidate();
-      toast.success("Logo gambar berhasil dihapus, kembali ke logo default.");
-    } catch (err: unknown) {
-      toast.error(err instanceof Error ? err.message : "Gagal menghapus logo.");
+      await refresh();
+      toast.success("Logo gambar dihapus, kembali ke logo NUSAKARYA bawaan.");
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Gagal menghapus logo.");
     } finally {
       setIsUploadingLogo(false);
     }
   };
 
   const tabCounts = useMemo(() => {
-    const company = originalItems.filter((i) => i.key.startsWith("company.") && i.key !== "company.logoUrl").length;
-    const home = originalItems.filter((i) => i.key.startsWith("home.")).length;
-    const about = originalItems.filter((i) => i.key.startsWith("about."))?.length ?? 0;
-    const contact = originalItems.filter((i) => i.key.startsWith("contact.")).length;
-    return { all: originalItems.length, company, home, about, contact };
-  }, [originalItems]);
+    const counts: Record<string, number> = { all: entries.length };
+    for (const entry of entries) counts[entry.section] = (counts[entry.section] ?? 0) + 1;
+    return counts;
+  }, [entries]);
 
-  const filteredItems = useMemo(() => {
-    const term = search.trim().toLowerCase();
-    const items = originalItems.filter((item) => {
-      if (item.key === "company.logoUrl") return false; // Managed separately via logo uploader
-      if (activeTab === "company" && !item.key.startsWith("company.")) return false;
-      if (activeTab === "home" && !item.key.startsWith("home.")) return false;
-      if (activeTab === "about" && !item.key.startsWith("about.")) return false;
-      if (activeTab === "contact" && !item.key.startsWith("contact.")) return false;
-      if (term && !`${item.label} ${item.key} ${item.value}`.toLowerCase().includes(term)) return false;
-      return true;
-    });
-
-    return items.sort((a, b) => {
-      const orderA = keyOrder[a.key] ?? 999;
-      const orderB = keyOrder[b.key] ?? 999;
-      return orderA - orderB;
-    });
-  }, [originalItems, activeTab, search]);
-
-  const modifiedKeys = useMemo(() => {
-    return filteredItems
-      .map((item) => item.key)
-      .filter((key) => values[key] !== undefined && values[key] !== originalValues[key]);
-  }, [filteredItems, values, originalValues]);
-
-  const handleResetCurrentTab = () => {
-    const resetPatch: Record<string, string> = {};
-    for (const item of filteredItems) {
-      resetPatch[item.key] = originalValues[item.key] ?? "";
-    }
-    setValues((prev) => ({ ...prev, ...resetPatch }));
-    toast.info("Perubahan pada tab ini telah dikembalikan.");
-  };
-
-  const handleSaveCurrentTab = async () => {
-    if (modifiedKeys.length === 0) {
-      toast.info("Tidak ada perubahan baru untuk disimpan pada tab ini.");
-      return;
-    }
-    try {
-      setIsSaving(true);
-      await Promise.all(
-        modifiedKeys.map((key) =>
-          updateMutation.mutateAsync({
-            key,
-            value: values[key] ?? "",
-          })
-        )
-      );
-      await Promise.all([
-        utils.registry.admin.siteContent.invalidate(),
-        utils.registry.public.siteContent.invalidate(),
-      ]);
-      toast.success(`${modifiedKeys.length} teks berhasil diperbarui!`);
-    } catch (err: unknown) {
-      toast.error(err instanceof Error ? err.message : "Gagal menyimpan perubahan konten.");
-    } finally {
-      setIsSaving(false);
-    }
-  };
-
-  const currentMeta = tabMeta[activeTab] ?? tabMeta.all;
+  const currentTab = TABS.find((tab) => tab.id === activeTab) ?? TABS[0];
+  const groups = activeTab === "all" ? CONTENT_SECTIONS.map((section) => ({ ...section, items: visibleEntries.filter((entry) => entry.section === section.id) })).filter((group) => group.items.length) : [{ id: activeTab, title: "", items: visibleEntries }];
 
   return (
     <AdminGuard>
-      <div className="space-y-6">
+      <div className="min-w-0 max-w-full space-y-6">
         <div className="flex flex-wrap items-end justify-between gap-4 border-b border-[var(--line)] pb-6">
           <div>
-            <span className="font-mono text-xs font-bold uppercase tracking-widest text-[var(--accent)]">
-              Pengaturan &amp; Konten
-            </span>
+            <span className="font-mono text-xs font-bold uppercase tracking-widest text-[var(--accent)]">Konten Situs · EN / ID</span>
             <h1 className="mt-1 admin-display text-4xl text-[var(--ink)]">Profil &amp; Konten Situs</h1>
             <p className="mt-1 text-xs text-[var(--ink-soft)]">
-              Kelola nama perusahaan, logo, dan tautan media sosial.
+              Edit teks website dalam bahasa Inggris dan Indonesia. Kolom yang belum diubah memakai teks bawaan.
             </p>
-            <p className="mt-2 max-w-2xl rounded-md bg-[var(--yellow-2)] px-3 py-2 text-xs text-[var(--yellow-50)]">
-              Sejak versi bilingual (ID/EN), teks halaman publik, email, dan lokasi dikelola di kode
-              (<code>shared/i18n/messages.ts</code> dan <code>shared/site.ts</code>). Field Home, About, Contact, nama perusahaan,
-              tagline, dan email di sini tidak lagi tampil di situs publik.
+            <p className="mt-2 inline-flex max-w-2xl items-center gap-2 rounded-md bg-[var(--blue-5)] px-3 py-2 text-xs font-semibold text-[var(--blue-60)]" role="note">
+              <Globe size={14} aria-hidden="true" /> Perubahan yang disimpan langsung tampil di website publik.
             </p>
           </div>
           <div className="relative">
             <Search size={14} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[var(--cool-40)]" />
+            <label htmlFor="content-search" className="sr-only">Cari konten</label>
             <input
-              type="text"
+              id="content-search"
+              type="search"
               value={search}
-              onChange={(e) => setSearch(e.target.value)}
+              onChange={(event) => setSearch(event.target.value)}
               placeholder="Cari teks atau key…"
               className="h-9 w-60 border border-[var(--line-strong)] bg-[var(--card)] pl-9 pr-3 text-xs text-[var(--ink)] outline-none transition-colors focus:border-[var(--accent)]"
             />
           </div>
         </div>
 
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="mt-6 w-full">
+        <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as TabId)} className="mt-6 w-full min-w-0">
           <TabsList className="mb-6 h-auto w-full max-w-full justify-start gap-8 overflow-x-auto rounded-none border-b-2 border-[var(--ink)] bg-transparent p-0">
-            <TabsTrigger value="company" className={tabTriggerClass}>
-              Profil Perusahaan <span className="ml-1.5 rounded-full bg-[var(--cool-10)] px-1.5 py-0.5 text-[10px] text-[var(--ink)]">{tabCounts.company}</span>
-            </TabsTrigger>
-            <TabsTrigger value="home" className={tabTriggerClass}>
-              Home Page <span className="ml-1.5 rounded-full bg-[var(--cool-10)] px-1.5 py-0.5 text-[10px] text-[var(--ink)]">{tabCounts.home}</span>
-            </TabsTrigger>
-            <TabsTrigger value="about" className={tabTriggerClass}>
-              About Page <span className="ml-1.5 rounded-full bg-[var(--cool-10)] px-1.5 py-0.5 text-[10px] text-[var(--ink)]">{tabCounts.about}</span>
-            </TabsTrigger>
-            <TabsTrigger value="contact" className={tabTriggerClass}>
-              Contact Page <span className="ml-1.5 rounded-full bg-[var(--cool-10)] px-1.5 py-0.5 text-[10px] text-[var(--ink)]">{tabCounts.contact}</span>
-            </TabsTrigger>
-            <TabsTrigger value="all" className={tabTriggerClass}>
-              Semua Konten <span className="ml-1.5 rounded-full bg-[var(--cool-10)] px-1.5 py-0.5 text-[10px] text-[var(--ink)]">{tabCounts.all}</span>
-            </TabsTrigger>
+            {TABS.map((tab) => (
+              <TabsTrigger key={tab.id} value={tab.id} className={tabTriggerClass}>
+                {tab.title}
+                <span className="ml-1.5 rounded-full bg-[var(--cool-10)] px-1.5 py-0.5 text-[10px] text-[var(--ink)]">{tabCounts[tab.id] ?? 0}</span>
+              </TabsTrigger>
+            ))}
           </TabsList>
 
-          {contentQuery.isLoading ? (
+          {entriesQuery.isLoading ? (
             <div className="flex items-center gap-2 py-16 text-sm text-[var(--ink-soft)]">
-              <Loader2 className="h-4 w-4 animate-spin" /> Memuat daftar konten yang dapat diedit…
+              <Loader2 className="h-4 w-4 animate-spin" /> Memuat konten…
             </div>
-          ) : filteredItems.length === 0 ? (
-            <div className="w-full admin-card border border-[var(--line)] bg-white p-12 text-center text-[var(--ink-soft)]">
-              <FileText className="mx-auto mb-3 h-8 w-8 text-[var(--cool-40)]" />
-              <p className="text-sm font-semibold text-[var(--ink)]">Tidak ada konten yang sesuai dengan filter.</p>
-              {search && <p className="mt-1 text-xs">Coba kata kunci pencarian yang lain.</p>}
+          ) : entriesQuery.isError ? (
+            <div className="admin-card border border-red-200 bg-red-50 p-6 text-sm text-red-800" role="alert">
+              Konten tidak dapat dimuat: {entriesQuery.error.message}
             </div>
           ) : (
-            <div className="w-full">
-              <form
-                onSubmit={(e) => {
-                  e.preventDefault();
-                  void handleSaveCurrentTab();
-                }}
-                className="w-full overflow-hidden admin-card border border-[var(--line)] bg-white shadow-sm"
-              >
-                {/* Form Header */}
-                <div className="border-b border-[var(--line)] px-6 py-5">
-                  <h2 className="admin-display text-3xl text-[var(--ink)]">{currentMeta.title}</h2>
-                  <p className="mt-1 text-xs text-[var(--ink-soft)]">{currentMeta.desc}</p>
-                </div>
+            <form
+              onSubmit={(event) => {
+                event.preventDefault();
+                void handleSave();
+              }}
+              className="w-full overflow-hidden admin-card border border-[var(--line)] bg-white shadow-sm"
+            >
+              <div className="border-b border-[var(--line)] px-6 py-5">
+                <h2 className="admin-display text-3xl text-[var(--ink)]">{currentTab.title}</h2>
+                <p className="mt-1 text-xs text-[var(--ink-soft)]">{currentTab.desc}</p>
+              </div>
 
-                {/* Logo Uploader Card (Visible on Company Tab) */}
-                {activeTab === "company" && (
-                  <div className="border-b border-[var(--line)] bg-[var(--warm-2)] p-6">
-                    <div className="flex flex-wrap items-center justify-between gap-6">
-                      <div className="flex items-center gap-5">
-                        <div className="grid h-16 w-24 place-items-center rounded admin-card border border-[var(--line)] bg-white p-2 shadow-inner">
-                          {logoUrl ? (
-                            <img src={logoUrl} alt="Logo Preview" className="max-h-12 max-w-full object-contain" />
-                          ) : (
-                            <div className="flex flex-col items-center gap-1 text-[var(--cool-40)]">
-                              <BrandMark className="h-7 w-7" />
-                              <span className="text-[9px] font-bold">Logo Vektor</span>
-                            </div>
-                          )}
-                        </div>
-                        <div>
-                          <h3 className="text-sm font-extrabold text-[var(--ink)]">Logo Gambar Perusahaan (Opsional)</h3>
-                          <p className="mt-0.5 text-xs text-[var(--ink-soft)]">
-                            Unggah file logo gambar (PNG, SVG, JPG, WebP). Jika kosong, situs akan menggunakan logo ikon bawaan.
-                          </p>
-                          {logoUrl && (
-                            <p className="mt-1 max-w-sm truncate font-mono text-[10px] text-[var(--cool-40)]">
-                              {logoUrl}
-                            </p>
-                          )}
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        {logoUrl && (
-                          <button
-                            type="button"
-                            disabled={isUploadingLogo}
-                            onClick={() => void handleLogoRemove()}
-                            className="inline-flex items-center gap-1.5 border border-red-200 bg-white px-3 py-2 text-xs font-bold text-red-700 hover:bg-red-50 disabled:opacity-50"
-                          >
-                            <Trash2 size={13} /> Hapus Logo
-                          </button>
+              {activeTab === "company" && (
+                <div className="border-b border-[var(--line)] bg-[var(--warm-2)] p-6">
+                  <div className="flex flex-wrap items-center justify-between gap-6">
+                    <div className="flex items-center gap-5">
+                      <div className="grid h-16 w-24 place-items-center rounded admin-card border border-[var(--line)] bg-white p-2 shadow-inner">
+                        {logoUrl ? (
+                          <img src={logoUrl} alt="Pratinjau logo" className="max-h-12 max-w-full object-contain" />
+                        ) : (
+                          <div className="flex flex-col items-center gap-1 text-[var(--ink)]">
+                            <BrandMark className="h-7 w-7" />
+                            <span className="text-[9px] font-bold text-[var(--cool-40)]">Logo bawaan</span>
+                          </div>
                         )}
-                        <label className="inline-flex cursor-pointer items-center gap-2 bg-[var(--ink)] px-4 py-2 text-xs font-extrabold text-[var(--lightest)] transition-transform duration-150 hover:-translate-y-0.5 disabled:opacity-50">
-                          {isUploadingLogo ? <Loader2 size={14} className="animate-spin" /> : <UploadCloud size={14} />}
-                          {logoUrl ? "Ganti Logo" : "Unggah Logo"}
-                          <input
-                            type="file"
-                            accept="image/*"
-                            className="hidden"
-                            disabled={isUploadingLogo}
-                            onChange={(e) => void handleLogoUpload(e)}
-                          />
-                        </label>
+                      </div>
+                      <div>
+                        <h3 className="text-sm font-extrabold text-[var(--ink)]">Logo gambar (opsional)</h3>
+                        <p className="mt-0.5 text-xs text-[var(--ink-soft)]">
+                          Jika kosong, website memakai logo NUSAKARYA bawaan. Unggahan menggantikan logo di header dan data mesin pencari.
+                        </p>
                       </div>
                     </div>
-                  </div>
-                )}
-
-                {/* Form Body - Responsive 2-Column Side-by-Side Grid */}
-                <div className="grid grid-cols-1 gap-x-6 gap-y-5 p-6 md:grid-cols-2">
-                  {filteredItems.map((item) => {
-                    const isModified = values[item.key] !== undefined && values[item.key] !== originalValues[item.key];
-                    const isLong =
-                      item.key.toLowerCase().includes("description") ||
-                      item.key.toLowerCase().includes("statement") ||
-                      item.key.toLowerCase().includes("body") ||
-                      item.key.toLowerCase().includes("intro") ||
-                      item.key.toLowerCase().includes("herotitle") ||
-                      (item.value && item.value.length > 75);
-
-                    return (
-                      <div
-                        className={`flex flex-col justify-between rounded border p-4 transition-colors ${
-                          isLong ? "md:col-span-2" : "md:col-span-1"
-                        } ${
-                          isModified
-                            ? "border-[var(--purple-20)] bg-[var(--card)]"
-                            : "border-[var(--line)] bg-[var(--warm-2)] hover:border-[var(--line-strong)]"
-                        }`}
-                        key={item.key}
-                      >
-                        <div className="mb-2 flex items-center justify-between gap-2">
-                          <label htmlFor={`field-${item.key}`} className="text-xs font-extrabold text-[var(--ink)]">
-                            {formatCleanLabel(item.label)}
-                          </label>
-                          <div className="flex items-center gap-1.5">
-                            {isModified && (
-                              <span className="rounded bg-[var(--purple-5)] px-1.5 py-0.5 text-[9px] font-extrabold uppercase tracking-wide text-[var(--purple-60)]">
-                                Diedit
-                              </span>
-                            )}
-                            <code className="hidden text-[10px] text-[var(--cool-40)] sm:inline">{item.key}</code>
-                          </div>
-                        </div>
-
-                        {isLong ? (
-                          <textarea
-                            id={`field-${item.key}`}
-                            rows={3}
-                            value={values[item.key] ?? ""}
-                            onChange={(event) =>
-                              setValues((current) => ({
-                                ...current,
-                                [item.key]: event.target.value,
-                              }))
-                            }
-                            className={`w-full resize-y border bg-[var(--card)] p-2.5 text-sm leading-6 text-[var(--ink)] outline-none transition-colors focus:border-[var(--accent)] ${
-                              isModified ? "border-[var(--purple-30)]" : "border-[var(--line-strong)]"
-                            }`}
-                          />
-                        ) : (
-                          <input
-                            type="text"
-                            id={`field-${item.key}`}
-                            value={values[item.key] ?? ""}
-                            onChange={(event) =>
-                              setValues((current) => ({
-                                ...current,
-                                [item.key]: event.target.value,
-                              }))
-                            }
-                            className={`h-10 w-full border bg-[var(--card)] px-3 text-sm text-[var(--ink)] outline-none transition-colors focus:border-[var(--accent)] ${
-                              isModified ? "border-[var(--purple-30)]" : "border-[var(--line-strong)]"
-                            }`}
-                          />
-                        )}
-                      </div>
-                    );
-                  })}
-                </div>
-
-                {/* Form Sticky Footer Bar */}
-                <div className="flex flex-wrap items-center justify-between gap-3 border-t border-[var(--line)] bg-[var(--paper)] px-6 py-4">
-                  <div className="text-xs font-semibold text-[var(--ink-soft)]">
-                    {modifiedKeys.length > 0 ? (
-                      <span className="text-[var(--purple-60)]">
-                        <b className="font-extrabold">{modifiedKeys.length}</b> kolom teks telah diubah
-                      </span>
-                    ) : (
-                      <span className="text-[var(--ink-soft)]">Semua data pada tab ini tersimpan</span>
-                    )}
-                  </div>
-                  <div className="flex items-center gap-3">
-                    {modifiedKeys.length > 0 && (
-                      <button
-                        type="button"
-                        disabled={isSaving}
-                        onClick={handleResetCurrentTab}
-                        className="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-bold text-[var(--ink-soft)] transition-colors hover:text-[var(--ink)] disabled:opacity-50"
-                      >
-                        <RotateCcw size={13} /> Batalkan
-                      </button>
-                    )}
-                    <button
-                      type="submit"
-                      disabled={isSaving || modifiedKeys.length === 0}
-                      className={`inline-flex items-center gap-2 px-5 py-2.5 text-xs font-extrabold transition-all disabled:cursor-not-allowed disabled:opacity-40 ${
-                        modifiedKeys.length > 0
-                          ? "bg-[var(--accent)] text-white shadow hover:bg-[var(--purple-60)]"
-                          : "bg-[var(--ink)] text-[var(--lightest)]"
-                      }`}
-                    >
-                      {isSaving ? (
-                        <>
-                          <Loader2 size={14} className="animate-spin" /> Menyimpan…
-                        </>
-                      ) : (
-                        <>
-                          <Save size={14} /> Simpan Perubahan
-                        </>
+                    <div className="flex items-center gap-2">
+                      {logoUrl && (
+                        <button
+                          type="button"
+                          disabled={isUploadingLogo}
+                          onClick={() => void handleLogoRemove()}
+                          className="inline-flex items-center gap-1.5 border border-red-200 bg-white px-3 py-2 text-xs font-bold text-red-700 hover:bg-red-50 disabled:opacity-50"
+                        >
+                          <Trash2 size={13} /> Hapus logo
+                        </button>
                       )}
-                    </button>
+                      <label className="inline-flex cursor-pointer items-center gap-2 bg-[var(--ink)] px-4 py-2 text-xs font-extrabold text-[var(--lightest)]">
+                        {isUploadingLogo ? <Loader2 size={14} className="animate-spin" /> : <UploadCloud size={14} />}
+                        {logoUrl ? "Ganti logo" : "Unggah logo"}
+                        <input type="file" accept="image/*" className="hidden" disabled={isUploadingLogo} onChange={(event) => void handleLogoUpload(event)} />
+                      </label>
+                    </div>
                   </div>
                 </div>
-              </form>
-            </div>
+              )}
+
+              <div className="divide-y divide-[var(--line)]">
+                {groups.map((group) => (
+                  <section key={group.id} aria-label={group.title || currentTab.title} className="space-y-4 p-6">
+                    {group.title && <h3 className="text-xs font-extrabold uppercase tracking-[.14em] text-[var(--accent)]">{group.title}</h3>}
+                    {group.items.length === 0 && (
+                      <p className="py-8 text-center text-sm text-[var(--ink-soft)]">
+                        <FileText className="mx-auto mb-2 h-6 w-6 text-[var(--cool-40)]" /> Tidak ada konten yang cocok dengan pencarian.
+                      </p>
+                    )}
+                    {group.items.map((entry) => (
+                      <FieldRow
+                        key={entry.key}
+                        entry={entry}
+                        drafts={drafts}
+                        problems={problems}
+                        resetting={resetting}
+                        onChange={(locale, value) => setDrafts((current) => ({ ...current, [draftKey(entry.key, locale)]: value }))}
+                        onReset={(locale) => void handleReset(entry, locale)}
+                      />
+                    ))}
+                  </section>
+                ))}
+
+                {activeTab === "company" && (
+                  <section aria-label="Kontak dan media sosial" className="space-y-4 p-6">
+                    <h3 className="text-xs font-extrabold uppercase tracking-[.14em] text-[var(--accent)]">Kontak &amp; media sosial</h3>
+                    <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                      {PROFILE_KEYS.map((item) => {
+                        const value = profileDrafts[item.key] ?? legacyValues[item.key] ?? "";
+                        const problem = problems[item.key];
+                        return (
+                          <div key={item.key} className="rounded border border-[var(--line)] bg-[var(--warm-2)] p-4">
+                            <label htmlFor={`profile-${item.key}`} className="text-xs font-extrabold text-[var(--ink)]">{item.label}</label>
+                            <input
+                              id={`profile-${item.key}`}
+                              type={item.key === "company.phone" ? "tel" : "url"}
+                              value={value}
+                              placeholder={item.placeholder}
+                              onChange={(event) => setProfileDrafts((current) => ({ ...current, [item.key]: event.target.value }))}
+                              aria-invalid={Boolean(problem)}
+                              className={`mt-2 h-10 w-full border bg-[var(--card)] px-3 text-sm text-[var(--ink)] outline-none focus:border-[var(--accent)] ${problem ? "border-red-500" : "border-[var(--line-strong)]"}`}
+                            />
+                            <p className={`mt-1.5 text-[11px] ${problem ? "text-red-700" : "text-[var(--ink-soft)]"}`}>{problem ?? item.hint}</p>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </section>
+                )}
+              </div>
+
+              <div className="sticky bottom-0 flex flex-wrap items-center justify-between gap-3 border-t border-[var(--line)] bg-[var(--paper)] px-6 py-4">
+                <div className="text-xs font-semibold text-[var(--ink-soft)]" aria-live="polite">
+                  {pendingCount > 0 ? (
+                    <span className={hasProblems ? "text-red-700" : "text-[var(--purple-60)]"}>
+                      <b className="font-extrabold">{pendingCount}</b> perubahan belum disimpan
+                      {hasProblems && " · ada kolom yang perlu diperbaiki"}
+                    </span>
+                  ) : (
+                    <span>Semua perubahan sudah tersimpan.</span>
+                  )}
+                </div>
+                <div className="flex items-center gap-3">
+                  {pendingCount > 0 && (
+                    <button
+                      type="button"
+                      disabled={isSaving}
+                      onClick={() => {
+                        setDrafts({});
+                        setProfileDrafts({});
+                      }}
+                      className="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-bold text-[var(--ink-soft)] hover:text-[var(--ink)] disabled:opacity-50"
+                    >
+                      <Undo2 size={13} /> Batalkan
+                    </button>
+                  )}
+                  <button
+                    type="submit"
+                    disabled={isSaving || pendingCount === 0 || hasProblems}
+                    className="inline-flex items-center gap-2 bg-[var(--ink)] px-5 py-2.5 text-xs font-extrabold text-[var(--lightest)] transition-all disabled:cursor-not-allowed disabled:opacity-40"
+                  >
+                    {isSaving ? <Loader2 size={14} className="animate-spin" /> : <Save size={14} />}
+                    {isSaving ? "Menyimpan…" : "Simpan & tayangkan"}
+                  </button>
+                </div>
+              </div>
+            </form>
           )}
         </Tabs>
       </div>
     </AdminGuard>
   );
+}
+
+function FieldRow({
+  entry,
+  drafts,
+  problems,
+  resetting,
+  onChange,
+  onReset,
+}: {
+  entry: Entry;
+  drafts: Record<string, string>;
+  problems: Record<string, string>;
+  resetting: string | null;
+  onChange: (locale: Locale, value: string) => void;
+  onReset: (locale: Locale) => void;
+}) {
+  const locales = entry.shared ? LOCALES.slice(0, 1) : LOCALES;
+  return (
+    <div className="rounded border border-[var(--line)] bg-[var(--warm-2)] p-4">
+      <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+        <span className="text-xs font-extrabold text-[var(--ink)]">{entry.label}</span>
+        <code className="text-[10px] text-[var(--cool-40)]">{entry.key}</code>
+      </div>
+      <div className={`grid grid-cols-1 gap-4 ${entry.shared ? "" : "lg:grid-cols-2"}`}>
+        {locales.map(({ id: locale, label }) => {
+          const slotKey = draftKey(entry.key, locale);
+          const slot = entry.values[entry.shared ? "en" : locale];
+          const stored = slot.override ?? slot.default;
+          const value = drafts[slotKey] ?? stored;
+          const dirty = value !== stored;
+          const problem = problems[slotKey];
+          const fieldId = `field-${locale}-${entry.key}`;
+          const inputClass = `w-full border bg-[var(--card)] text-sm text-[var(--ink)] outline-none transition-colors focus:border-[var(--accent)] ${
+            problem ? "border-red-500" : dirty ? "border-[var(--purple-30)]" : "border-[var(--line-strong)]"
+          }`;
+          return (
+            <div key={locale} className="flex flex-col gap-1.5">
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <label htmlFor={fieldId} className="text-[11px] font-bold uppercase tracking-wide text-[var(--ink-soft)]">
+                  {entry.shared ? "EN & ID (sama untuk kedua bahasa)" : label}
+                </label>
+                <span className="flex items-center gap-1.5">
+                  {dirty ? (
+                    <Badge tone="purple">Belum disimpan</Badge>
+                  ) : slot.override !== null ? (
+                    <Badge tone="blue">Diubah</Badge>
+                  ) : (
+                    <Badge tone="neutral">Bawaan</Badge>
+                  )}
+                  {slot.override !== null && (
+                    <button
+                      type="button"
+                      onClick={() => onReset(locale)}
+                      disabled={resetting === slotKey}
+                      className="inline-flex items-center gap-1 text-[11px] font-bold text-[var(--ink-soft)] underline-offset-2 hover:text-[var(--ink)] hover:underline disabled:opacity-50"
+                    >
+                      {resetting === slotKey ? <Loader2 size={11} className="animate-spin" /> : <RotateCcw size={11} />} Reset to Default
+                    </button>
+                  )}
+                </span>
+              </div>
+              {entry.multiline ? (
+                <textarea id={fieldId} rows={3} value={value} onChange={(event) => onChange(locale, event.target.value)} aria-invalid={Boolean(problem)} aria-describedby={`${fieldId}-help`} className={`${inputClass} resize-y p-2.5 leading-6`} />
+              ) : (
+                <input id={fieldId} type={entry.format === "email" ? "email" : "text"} value={value} onChange={(event) => onChange(locale, event.target.value)} aria-invalid={Boolean(problem)} aria-describedby={`${fieldId}-help`} className={`${inputClass} h-10 px-3`} />
+              )}
+              <div id={`${fieldId}-help`} className="flex flex-wrap items-start justify-between gap-2 text-[11px]">
+                {problem ? (
+                  <span className="text-red-700">{problem}</span>
+                ) : slot.override !== null || dirty ? (
+                  <span className="text-[var(--ink-soft)]">Bawaan: {slot.default}</span>
+                ) : (
+                  <span className="text-[var(--ink-soft)]">Kosongkan kolom untuk kembali ke teks bawaan.</span>
+                )}
+                <span className={value.trim().length > entry.max ? "font-bold text-red-700" : "text-[var(--cool-40)]"}>
+                  {value.trim().length}/{entry.max}
+                </span>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+function Badge({ tone, children }: { tone: "purple" | "blue" | "neutral"; children: ReactNode }) {
+  const tones = {
+    purple: "bg-[var(--purple-5)] text-[var(--purple-60)]",
+    blue: "bg-[var(--blue-5)] text-[var(--blue-60)]",
+    neutral: "bg-[var(--cool-10)] text-[var(--ink-soft)]",
+  };
+  return <span className={`rounded px-1.5 py-0.5 text-[9px] font-extrabold uppercase tracking-wide ${tones[tone]}`}>{children}</span>;
 }

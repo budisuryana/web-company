@@ -73,7 +73,7 @@ export const COMPANY_FIELDS = {
 export const EDITABLE_FIELDS: EditableField[] = [
   field("company", COMPANY_FIELDS.name, "Nama perusahaan", SHORT, { shared: true }),
   field("company", COMPANY_FIELDS.tagline, "Tagline", TITLE),
-  field("company", COMPANY_FIELDS.email, "Email resmi", 254, { shared: true, format: "email" }),
+  field("company", COMPANY_FIELDS.email, "Email resmi", 254, { shared: true, format: "email", multiline: false }),
   field("company", COMPANY_FIELDS.location, "Lokasi", TITLE),
 
   field("home", "meta.homeTitle", "SEO — judul halaman", TITLE),
