@@ -37,6 +37,7 @@ export const PRODUCT_PRESENTATION: Record<string, ProductPresentation> = {
   reconly: {
     cta: "app",
     id: {
+      category: "Keuangan",
       capabilities: [
         "Perbandingan dua file data",
         "Pemetaan kolom yang fleksibel",
@@ -81,8 +82,9 @@ export const PRODUCT_PRESENTATION: Record<string, ProductPresentation> = {
   "karya-people": {
     // Owner decision: KaryaPeople is live, but no public production URL is confirmed yet.
     cta: "demo",
+    id: { category: "SDM · HRIS" },
     en: {
-      category: "Human Resources",
+      category: "Human Resources · HRIS",
       shortDescription: "One system for employees, attendance, leave, recruitment, and payroll.",
       fullDescription:
         "KaryaPeople helps companies manage the entire employee lifecycle on one platform — from workforce records and attendance to approvals, recruitment, and payroll.",

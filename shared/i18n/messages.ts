@@ -18,10 +18,10 @@ const id = {
   meta: {
     homeTitle: "Ruang Karya — Software Bisnis & Solusi SaaS",
     homeDescription:
-      "Ruang Karya membangun aplikasi SaaS untuk operasional bisnis: Reconly untuk rekonsiliasi data dan KaryaPeople untuk HR & payroll. Berbasis di Bandung, Indonesia.",
+      "Ruang Karya, pengembang software bisnis dan produk SaaS di Bandung: Reconly untuk rekonsiliasi data dan KaryaPeople, HRIS untuk SDM dan payroll.",
     productsTitle: "Produk SaaS",
     productsDescription:
-      "Reconly dan KaryaPeople — aplikasi SaaS untuk tim finance dan HR yang ingin operasional lebih teratur.",
+      "Reconly dan KaryaPeople — aplikasi SaaS untuk tim keuangan dan SDM yang ingin operasional lebih teratur.",
     aboutTitle: "Tentang Kami",
     aboutDescription:
       "Ruang Karya adalah perusahaan pengembang software bisnis dan produk SaaS di Bandung yang membangun dan mengoperasikan aplikasi untuk operasional bisnis.",
@@ -36,7 +36,7 @@ const id = {
   },
   common: {
     tagline: "Software bisnis & solusi SaaS untuk operasional yang lebih teratur.",
-    statusLive: "Live",
+    statusLive: "Aktif",
     viewDetails: "Lihat detail",
     tryProduct: (name: string) => `Coba ${name}`,
     requestDemo: "Minta Demo",
@@ -68,11 +68,11 @@ const id = {
     rights: "Hak cipta dilindungi.",
   },
   home: {
-    eyebrow: "Software Bisnis & Solusi SaaS",
+    eyebrow: "Pengembang Software Bisnis & Produk SaaS",
     title: "Software bisnis yang membuat operasional lebih teratur.",
     lead:
-      "Ruang Karya membangun dan mengoperasikan aplikasi SaaS untuk tim finance dan HR — mulai dari rekonsiliasi data hingga pengelolaan karyawan dan payroll.",
-    facts: ["2 produk SaaS live", "Finance & HR", "Bandung, Indonesia"],
+      "Ruang Karya adalah perusahaan pengembang software bisnis dan produk SaaS di Bandung. Kami membangun dan mengoperasikan Reconly untuk rekonsiliasi data, serta KaryaPeople — HRIS untuk pengelolaan karyawan hingga payroll.",
+    facts: ["2 produk SaaS aktif", "Keuangan & SDM", "Bandung, Indonesia"],
     productsEyebrow: "Produk",
     productsTitle: "Dua produk SaaS untuk alur kerja operasional.",
     productsLead:
@@ -164,7 +164,7 @@ const id = {
     facts: [
       { label: "Brand", value: SITE.name },
       { label: "Fokus", value: "Software bisnis & SaaS" },
-      { label: "Produk live", value: "Reconly, KaryaPeople" },
+      { label: "Produk aktif", value: "Reconly, KaryaPeople" },
       { label: "Lokasi", value: `${SITE.city}, ${SITE.region.id}, ${SITE.country.id}` },
       { label: "Email", value: SITE.email },
       { label: "Website", value: SITE.domain },
@@ -382,7 +382,7 @@ const en: Messages = {
   meta: {
     homeTitle: "Ruang Karya — Business Software & SaaS Solutions",
     homeDescription:
-      "Ruang Karya builds SaaS for business operations: Reconly for data reconciliation and KaryaPeople for HR & payroll. Based in Bandung, Indonesia.",
+      "Ruang Karya is a business software and SaaS product company in Bandung: Reconly for data reconciliation and KaryaPeople, an HRIS for HR and payroll.",
     productsTitle: "SaaS Products",
     productsDescription:
       "Reconly and KaryaPeople — SaaS applications for finance and HR teams who want better-run operations.",
@@ -432,10 +432,10 @@ const en: Messages = {
     rights: "All rights reserved.",
   },
   home: {
-    eyebrow: "Business Software & SaaS Solutions",
+    eyebrow: "Business Software & SaaS Product Developer",
     title: "Business software that keeps operations in order.",
     lead:
-      "Ruang Karya builds and operates SaaS applications for finance and HR teams — from data reconciliation to employee management and payroll.",
+      "Ruang Karya is a business software and SaaS product company based in Bandung, Indonesia. We build and operate Reconly for data reconciliation, and KaryaPeople — an HRIS for everything from employee records to payroll.",
     facts: ["2 live SaaS products", "Finance & HR", "Bandung, Indonesia"],
     productsEyebrow: "Products",
     productsTitle: "Two SaaS products for operational workflows.",
