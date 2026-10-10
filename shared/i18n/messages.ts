@@ -127,10 +127,38 @@ const id = {
     eyebrow: "Produk SaaS",
     title: "Software yang membantu operasional bisnis lebih teratur.",
     lead:
-      "Dua produk SaaS yang sudah live, masing-masing dibangun untuk satu alur kerja operasional yang spesifik.",
+      "Dua produk SaaS yang sudah aktif, masing-masing dibangun untuk satu alur kerja operasional yang spesifik.",
     builtFor: "Dirancang untuk",
     ctaTitle: "Ingin melihat produk kami bekerja dengan data Anda?",
     ctaButton: "Diskusikan kebutuhan Anda",
+  },
+  /** Owner-confirmed products still in development: shown as text only — no page, CTA, image, or sitemap entry. */
+  upcoming: {
+    title: "Sedang Dikembangkan",
+    lead: "Produk berikut masih dalam tahap pengembangan dan belum tersedia untuk umum.",
+    status: "Sedang Dikembangkan",
+    items: [
+      {
+        name: "ReportForge",
+        description:
+          "ReportForge adalah report designer untuk menyusun template laporan dan dokumen bisnis yang dapat digunakan berulang, sehingga laporan rutin lebih cepat disiapkan dan tetap konsisten.",
+      },
+      {
+        name: "Work Management & Ticketing",
+        description:
+          "Aplikasi untuk mengelola pekerjaan tim serta tiket pekerjaan dan permintaan dalam satu tempat, agar prioritas dan progres pekerjaan lebih mudah dipantau.",
+      },
+      {
+        name: "Remunerasi",
+        description:
+          "Aplikasi untuk membantu perusahaan mengelola proses remunerasi karyawan secara lebih terstruktur dan transparan.",
+      },
+      {
+        name: "Akuntansi",
+        description:
+          "Aplikasi akuntansi untuk membantu bisnis mencatat transaksi dan menyusun laporan keuangan secara lebih teratur.",
+      },
+    ],
   },
   productDetail: {
     challenge: "Tantangan",
@@ -494,6 +522,33 @@ const en: Messages = {
     builtFor: "Built for",
     ctaTitle: "Want to see our products working with your data?",
     ctaButton: "Discuss your needs",
+  },
+  upcoming: {
+    title: "In Development",
+    lead: "The following products are still being developed and are not yet publicly available.",
+    status: "In Development",
+    items: [
+      {
+        name: "ReportForge",
+        description:
+          "ReportForge is a report designer for building reusable templates for business reports and documents, so recurring reports are faster to prepare and stay consistent.",
+      },
+      {
+        name: "Work Management & Ticketing",
+        description:
+          "An application for managing team tasks, work tickets, and requests in one place, making priorities and progress easier to track.",
+      },
+      {
+        name: "Remuneration",
+        description:
+          "An application that helps companies manage employee remuneration in a more structured and transparent way.",
+      },
+      {
+        name: "Accounting",
+        description:
+          "An accounting application that helps businesses record transactions and prepare financial reports in a more orderly way.",
+      },
+    ],
   },
   productDetail: {
     challenge: "The challenge",

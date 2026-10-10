@@ -133,6 +133,26 @@ describe("copy", () => {
   });
 });
 
+describe("products in development", () => {
+  it("lists the four owner-confirmed products, named in the page language", () => {
+    expect(MESSAGES.id.upcoming.items.map((item) => item.name)).toEqual(["ReportForge", "Work Management & Ticketing", "Remunerasi", "Akuntansi"]);
+    expect(MESSAGES.en.upcoming.items.map((item) => item.name)).toEqual(["ReportForge", "Work Management & Ticketing", "Remuneration", "Accounting"]);
+    expect(MESSAGES.id.upcoming.status).toBe("Sedang Dikembangkan");
+    expect(MESSAGES.en.upcoming.status).toBe("In Development");
+  });
+
+  it("never claims availability for them", () => {
+    const text = JSON.stringify([MESSAGES.id.upcoming, MESSAGES.en.upcoming]);
+    expect(text).not.toMatch(/https?:|tersedia sekarang|now available|pelanggan|customers/i);
+  });
+
+  it("gives them no page: unknown in the router and absent from the sitemap", async () => {
+    expect((await resolvePageMeta("/products/reportforge")).notFound).toBe(true);
+    const xml = sitemapXml(ORIGIN, []);
+    expect(xml).not.toMatch(/reportforge|ticketing|remuner|accounting/i);
+  });
+});
+
 describe("product presentation", () => {
   const record = {
     slug: "reconly",

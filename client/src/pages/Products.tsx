@@ -4,6 +4,7 @@ import { Link } from "wouter";
 import { ProductPrimaryCta, ProductStatus } from "@/components/ProductCta";
 import RegistryProductVisual from "@/components/RegistryProductVisual";
 import SiteShell from "@/components/SiteShell";
+import UpcomingProducts from "@/components/UpcomingProducts";
 import { useDocumentTitle, useLocale, useMessages } from "@/i18n";
 import { trpc } from "@/lib/trpc";
 import { localizeProduct } from "@shared/i18n/products";
@@ -60,6 +61,8 @@ export default function Products() {
             </article>
           ))}
         </section>
+
+        <UpcomingProducts className="is-archive" />
 
         <section className="mini-cta">
           <p>{t.products.ctaTitle}</p>

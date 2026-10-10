@@ -6,6 +6,7 @@ import { ConfettiBits, SparkCluster, TiltFrame } from "@/components/Decor";
 import { ProductPrimaryCta, ProductStatus } from "@/components/ProductCta";
 import RegistryProductVisual from "@/components/RegistryProductVisual";
 import SiteShell from "@/components/SiteShell";
+import UpcomingProducts from "@/components/UpcomingProducts";
 import { useDocumentTitle, useLocale, useMessages } from "@/i18n";
 import { trpc } from "@/lib/trpc";
 import { localizeProduct } from "@shared/i18n/products";
@@ -118,6 +119,8 @@ export default function Home() {
             ))}
           </div>
         </section>
+
+        <UpcomingProducts />
 
         <section className="working-method">
           <TiltFrame />
