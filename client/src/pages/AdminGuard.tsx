@@ -10,9 +10,12 @@ import { CMS_BASE_PATH } from "@/const";
 import { trpc } from "@/lib/trpc";
 import { SITE } from "@shared/site";
 import { toast } from "sonner";
+import { AdminLanguageSwitch, useAdminDocumentLang, useT } from "@/admin/i18n";
 
 function AccessFrame({ eyebrow, title, body, children, denied = false }: { eyebrow: string; title: ReactNode; body: string; children: ReactNode; denied?: boolean }) {
   const companyName = SITE.name;
+  const t = useT();
+  useAdminDocumentLang();
 
   return (
     <main className="min-h-screen overflow-hidden bg-[var(--paper)] text-[var(--ink)]">
@@ -27,7 +30,7 @@ function AccessFrame({ eyebrow, title, body, children, denied = false }: { eyebr
               <BrandLockup name={companyName} variant="duo" />
             </Link>
             <span className="font-[family-name:var(--mono)] text-[10px] font-semibold uppercase tracking-[.16em] text-[var(--warm-40)]">
-              Panel Admin
+              {t("Panel Admin")}
             </span>
           </div>
 
@@ -37,25 +40,28 @@ function AccessFrame({ eyebrow, title, body, children, denied = false }: { eyebr
 
           <div className="relative">
             <span className="inline-flex items-center gap-2 font-[family-name:var(--mono)] text-[10px] font-semibold uppercase tracking-[.17em] text-[var(--lime-30)]">
-              <Sparkles size={13} /> Ruang kerja privat
+              <Sparkles size={13} /> {t("Ruang kerja privat")}
             </span>
             <p className="mt-4 max-w-md admin-display text-2xl leading-tight text-[var(--lightest)] sm:text-[27px]">
-              Kelola katalog produk dan seluruh konten situs <em className="text-[var(--lime-30)]">dari satu tempat.</em>
+              {t("Kelola katalog produk dan seluruh konten situs")} <em className="text-[var(--lime-30)]">{t("dari satu tempat.")}</em>
             </p>
             <div className="mt-7 flex flex-wrap gap-x-7 gap-y-2 border-t border-white/12 pt-5 font-[family-name:var(--mono)] text-[11px] text-[var(--warm-40)]">
-              <span>Katalog Produk</span>
-              <span>Profil &amp; Konten</span>
-              <span>Kotak Masuk</span>
-              <span>Kontrol Akses</span>
+              <span>{t("Katalog Produk")}</span>
+              <span>{t("Profil & Konten")}</span>
+              <span>{t("Kotak Masuk")}</span>
+              <span>{t("Kontrol Akses")}</span>
             </div>
           </div>
         </section>
 
         {/* Sign-in panel */}
         <section className="relative flex items-center px-7 py-12 sm:px-14 lg:px-16">
-          <span className="absolute right-8 top-8 font-[family-name:var(--mono)] text-[10px] font-semibold uppercase tracking-[.15em] text-[var(--cool-40)]">
-            [ masuk aman ]
-          </span>
+          <div className="absolute right-8 top-7 flex items-center gap-4">
+            <span className="hidden font-[family-name:var(--mono)] text-[10px] font-semibold uppercase tracking-[.15em] text-[var(--cool-40)] sm:inline">
+              {t("[ masuk aman ]")}
+            </span>
+            <AdminLanguageSwitch compact />
+          </div>
           <div className="w-full max-w-lg">
             <span className={`inline-flex items-center gap-2 font-[family-name:var(--mono)] text-[10px] font-semibold uppercase tracking-[.16em] ${denied ? "text-[var(--red-50)]" : "text-[var(--accent)]"}`}>
               {denied ? <ShieldAlert size={14} /> : <LockKeyhole size={14} />}
@@ -67,11 +73,11 @@ function AccessFrame({ eyebrow, title, body, children, denied = false }: { eyebr
             <div className="mt-9 grid gap-3 border-t border-[var(--line)] pt-5 text-xs leading-5 text-[var(--ink-soft)] sm:grid-cols-2">
               <span className="flex gap-2">
                 <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-[var(--green-50)]" />
-                Pemeriksaan peran dijalankan di server untuk setiap tindakan CMS.
+                {t("Pemeriksaan peran dijalankan di server untuk setiap tindakan CMS.")}
               </span>
               <span className="flex gap-2">
                 <LockKeyhole className="mt-0.5 h-4 w-4 shrink-0 text-[var(--green-50)]" />
-                Sesi Anda diverifikasi sebelum data produk atau pengguna dibuka.
+                {t("Sesi Anda diverifikasi sebelum data produk atau pengguna dibuka.")}
               </span>
             </div>
           </div>
@@ -87,6 +93,7 @@ function LoginForm() {
   const [showPassword, setShowPassword] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const utils = trpc.useUtils();
+  const t = useT();
 
   const loginMutation = trpc.auth.login.useMutation({
     onSuccess: (userData) => {
@@ -94,7 +101,7 @@ function LoginForm() {
       // Credentials can be valid while the account still lacks the admin role, so don't
       // claim CMS access here — AdminGuard decides which screen comes next.
       const isAdmin = (userData as { role?: string } | null)?.role === "admin";
-      toast.success(isAdmin ? "Berhasil masuk ke CMS." : "Akun terverifikasi. Menunggu izin administrator.");
+      toast.success(isAdmin ? t("Berhasil masuk ke CMS.") : t("Akun terverifikasi. Menunggu izin administrator."));
       utils.auth.me.setData(undefined, userData as any);
       void utils.auth.me.invalidate();
     },
@@ -106,7 +113,7 @@ function LoginForm() {
   const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!usernameOrEmail.trim() || !password) {
-      setErrorMessage("Silakan isi username/email dan password.");
+      setErrorMessage(t("Silakan isi username/email dan password."));
       return;
     }
     setErrorMessage(null);
@@ -124,7 +131,7 @@ function LoginForm() {
 
       <div>
         <label className="block text-xs font-extrabold uppercase tracking-wide text-[var(--ink)]" htmlFor="usernameOrEmail">
-          Username atau Email
+          {t("Username atau Email")}
         </label>
         <div className="relative mt-1.5">
           <User size={15} className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-[var(--cool-40)]" />
@@ -135,7 +142,7 @@ function LoginForm() {
             autoComplete="username"
             value={usernameOrEmail}
             onChange={(e) => setUsernameOrEmail(e.target.value)}
-            placeholder="admin atau email anda"
+            placeholder={t("admin atau email anda")}
             className="w-full rounded-[var(--r-sm)] border-[1.5px] border-[var(--line-strong)] bg-[var(--card)] py-3 pl-10 pr-3 text-sm text-[var(--ink)] outline-none transition-colors focus:border-[var(--accent)]"
           />
         </div>
@@ -143,7 +150,7 @@ function LoginForm() {
 
       <div>
         <label className="block text-xs font-extrabold uppercase tracking-wide text-[var(--ink)]" htmlFor="password">
-          Password
+          {t("Password")}
         </label>
         <div className="relative mt-1.5">
           <Lock size={15} className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-[var(--cool-40)]" />
@@ -160,6 +167,7 @@ function LoginForm() {
           <button
             type="button"
             tabIndex={-1}
+            aria-label={showPassword ? t("Sembunyikan password") : t("Tampilkan password")}
             onClick={() => setShowPassword(!showPassword)}
             className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--cool-40)] transition-colors hover:text-[var(--ink)]"
           >
@@ -177,11 +185,11 @@ function LoginForm() {
           {loginMutation.isPending ? (
             <>
               <Loader2 size={16} className="animate-spin" />
-              Memeriksa akun…
+              {t("Memeriksa akun…")}
             </>
           ) : (
             <>
-              Masuk ke Panel CMS <ArrowRight size={16} className="transition-transform group-hover:translate-x-1" />
+              {t("Masuk ke Panel CMS")} <ArrowRight size={16} className="transition-transform group-hover:translate-x-1" />
             </>
           )}
         </button>
@@ -190,9 +198,9 @@ function LoginForm() {
       {import.meta.env.DEV && (
         <div className="mt-5 rounded-[var(--r-md)] border border-[var(--line)] bg-[var(--warm-2)] p-3.5 text-xs text-[var(--ink-soft)]">
           <span className="flex items-center gap-1.5 font-bold text-[var(--ink)]">
-            <KeyRound size={13} className="text-[var(--accent)]" /> Kredensial default admin
+            <KeyRound size={13} className="text-[var(--accent)]" /> {t("Kredensial default admin")}
             <span className="ml-1 rounded-full bg-[var(--yellow-10)] px-2 py-0.5 font-[family-name:var(--mono)] text-[9px] font-semibold uppercase tracking-[.1em] text-[var(--ink)]">
-              hanya dev
+              {t("hanya dev")}
             </span>
           </span>
           <div className="mt-2 grid grid-cols-2 gap-2 text-[11px]">
@@ -212,13 +220,15 @@ function LoginForm() {
 export default function AdminGuard({ children }: { children: ReactNode }) {
   const { user, loading, logout } = useAuth();
   const companyName = SITE.name;
+  const t = useT();
+  useAdminDocumentLang();
 
   if (loading) {
     return (
       <main className="grid min-h-screen place-items-center bg-[var(--paper)]">
         <div className="text-center">
           <span className="inline-block h-8 w-8 animate-spin rounded-full border-2 border-[var(--line-strong)] border-t-[var(--accent)]" />
-          <p className="mt-4 font-[family-name:var(--mono)] text-xs font-semibold uppercase tracking-[.16em] text-[var(--ink)]">Membuka CMS…</p>
+          <p className="mt-4 font-[family-name:var(--mono)] text-xs font-semibold uppercase tracking-[.16em] text-[var(--ink)]">{t("Membuka CMS…")}</p>
         </div>
       </main>
     );
@@ -227,13 +237,13 @@ export default function AdminGuard({ children }: { children: ReactNode }) {
   if (!user) {
     return (
       <AccessFrame
-        eyebrow={`Panel Admin ${companyName}`}
+        eyebrow={t("Panel Admin {company}", { company: companyName })}
         title={
           <>
-            Masuk ke <em className="text-[var(--accent)]">CMS {companyName}.</em>
+            {t("Masuk ke")} <em className="text-[var(--accent)]">{t("CMS {company}.", { company: companyName })}</em>
           </>
         }
-        body="Silakan masukkan username/email dan password administrator untuk mengelola konten dan katalog produk."
+        body={t("Silakan masukkan username/email dan password administrator untuk mengelola konten dan katalog produk.")}
       >
         <LoginForm />
       </AccessFrame>
@@ -244,13 +254,13 @@ export default function AdminGuard({ children }: { children: ReactNode }) {
     return (
       <AccessFrame
         denied
-        eyebrow="Akses Membutuhkan Persetujuan"
+        eyebrow={t("Akses Membutuhkan Persetujuan")}
         title={
           <>
-            Akun Terhubung, <em className="text-[var(--accent)]">Belum Memiliki Izin.</em>
+            {t("Akun Terhubung,")} <em className="text-[var(--accent)]">{t("Belum Memiliki Izin.")}</em>
           </>
         }
-        body="Akun Anda telah terdaftar, namun belum memiliki role administrator. Hubungi administrator yang berwenang untuk menyetujui akses akun ini atau masuk dengan akun admin."
+        body={t("Akun Anda telah terdaftar, namun belum memiliki role administrator. Hubungi administrator yang berwenang untuk menyetujui akses akun ini atau masuk dengan akun admin.")}
       >
         <div className="flex flex-wrap items-center gap-3">
           <button
@@ -261,13 +271,13 @@ export default function AdminGuard({ children }: { children: ReactNode }) {
             }}
             className="group inline-flex items-center gap-2 rounded-[var(--r-pill)] bg-[var(--ink)] px-6 py-3.5 text-sm font-bold text-[var(--lightest)] transition-transform duration-150 hover:-translate-y-0.5 active:scale-[.97]"
           >
-            <LogOut size={15} /> Keluar &amp; Ganti Akun
+            <LogOut size={15} /> {t("Keluar & Ganti Akun")}
           </button>
           <Link
             href="/"
             className="group inline-flex items-center gap-3 rounded-[var(--r-pill)] border-[1.5px] border-[var(--ink)] px-6 py-3.5 text-sm font-bold text-[var(--ink)] transition-transform duration-150 hover:-translate-y-0.5 active:scale-[.97]"
           >
-            Kembali ke website <ChevronRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
+            {t("Kembali ke website")} <ChevronRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
           </Link>
         </div>
       </AccessFrame>

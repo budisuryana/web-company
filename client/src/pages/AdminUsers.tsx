@@ -17,6 +17,7 @@ import { useAuth } from "@/_core/hooks/useAuth";
 import { trpc } from "@/lib/trpc";
 import { toast } from "sonner";
 import ConfirmModal from "@/components/ConfirmModal";
+import { useAdminLocale, useT } from "@/admin/i18n";
 
 type RoleFilter = "all" | "admin" | "user" | "owner";
 
@@ -28,8 +29,8 @@ const initials = (name: string | null, email: string | null, openId: string) =>
     .map((part) => part[0]?.toUpperCase())
     .join("") || "U";
 
-const dateLabel = (value: Date) =>
-  new Intl.DateTimeFormat("id-ID", {
+const dateLabel = (value: Date, intlLocale: string) =>
+  new Intl.DateTimeFormat(intlLocale, {
     day: "2-digit",
     month: "short",
     year: "numeric",
@@ -37,6 +38,9 @@ const dateLabel = (value: Date) =>
 
 export default function AdminUsers() {
   const { user: currentUser } = useAuth();
+  const t = useT();
+  const { locale } = useAdminLocale();
+  const intlLocale = locale === "en" ? "en-GB" : "id-ID";
   const isAdmin = currentUser?.role === "admin";
   const usersQuery = trpc.registry.admin.users.list.useQuery(undefined, { enabled: isAdmin });
   const utils = trpc.useUtils();
@@ -58,15 +62,15 @@ export default function AdminUsers() {
     title: "",
     description: "",
     variant: "primary",
-    confirmLabel: "Konfirmasi",
+    confirmLabel: t("Konfirmasi"),
   });
 
   const setRole = trpc.registry.admin.users.setRole.useMutation({
     onSuccess: (user) => {
       toast.success(
         user.role === "admin"
-          ? `${user.name || user.email || "Pengguna"} kini menjadi administrator.`
-          : `Hak akses administrator ${user.name || user.email || "Pengguna"} telah dicabut.`
+          ? t("{name} kini menjadi administrator.", { name: user.name || user.email || t("Pengguna") })
+          : t("Hak akses administrator {name} telah dicabut.", { name: user.name || user.email || t("Pengguna") })
       );
       void utils.registry.admin.users.list.invalidate();
       void utils.registry.admin.dashboard.invalidate();
@@ -106,9 +110,12 @@ export default function AdminUsers() {
         open: true,
         openId,
         role: "admin",
-        title: "Jadikan Administrator?",
-        description: `Apakah Anda yakin ingin memberikan hak akses Administrator kepada ${label}? Pengguna ini akan dapat mengelola katalog produk, mengubah konten website, dan mengelola hak akses akun tim lain.`,
-        confirmLabel: "Jadikan Admin",
+        title: t("Jadikan Administrator?"),
+        description: t(
+          "Apakah Anda yakin ingin memberikan hak akses Administrator kepada {label}? Pengguna ini akan dapat mengelola katalog produk, mengubah konten website, dan mengelola hak akses akun tim lain.",
+          { label }
+        ),
+        confirmLabel: t("Jadikan Admin"),
         variant: "primary",
       });
     } else {
@@ -116,9 +123,12 @@ export default function AdminUsers() {
         open: true,
         openId,
         role: "user",
-        title: "Cabut Hak Akses Admin?",
-        description: `Apakah Anda yakin ingin mencabut hak akses Administrator dari ${label}? Akun ini tidak akan dapat lagi mengakses panel CMS Workshop Collective.`,
-        confirmLabel: "Cabut Akses Admin",
+        title: t("Cabut Hak Akses Admin?"),
+        description: t(
+          "Apakah Anda yakin ingin mencabut hak akses Administrator dari {label}? Akun ini tidak akan dapat lagi mengakses panel CMS Workshop Collective.",
+          { label }
+        ),
+        confirmLabel: t("Cabut Akses Admin"),
         variant: "danger",
       });
     }
@@ -131,28 +141,28 @@ export default function AdminUsers() {
         <div className="mb-9 grid gap-6 border-b-2 border-[var(--ink)] pb-8 lg:grid-cols-[1.2fr_.8fr]">
           <div>
             <span className="text-[10px] font-extrabold uppercase tracking-[.16em] text-[var(--accent)]">
-              Kontrol Akses
+              {t("Kontrol Akses")}
             </span>
             <h1 className="mt-2 admin-display text-3xl sm:text-4xl leading-tight tracking-tight text-[var(--ink)]">
-              User &amp; <em className="text-[var(--accent)]">Access Management.</em>
+              {t("User &")} <em className="text-[var(--accent)]">{t("Access Management.")}</em>
             </h1>
             <p className="mt-4 max-w-2xl text-sm leading-6 text-[var(--ink-soft)]">
-              Kelola akun pengguna yang terdaftar, berikan peran Administrator, atau sesuaikan hak akses CMS dengan aman.
+              {t("Kelola akun pengguna yang terdaftar, berikan peran Administrator, atau sesuaikan hak akses CMS dengan aman.")}
             </p>
           </div>
           <aside className="admin-card border border-[var(--line)] bg-[var(--ink)] p-5 text-[var(--warm-2)]">
             <span className="text-[10px] font-extrabold uppercase tracking-[.16em] text-[var(--purple-30)]">
-              Alur Perizinan
+              {t("Alur Perizinan")}
             </span>
             <ol className="mt-4 space-y-3 text-xs leading-5 text-white/75">
               <li>
-                <b className="mr-2 text-[var(--purple-30)]">01</b>Akun admin dapat mengelola semua produk dan konten situs.
+                <b className="mr-2 text-[var(--purple-30)]">01</b>{t("Akun admin dapat mengelola semua produk dan konten situs.")}
               </li>
               <li>
-                <b className="mr-2 text-[var(--purple-30)]">02</b>Cari dan atur hak akses akun melalui tabel di bawah.
+                <b className="mr-2 text-[var(--purple-30)]">02</b>{t("Cari dan atur hak akses akun melalui tabel di bawah.")}
               </li>
               <li>
-                <b className="mr-2 text-[var(--purple-30)]">03</b>Akun pemilik (Owner) dan akun aktif terlindungi dari pencabutan.
+                <b className="mr-2 text-[var(--purple-30)]">03</b>{t("Akun pemilik (Owner) dan akun aktif terlindungi dari pencabutan.")}
               </li>
             </ol>
           </aside>
@@ -160,19 +170,19 @@ export default function AdminUsers() {
 
         {/* Metric Cards */}
         <div className="mb-6 grid gap-4 sm:grid-cols-3">
-          <Metric icon={UsersRound} label="Known accounts" value={users.length} copy="Total akun terdaftar" />
+          <Metric icon={UsersRound} label={t("Known accounts")} value={users.length} copy={t("Total akun terdaftar")} />
           <Metric
             icon={ShieldCheck}
-            label="Administrators"
+            label={t("Administrators")}
             value={administrators.length}
-            copy="Akses admin aktif"
+            copy={t("Akses admin aktif")}
             tone="ink"
           />
           <Metric
             icon={Clock3}
-            label="Awaiting approval"
+            label={t("Awaiting approval")}
             value={pendingUsers.length}
-            copy="Menunggu persetujuan"
+            copy={t("Menunggu persetujuan")}
             tone={(pendingUsers.length) > 0 ? "alert" : "paper"}
           />
         </div>
@@ -181,9 +191,9 @@ export default function AdminUsers() {
         <section className="overflow-hidden admin-card border border-[var(--line)] bg-white shadow-sm">
           <div className="flex flex-wrap items-end justify-between gap-4 border-b border-[var(--line)] px-5 py-4">
             <div>
-              <h2 className="admin-display text-3xl text-[var(--ink)]">Daftar Pengguna &amp; Izin</h2>
+              <h2 className="admin-display text-3xl text-[var(--ink)]">{t("Daftar Pengguna & Izin")}</h2>
               <p className="mt-1 text-xs text-[var(--ink-soft)]">
-                Pengguna dengan role admin memiliki kontrol penuh terhadap CMS Workshop.
+                {t("Pengguna dengan role admin memiliki kontrol penuh terhadap CMS Workshop.")}
               </p>
             </div>
             <div className="flex flex-wrap gap-2">
@@ -192,7 +202,7 @@ export default function AdminUsers() {
                 <input
                   value={search}
                   onChange={(event) => setSearch(event.target.value)}
-                  placeholder="Cari nama atau email..."
+                  placeholder={t("Cari nama atau email...")}
                   className="w-56 admin-card border border-[var(--line)] bg-[var(--card)] py-2 pl-9 pr-3 text-xs text-[var(--ink)] outline-none focus:border-[var(--accent)]"
                 />
               </label>
@@ -202,10 +212,10 @@ export default function AdminUsers() {
                   onChange={(event) => setRoleFilter(event.target.value as RoleFilter)}
                   className="appearance-none admin-card border border-[var(--line)] bg-[var(--card)] py-2 pl-3 pr-8 text-xs font-bold text-[var(--ink)] outline-none focus:border-[var(--accent)]"
                 >
-                  <option value="all">Semua Akun</option>
-                  <option value="admin">Administrator</option>
-                  <option value="user">User Biasa</option>
-                  <option value="owner">Project Owner</option>
+                  <option value="all">{t("Semua Akun")}</option>
+                  <option value="admin">{t("Administrator")}</option>
+                  <option value="user">{t("User Biasa")}</option>
+                  <option value="owner">{t("Project Owner")}</option>
                 </select>
                 <ChevronDown className="pointer-events-none absolute right-2 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--cool-40)]" />
               </label>
@@ -214,20 +224,20 @@ export default function AdminUsers() {
 
           {usersQuery.isLoading ? (
             <div className="flex items-center gap-2 p-9 text-sm text-[var(--ink-soft)]">
-              <Loader2 className="h-4 w-4 animate-spin" /> Memuat daftar akun…
+              <Loader2 className="h-4 w-4 animate-spin" /> {t("Memuat daftar akun…")}
             </div>
           ) : filteredUsers.length === 0 ? (
             <div className="p-10 text-center">
               <UserRoundPlus className="mx-auto h-8 w-8 text-[var(--accent)]" />
-              <h3 className="mt-4 admin-display text-2xl text-[var(--ink)]">Tidak ada akun yang sesuai.</h3>
+              <h3 className="mt-4 admin-display text-2xl text-[var(--ink)]">{t("Tidak ada akun yang sesuai.")}</h3>
               <p className="mx-auto mt-2 max-w-md text-xs leading-5 text-[var(--ink-soft)]">
-                Bersihkan kolom pencarian atau ganti filter role di atas.
+                {t("Bersihkan kolom pencarian atau ganti filter role di atas.")}
               </p>
             </div>
           ) : (
             <div>
               {filteredUsers.map((user) => {
-                const label = user.name || user.username || user.email || "Akun Tanpa Nama";
+                const label = user.name || user.username || user.email || t("Akun Tanpa Nama");
                 const isSelf = user.openId === currentUser?.openId;
                 const canDemote = user.role === "admin" && !user.isProjectOwner && !isSelf && administrators.length > 1;
 
@@ -249,18 +259,18 @@ export default function AdminUsers() {
                         <h3 className="truncate font-semibold text-[var(--ink)]">{label}</h3>
                         {user.isProjectOwner && (
                           <span className="inline-flex items-center gap-1 bg-[var(--purple-5)] px-2 py-0.5 text-[9px] font-extrabold uppercase tracking-[.1em] text-[var(--purple-60)]">
-                            <Crown size={10} fill="currentColor" /> Owner
+                            <Crown size={10} fill="currentColor" /> {t("Owner")}
                           </span>
                         )}
                         {isSelf && (
                           <span className="bg-[var(--cool-5)] px-2 py-0.5 text-[9px] font-extrabold uppercase tracking-[.1em] text-[var(--ink-soft)]">
-                            Anda
+                            {t("Anda")}
                           </span>
                         )}
                       </div>
                       <p className="mt-1 truncate text-xs text-[var(--ink-soft)]">
-                        {user.email || "Tanpa email"} <span className="mx-1 text-[var(--cool-20)]">•</span> Terakhir login{" "}
-                        {dateLabel(user.lastSignedIn)}
+                        {user.email || t("Tanpa email")} <span className="mx-1 text-[var(--cool-20)]">•</span> {t("Terakhir login")}{" "}
+                        {dateLabel(user.lastSignedIn, intlLocale)}
                       </p>
                       <p className="mt-0.5 truncate font-mono text-[10px] text-[var(--cool-40)]">{user.openId}</p>
                     </div>
@@ -272,7 +282,7 @@ export default function AdminUsers() {
                         }`}
                       >
                         {user.role === "admin" ? <ShieldCheck size={12} /> : <Clock3 size={12} />}
-                        {user.role === "admin" ? "Administrator" : "Standard User"}
+                        {user.role === "admin" ? t("Administrator") : t("Standard User")}
                       </span>
 
                       {user.role === "user" ? (
@@ -282,7 +292,7 @@ export default function AdminUsers() {
                           onClick={() => promptRoleChange(user.openId, "admin", label)}
                           className="inline-flex items-center gap-1.5 bg-[var(--ink)] px-3 py-2 text-xs font-extrabold text-[var(--lightest)] transition-opacity hover:opacity-90 disabled:opacity-50"
                         >
-                          <Check size={13} /> Jadikan Admin
+                          <Check size={13} /> {t("Jadikan Admin")}
                         </button>
                       ) : (
                         <button
@@ -291,12 +301,12 @@ export default function AdminUsers() {
                           onClick={() => promptRoleChange(user.openId, "user", label)}
                           title={
                             !canDemote
-                              ? "Owner, akun Anda sendiri, dan admin terakhir tidak dapat dicabut."
-                              : "Cabut hak akses administrator"
+                              ? t("Owner, akun Anda sendiri, dan admin terakhir tidak dapat dicabut.")
+                              : t("Cabut hak akses administrator")
                           }
                           className="inline-flex items-center gap-1.5 border border-[var(--line-strong)] px-3 py-2 text-xs font-extrabold text-[var(--ink)] transition-colors hover:bg-red-50 hover:text-red-700 disabled:cursor-not-allowed disabled:opacity-35"
                         >
-                          <ShieldOff size={13} /> Cabut Admin
+                          <ShieldOff size={13} /> {t("Cabut Admin")}
                         </button>
                       )}
                     </div>
@@ -314,7 +324,7 @@ export default function AdminUsers() {
           title={confirmModal.title}
           description={confirmModal.description}
           confirmLabel={confirmModal.confirmLabel}
-          cancelLabel="Batal"
+          cancelLabel={t("Batal")}
           variant={confirmModal.variant}
           isPending={setRole.isPending}
           onConfirm={() => {

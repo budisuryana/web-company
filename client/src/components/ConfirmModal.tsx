@@ -9,6 +9,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { AlertTriangle, ShieldAlert } from "lucide-react";
+import { useT } from "@/admin/i18n";
 
 export type ConfirmModalProps = {
   open: boolean;
@@ -27,12 +28,13 @@ export default function ConfirmModal({
   onOpenChange,
   title,
   description,
-  confirmLabel = "Konfirmasi",
-  cancelLabel = "Batal",
+  confirmLabel,
+  cancelLabel,
   variant = "danger",
   onConfirm,
   isPending = false,
 }: ConfirmModalProps) {
+  const t = useT();
   const isDanger = variant === "danger";
 
   return (
@@ -62,7 +64,7 @@ export default function ConfirmModal({
             onClick={() => onOpenChange(false)}
             className="m-0 h-10 rounded-none border border-[var(--line-strong)] bg-white px-4 text-xs font-extrabold text-[var(--ink)] hover:bg-[var(--warm-2)]"
           >
-            {cancelLabel}
+            {cancelLabel ?? t("Batal")}
           </AlertDialogCancel>
           <AlertDialogAction
             disabled={isPending}
@@ -76,7 +78,7 @@ export default function ConfirmModal({
                 : "bg-[var(--ink)] hover:bg-[var(--cool-80)]"
             }`}
           >
-            {confirmLabel}
+            {confirmLabel ?? t("Konfirmasi")}
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>

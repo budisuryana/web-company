@@ -35,14 +35,62 @@ export const CONTENT_ELEMENT_ID = "nk-content";
 /** Overrides as stored: locale → key → value. */
 export type ContentOverrides = Partial<Record<Locale, Record<string, string>>>;
 
-export const CONTENT_SECTIONS: Array<{ id: ContentSection; title: string }> = [
-  { id: "company", title: "Profil Perusahaan" },
-  { id: "home", title: "Home Page" },
-  { id: "products", title: "Halaman Produk" },
-  { id: "upcoming", title: "In Development" },
-  { id: "about", title: "About Page" },
-  { id: "contact", title: "Contact Page" },
+export const CONTENT_SECTIONS: Array<{ id: ContentSection; title: string; titleEn: string }> = [
+  { id: "company", title: "Profil Perusahaan", titleEn: "Company Profile" },
+  { id: "home", title: "Home Page", titleEn: "Home Page" },
+  { id: "products", title: "Halaman Produk", titleEn: "Products Page" },
+  { id: "upcoming", title: "In Development", titleEn: "In Development" },
+  { id: "about", title: "About Page", titleEn: "About Page" },
+  { id: "contact", title: "Contact Page", titleEn: "Contact Page" },
 ];
+
+/** English for each part of an editable field's Indonesian label ("Prinsip 2 — isi" → "Principle 2 — body"). */
+export const FIELD_LABEL_PARTS_EN: Record<string, string> = {
+  "Nama perusahaan": "Company name",
+  "Tagline": "Tagline",
+  "Email resmi": "Official email",
+  "Lokasi": "Location",
+  "SEO": "SEO",
+  "judul halaman": "page title",
+  "deskripsi": "description",
+  "Hero": "Hero",
+  "label": "label",
+  "judul": "title",
+  "paragraf": "paragraph",
+  "fakta": "fact",
+  "Produk": "Products",
+  "Cara kami membangun": "How we build",
+  "poin": "point",
+  "isi": "body",
+  "AI": "AI",
+  "kartu": "card",
+  "Penutup": "Closing",
+  "Ajakan": "Call to action",
+  "tombol": "button",
+  "Judul bagian": "Section title",
+  "Pengantar": "Introduction",
+  "Label status": "Status label",
+  "nama": "name",
+  "Cerita": "Story",
+  "Prinsip": "Principle",
+  "Formulir": "Form",
+  "keterangan": "note",
+  "Setelah terkirim": "After sending",
+};
+
+/** A field's label in the admin language. Indonesian is the stored label; English is built from its parts. */
+export function fieldLabel(label: string, locale: Locale): string {
+  if (locale === "id") return label;
+  return label
+    .split(" — ")
+    .map((part) => {
+      // A part is a phrase optionally followed by an item number: "Prinsip 2", "isi".
+      const [, phrase, number] = part.match(/^(.*?)(?: (\d+))?$/) ?? [part, part, undefined];
+      const english = FIELD_LABEL_PARTS_EN[phrase] ?? phrase;
+      return number ? `${english} ${number}` : english;
+    })
+    .join(" — ");
+}
 
 const TITLE = 160;
 const SHORT = 80;
@@ -157,13 +205,14 @@ export function storageLocale(item: EditableField, locale: Locale): Locale {
 }
 
 /** Validates a CMS value for a key. Returns an error message, or null when acceptable. */
-export function validateContent(key: string, value: string): string | null {
+export function validateContent(key: string, value: string, locale: Locale = "id"): string | null {
+  const en = locale === "en";
   const item = editableField(key);
-  if (!item) return "Field ini tidak dapat diedit melalui CMS.";
+  if (!item) return en ? "This field cannot be edited in the CMS." : "Field ini tidak dapat diedit melalui CMS.";
   const text = value.trim();
-  if (!text) return "Isi tidak boleh kosong. Gunakan Reset to Default untuk kembali ke teks bawaan.";
-  if (text.length > item.max) return `Maksimal ${item.max} karakter (saat ini ${text.length}).`;
-  if (item.format === "email" && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(text)) return "Alamat email tidak valid.";
+  if (!text) return en ? "This field cannot be empty. Use Reset to Default to return to the default text." : "Isi tidak boleh kosong. Gunakan Reset to Default untuk kembali ke teks bawaan.";
+  if (text.length > item.max) return en ? `At most ${item.max} characters (currently ${text.length}).` : `Maksimal ${item.max} karakter (saat ini ${text.length}).`;
+  if (item.format === "email" && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(text)) return en ? "Invalid email address." : "Alamat email tidak valid.";
   return null;
 }
 
