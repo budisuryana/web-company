@@ -1,6 +1,6 @@
 /** Homepage: Ruang Karya as a business software & SaaS company — products first, then how we build, including AI. */
 import { useEffect } from "react";
-import { ArrowUpRight, Bot, Check, GitBranch, ShieldCheck, Workflow } from "lucide-react";
+import { ArrowUpRight, Bot, Check, GitBranch, ListChecks, Workflow } from "lucide-react";
 import { Link } from "wouter";
 import { ConfettiBits, SparkCluster, TiltFrame } from "@/components/Decor";
 import { ProductPrimaryCta, ProductStatus } from "@/components/ProductCta";
@@ -11,7 +11,7 @@ import { trpc } from "@/lib/trpc";
 import { localizeProduct } from "@shared/i18n/products";
 import { SITE } from "@shared/site";
 
-const AI_ICONS = [Bot, Workflow, GitBranch, ShieldCheck];
+const AI_ICONS = [Bot, Workflow, GitBranch, ListChecks];
 
 export default function Home() {
   const locale = useLocale();

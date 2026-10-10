@@ -101,19 +101,19 @@ const id = {
     aiPractices: [
       {
         title: "Claude Code dalam alur engineering",
-        body: "Implementasi fitur, refactor, penulisan dan peninjauan kode, pengujian, serta dokumentasi teknis dikerjakan bersama Claude Code langsung di repositori dan server pengembangan.",
+        body: "Kami memakai Claude Code untuk menulis dan meninjau kode, menyusun test, dan merapikan dokumentasi teknis — langsung di repositori proyek.",
       },
       {
         title: "Workflow multi-agent",
-        body: "Pekerjaan besar dipecah ke beberapa agent dengan peran berbeda — misalnya implementasi, review, dan pengujian — yang berjalan paralel, lalu hasilnya dikonsolidasikan dan diverifikasi.",
+        body: "Untuk pekerjaan besar, beberapa sesi Claude Code dapat mengerjakan bagian berbeda secara paralel — misalnya penulisan kode, review, dan pengujian — lalu hasilnya kami gabungkan dan periksa.",
       },
       {
         title: "Persetujuan manusia sebelum rilis",
-        body: "Perubahan dikerjakan di branch terpisah, diuji (typecheck, test, build), dan baru di-deploy ke production setelah disetujui pemilik.",
+        body: "Perubahan dikerjakan di branch terpisah dan baru dirilis ke production setelah ditinjau dan disetujui pemilik.",
       },
       {
-        title: "Aman untuk data production",
-        body: "Audit dilakukan read-only terlebih dulu, backup dibuat dan diverifikasi sebelum perubahan infrastruktur, dan secret tidak ditampilkan ke dalam percakapan AI.",
+        title: "Diuji sebelum digabungkan",
+        body: "Kode yang ditulis bersama AI melewati pemeriksaan yang sama dengan kode lainnya: pemeriksaan tipe, test otomatis, dan build.",
       },
     ],
     aiNote:
@@ -467,19 +467,19 @@ const en: Messages = {
     aiPractices: [
       {
         title: "Claude Code in the engineering loop",
-        body: "Feature implementation, refactoring, code writing and review, testing, and technical documentation are done with Claude Code directly in our repositories and development servers.",
+        body: "We use Claude Code to write and review code, draft tests, and tidy up technical documentation — directly in the project repository.",
       },
       {
         title: "Multi-agent workflows",
-        body: "Large tasks are split across several agents with distinct roles — for example implementation, review, and testing — that run in parallel, then the results are consolidated and verified.",
+        body: "For larger tasks, several Claude Code sessions can work on different parts in parallel — for example coding, review, and testing — and we then combine and check the results.",
       },
       {
         title: "Human approval before release",
-        body: "Changes are made on separate branches, checked (typecheck, tests, build), and deployed to production only after the owner approves.",
+        body: "Changes are made on separate branches and released to production only after the owner has reviewed and approved them.",
       },
       {
-        title: "Safe around production data",
-        body: "Audits run read-only first, backups are taken and verified before infrastructure changes, and secrets are kept out of AI conversations.",
+        title: "Tested before merging",
+        body: "Code written with AI goes through the same checks as any other code: type checking, automated tests, and a production build.",
       },
     ],
     aiNote:
