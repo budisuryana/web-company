@@ -11,6 +11,7 @@ import { trpc } from "@/lib/trpc";
 import { SITE } from "@shared/site";
 import { toast } from "sonner";
 import { AdminLanguageSwitch, useAdminDocumentLang, useT } from "@/admin/i18n";
+import { StudioThemeProvider } from "@/studio/theme";
 
 function AccessFrame({ eyebrow, title, body, children, denied = false }: { eyebrow: string; title: ReactNode; body: string; children: ReactNode; denied?: boolean }) {
   const companyName = SITE.name;
@@ -218,6 +219,10 @@ function LoginForm() {
 }
 
 export default function AdminGuard({ children }: { children: ReactNode }) {
+  return <StudioThemeProvider><AdminGate>{children}</AdminGate></StudioThemeProvider>;
+}
+
+function AdminGate({ children }: { children: ReactNode }) {
   const { user, loading, logout } = useAuth();
   const companyName = SITE.name;
   const t = useT();

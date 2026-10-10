@@ -1,0 +1,161 @@
+/* ============================================================
+   Workshop CMS — NUSAKARYA HQ design system.
+   Tokens come from the NUSAKARYA HQ design system (tokens.json) and its prototype; names keep the
+   HQ token names behind an `--hq-` prefix so they never collide with the public site's tokens.
+
+   Every rule hangs from html[data-studio], which StudioThemeProvider sets only while the CMS is on
+   screen (portals included). The public website never matches any of it.
+   ============================================================ */
+
+/* ---------- tokens: light (default) ---------- */
+html[data-studio] {
+  --hq-bg-canvas: #f5f7fb;
+  --hq-bg-surface: #ffffff;
+  --hq-bg-raised: #ffffff;
+  --hq-bg-hover: #eef2f8;
+  --hq-bg-inset: #e9edf4;
+  --hq-bg-subtle: #f8fafc;
+  --hq-border-subtle: #e3e8f0;
+  --hq-border-default: #d5dbe5;
+  --hq-border-strong: #868b96;
+  --hq-text-primary: #0f1115;
+  --hq-text-secondary: #4b515c;
+  --hq-text-tertiary: #646a75;
+  --hq-accent: #2756d6;
+  --hq-accent-solid: #2b5ce6;
+  --hq-accent-hover: #1f47b8;
+  --hq-accent-soft: #e6edfd;
+  --hq-text-on-accent: #ffffff;
+  --hq-success: #14733a;
+  --hq-success-soft: #e3f6ea;
+  --hq-warning: #a35a00;
+  --hq-warning-soft: #fff1db;
+  --hq-danger: #c22f2a;
+  --hq-danger-soft: #fde7e6;
+  --hq-review: #6b46d9;
+  --hq-review-soft: #efe9fd;
+  --hq-neutral: #5d636e;
+  --hq-neutral-soft: #eef1f5;
+  --hq-teal: #0f766e;
+  --hq-teal-soft: #d9f3ef;
+  --hq-wash-blue: #f3f7ff;
+  --hq-wash-teal: #effaf8;
+  --hq-wash-violet: #f6f3ff;
+  --hq-wash-amber: #fff8ec;
+  --hq-shadow-card: 0 1px 2px rgba(16, 24, 40, 0.05), 0 1px 3px rgba(16, 24, 40, 0.03);
+  --hq-shadow-pop: 0 8px 24px rgba(16, 24, 40, 0.1), 0 0 0 1px rgba(16, 24, 40, 0.04);
+  --hq-shadow-overlay: 0 24px 64px rgba(16, 24, 40, 0.18);
+  --hq-scrim: rgba(15, 17, 21, 0.25);
+
+  --hq-font-sans: "Geist", "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --hq-font-mono: "Geist Mono", ui-monospace, "SF Mono", Menlo, monospace;
+  --hq-space-1: 4px; --hq-space-2: 8px; --hq-space-3: 12px; --hq-space-4: 16px;
+  --hq-space-5: 20px; --hq-space-6: 24px; --hq-space-8: 32px;
+  --hq-radius-sm: 4px; --hq-radius-md: 6px; --hq-radius-lg: 10px; --hq-radius-xl: 14px; --hq-radius-full: 999px;
+  --hq-sidebar-w: 232px;
+  --hq-topbar-h: 52px;
+  --hq-ease: cubic-bezier(0.2, 0.7, 0.2, 1);
+
+  /* Sidebar fallbacks; StudioThemeProvider sets the real palette (HQ preset or custom colour). */
+  --sb-bg: #222631; --sb-fg: #ffffff; --sb-muted: #c9ccd3; --sb-faint: #a9adb7;
+  --sb-border: #3e414b; --sb-border-strong: #5a5d66; --sb-hover: #2e323c; --sb-active: #3a3e48;
+  --sb-active-ring: #5a5d66; --sb-input: #1d2029; --sb-accent: #8fb0ff;
+  --sb-hot-bg: #ffe3e1; --sb-hot-fg: #b0241c; --sb-warn-bg: #ffeccb; --sb-warn-fg: #874600;
+}
+
+/* ---------- tokens: dark ---------- */
+html[data-studio][data-studio-theme="dark"] {
+  --hq-bg-canvas: #09090b;
+  --hq-bg-surface: #0f1013;
+  --hq-bg-raised: #16181c;
+  --hq-bg-hover: #1d2026;
+  --hq-bg-inset: #0c0d10;
+  --hq-bg-subtle: #14161a;
+  --hq-border-subtle: #1f2228;
+  --hq-border-default: #2a2e36;
+  --hq-border-strong: #5c6370;
+  --hq-text-primary: #ececef;
+  --hq-text-secondary: #a1a6b0;
+  --hq-text-tertiary: #868c97;
+  --hq-accent: #6b97ff;
+  --hq-accent-solid: #3563e9;
+  --hq-accent-hover: #4a74f0;
+  --hq-accent-soft: #17213a;
+  --hq-success: #4cc38a;
+  --hq-success-soft: #10261c;
+  --hq-warning: #e8a845;
+  --hq-warning-soft: #2a2010;
+  --hq-danger: #f2716b;
+  --hq-danger-soft: #2e1514;
+  --hq-review: #b39cff;
+  --hq-review-soft: #211b38;
+  --hq-neutral: #8a909b;
+  --hq-neutral-soft: #1c1f25;
+  --hq-teal: #43c2b3;
+  --hq-teal-soft: #0f2a28;
+  --hq-wash-blue: #131a28;
+  --hq-wash-teal: #11201f;
+  --hq-wash-violet: #1a1729;
+  --hq-wash-amber: #1f1a12;
+  --hq-shadow-card: none;
+  --hq-shadow-pop: 0 8px 24px rgba(0, 0, 0, 0.45), 0 0 0 1px rgba(255, 255, 255, 0.04);
+  --hq-shadow-overlay: 0 24px 64px rgba(0, 0, 0, 0.6);
+  --hq-scrim: rgba(0, 0, 0, 0.45);
+}
+
+/* ---------- legacy tokens inside the CMS ----------
+   The public site's tokens (warm paper, violet accent) are remapped onto HQ tokens while the CMS is
+   on screen. Every studio screen is restyled with hq-* classes; this keeps anything that still
+   reads an old token (shadcn primitives, inline utilities) on HQ colours in both modes. */
+html[data-studio] {
+  --paper: var(--hq-bg-canvas);
+  --paper-deep: var(--hq-bg-hover);
+  --ink: var(--hq-text-primary);
+  --ink-soft: var(--hq-text-secondary);
+  --lightest: var(--hq-bg-surface);
+  --white: var(--hq-bg-surface);
+  --card: var(--hq-bg-raised);
+  --line: var(--hq-border-subtle);
+  --line-strong: var(--hq-border-default);
+  --accent: var(--hq-accent);
+  --accent-soft: var(--hq-accent-soft);
+  --accent-fill: var(--hq-accent-soft);
+  --warm-2: var(--hq-bg-subtle);
+  --warm-5: var(--hq-bg-hover);
+  --cool-5: var(--hq-bg-hover);
+  --cool-10: var(--hq-bg-inset);
+  --cool-40: var(--hq-text-tertiary);
+  --cool-60: var(--hq-text-secondary);
+  --purple-5: var(--hq-accent-soft);
+  --purple-60: var(--hq-accent);
+  /* --purple-70 is referenced by the shadcn bridge (sidebar/accent text) but was never defined. */
+  --purple-70: var(--hq-accent);
+  --radius: var(--hq-radius-md);
+  /* Read by the sonner Toaster's inline style, and never defined before. */
+  --popover: var(--hq-bg-surface);
+  --popover-foreground: var(--hq-text-primary);
+  --border: var(--hq-border-default);
+  --sans: var(--hq-font-sans);
+  --serif: var(--hq-font-sans);
+  --mono: var(--hq-font-mono);
+}
+
+/* ---------- base ---------- */
+html[data-studio] body {
+  background: var(--hq-bg-canvas);
+  color: var(--hq-text-primary);
+  font: 400 13px/20px var(--hq-font-sans);
+  -webkit-font-smoothing: antialiased;
+  font-feature-settings: "cv11", "ss01";
+}
+/* The public site styles headings as display type (800, tight tracking); CMS headings are UI type. */
+html[data-studio] :is(h1, h2, h3, h4) {
+  font-family: var(--hq-font-sans);
+  font-weight: 600;
+  letter-spacing: normal;
+}
+html[data-studio] em { font-style: normal; color: inherit; }
+html[data-studio] ::selection { background: var(--hq-accent-soft); color: inherit; }
+html[data-studio] :focus-visible { outline: 2px solid var(--hq-accent); outline-offset: 2px; border-radius: var(--hq-radius-md); }
+html[data-studio] code, html[data-studio] kbd { font-family: var(--hq-font-mono); }
+html[data-studio] input, html[data-studio] select, html[data-studio] textarea { accent-color: var(--hq-accent-solid); }
