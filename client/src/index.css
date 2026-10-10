@@ -732,3 +732,16 @@ em { font-style:normal; color:var(--accent); }
   .upcoming-intro p { justify-self:start; }
 }
 @media (max-width:600px) { .upcoming-grid { grid-template-columns:1fr; gap:14px; margin-top:24px; } }
+
+/* NUSAKARYA brand: N symbol + Geist wordmark. The middle block stays brand blue on
+   every section (it does not follow the per-section --accent); dark grounds lift it. */
+:root { --brand-accent:#2b5ce6; --brand-accent-on-dark:#6b97ff; --brand-sans:"Geist", var(--sans); }
+.lockup { gap:10px; }
+.lockup-mark { width:34px; height:34px; }
+.lockup.is-large .lockup-mark { width:44px; height:44px; }
+.lockup-words, .lockup-duo .lockup-words, .lockup-line .lockup-words, .lockup-stack .lockup-words { font-family:var(--brand-sans); font-size:18px; font-weight:600; letter-spacing:.04em; line-height:1; }
+.lockup-words b { font-weight:600; }
+.lockup.is-large .lockup-words { font-size:26px; }
+.site-footer .lockup, .principle-band .lockup, .capability-section .lockup, .about-cta .lockup,
+.site-footer .brand-mark, .ai-section .brand-mark { --brand-accent:var(--brand-accent-on-dark); }
+.bg-\[var\(--ink\)\] .lockup { --brand-accent:var(--brand-accent-on-dark); }

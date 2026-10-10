@@ -48,6 +48,9 @@ export const PRODUCTION_SITE_URL = SITE.origin;
  */
 export const DEFAULT_OG_IMAGE = "/og-default.png";
 
+/** NUSAKARYA app icon, the Organization logo when the CMS has no uploaded one. */
+export const BRAND_LOGO = "/nusakarya-icon-512.png";
+
 /** Mirrors the client's VITE_CMS_PATH so robots.txt and noindex stay in step with the real route. */
 export function cmsPath(): string {
   const raw = process.env.VITE_CMS_PATH || "/studio";
@@ -86,12 +89,12 @@ function organization(content: Content, origin: string, locale: Locale): JsonLd 
     .map((key) => content[key]?.trim())
     .filter((value): value is string => Boolean(value));
 
-  const logo = absoluteUrl(origin, content["company.logoUrl"]);
+  const logo = absoluteUrl(origin, content["company.logoUrl"] || BRAND_LOGO);
 
   return {
     "@context": "https://schema.org",
     "@type": "Organization",
-    name: content["company.name"] || SITE.name,
+    name: SITE.name,
     url: origin,
     description: MESSAGES[locale].common.tagline,
     email: SITE.email,
@@ -144,7 +147,8 @@ export async function resolvePageMeta(url: string, req?: Request): Promise<PageM
   const origin = siteUrl(req);
   const pathname = pathOf(url);
   const content = await siteContentMap();
-  const companyName = content["company.name"] || SITE.name;
+  // Brand name comes from code, not the CMS (which still holds the previous name).
+  const companyName = SITE.name;
 
   // The CMS is a private workspace; it must never reach an index.
   if (pathname === cmsPath() || pathname.startsWith(`${cmsPath()}/`) || pathname.startsWith("/admin")) {

@@ -8,7 +8,7 @@
 
 export const SITE = {
   /** Public brand. Do not rename — the brand and logo are owner decisions. */
-  name: "Ruang Karya",
+  name: "NUSAKARYA",
   domain: "nusakarya.tech",
   origin: "https://nusakarya.tech",
   email: "info@nusakarya.tech",

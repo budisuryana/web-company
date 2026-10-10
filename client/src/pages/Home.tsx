@@ -1,4 +1,4 @@
-/** Homepage: Ruang Karya as a business software & SaaS company — products first, then how we build, including AI. */
+/** Homepage: NUSAKARYA as a business software & SaaS company — products first, then how we build, including AI. */
 import { useEffect } from "react";
 import { ArrowUpRight, Bot, Check, GitBranch, ListChecks, Workflow } from "lucide-react";
 import { Link } from "wouter";

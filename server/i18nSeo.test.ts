@@ -2,7 +2,7 @@
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { MESSAGES } from "@shared/i18n/messages";
 import { PRODUCT_PRESENTATION, localizeProduct, productCtaMode } from "@shared/i18n/products";
-import { DEFAULT_LOCALE, legacyEnglishTarget, localizePath, splitLocale } from "@shared/site";
+import { DEFAULT_LOCALE, SITE, legacyEnglishTarget, localizePath, splitLocale } from "@shared/site";
 import { injectMeta, sitemapXml } from "./seo";
 import { resolvePageMeta } from "./seoRoutes";
 
@@ -103,7 +103,7 @@ describe("html rendering", () => {
       ogType: "website",
       locale: "en_US",
       htmlLang: "en",
-      siteName: "Ruang Karya",
+      siteName: "NUSAKARYA",
       jsonLd: [],
       alternates: [{ hreflang: "id", href: ORIGIN }],
     });
@@ -149,6 +149,20 @@ describe("copy", () => {
   it("drops the unverified response-time and remote-work claims", () => {
     const text = JSON.stringify(MESSAGES);
     expect(text).not.toMatch(/hari kerja|business days|zona waktu|time zones/i);
+  });
+});
+
+describe("brand", () => {
+  it("is NUSAKARYA everywhere the public site names the company", async () => {
+    expect(SITE.name).toBe("NUSAKARYA");
+    expect(JSON.stringify(MESSAGES)).not.toMatch(/Ruang Karya/);
+    // The CMS may still hold the previous company name; the page must not show it.
+    const meta = await resolvePageMeta("/about");
+    expect(meta.siteName).toBe("NUSAKARYA");
+    expect(meta.title).toContain("NUSAKARYA");
+    const org = meta.jsonLd.find((entry) => entry["@type"] === "Organization");
+    expect(org?.name).toBe("NUSAKARYA");
+    expect(String(org?.logo)).toMatch(/nusakarya-icon-512\.png$/);
   });
 });
 

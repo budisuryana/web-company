@@ -24,12 +24,12 @@ const TEMPLATE = `<!doctype html>
 </html>`;
 
 const meta = (overrides: Partial<PageMeta> = {}): PageMeta => ({
-  title: "Reconly — Aplikasi rekonsiliasi data Excel dan bank | Ruang Karya",
+  title: "Reconly — Aplikasi rekonsiliasi data Excel dan bank | NUSAKARYA",
   description: "Aplikasi rekonsiliasi data Excel dan bank yang selesai dalam hitungan menit.",
   canonical: "https://ruang-karya.co.id/products/reconly",
   ogType: "article",
   locale: "id_ID",
-  siteName: "Ruang Karya",
+  siteName: "NUSAKARYA",
   jsonLd: [],
   ...overrides,
 });
@@ -67,7 +67,7 @@ describe("title descriptor", () => {
 
   it("produces a full title that survives Google's ~60 character cut", () => {
     const descriptor = titleDescriptor("Aplikasi rekonsiliasi data Excel dan bank yang selesai dalam hitungan menit.");
-    const title = `Reconly — ${descriptor} | Ruang Karya`;
+    const title = `Reconly — ${descriptor} | NUSAKARYA`;
     // The brand suffix may be truncated; the product and the keyword must not be.
     expect(title.indexOf("rekonsiliasi")).toBeLessThan(60);
   });
@@ -111,7 +111,7 @@ describe("injection", () => {
   it("replaces the title instead of adding a second one", () => {
     const html = injectMeta(TEMPLATE, meta());
     expect(html.match(/<title>/g)).toHaveLength(1);
-    expect(html).toContain("<title>Reconly — Aplikasi rekonsiliasi data Excel dan bank | Ruang Karya</title>");
+    expect(html).toContain("<title>Reconly — Aplikasi rekonsiliasi data Excel dan bank | NUSAKARYA</title>");
     expect(html).not.toContain("Fallback Title");
   });
 
@@ -244,8 +244,8 @@ describe("dangling words", () => {
   });
 
   it("produces a readable homepage title from the tagline", () => {
-    const title = `Ruang Karya — ${titleDescriptor("Perangkat lunak terpadu untuk alur kerja yang terus bergerak.")}`;
-    expect(title).toBe("Ruang Karya — Perangkat lunak terpadu untuk alur kerja");
+    const title = `NUSAKARYA — ${titleDescriptor("Perangkat lunak terpadu untuk alur kerja yang terus bergerak.")}`;
+    expect(title).toBe("NUSAKARYA — Perangkat lunak terpadu untuk alur kerja");
     expect(title).not.toMatch(/\b(yang|dan|untuk|dengan)$/);
   });
 });

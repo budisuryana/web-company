@@ -8,13 +8,11 @@ import CmsIllustration from "@/components/CmsIllustration";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { CMS_BASE_PATH } from "@/const";
 import { trpc } from "@/lib/trpc";
+import { SITE } from "@shared/site";
 import { toast } from "sonner";
 
 function AccessFrame({ eyebrow, title, body, children, denied = false }: { eyebrow: string; title: ReactNode; body: string; children: ReactNode; denied?: boolean }) {
-  // Public query, so the sign-in screen carries the real company name before any session exists.
-  const contentQuery = trpc.registry.public.siteContent.useQuery();
-  const content = Object.fromEntries((contentQuery.data ?? []).map((item) => [item.key, item.value]));
-  const companyName = content["company.name"] || "Ruang Karya";
+  const companyName = SITE.name;
 
   return (
     <main className="min-h-screen overflow-hidden bg-[var(--paper)] text-[var(--ink)]">
@@ -213,9 +211,7 @@ function LoginForm() {
 
 export default function AdminGuard({ children }: { children: ReactNode }) {
   const { user, loading, logout } = useAuth();
-  const contentQuery = trpc.registry.public.siteContent.useQuery();
-  const companyName =
-    (contentQuery.data ?? []).find((item) => item.key === "company.name")?.value || "Ruang Karya";
+  const companyName = SITE.name;
 
   if (loading) {
     return (

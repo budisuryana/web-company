@@ -2,7 +2,7 @@
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { ArrowUpRight, Globe, Mail, MapPin, Menu, X } from "lucide-react";
 import { Link, useLocation } from "wouter";
-import { BrandLockup, CHEVRON_BODY, CHEVRON_NOTCH } from "@/components/BrandLockup";
+import { BrandLockup, BrandSymbol } from "@/components/BrandLockup";
 import { trpc } from "@/lib/trpc";
 import { CMS_BASE_PATH } from "@/const";
 import { alternateHref, useLocale, useMessages } from "@/i18n";
@@ -12,10 +12,7 @@ type SiteShellProps = { children: ReactNode };
 
 export function BrandMark({ className = "" }: { className?: string }) {
   return (
-    <svg className={`brand-mark ${className}`} viewBox="0 0 48 48" aria-hidden="true">
-      <path d={CHEVRON_BODY} fill="currentColor" />
-      <path d={CHEVRON_NOTCH} fill="var(--accent)" />
-    </svg>
+    <BrandSymbol className={`brand-mark ${className}`.trim()} />
   );
 }
 
@@ -82,7 +79,9 @@ export default function SiteShell({ children }: SiteShellProps) {
   }, [contentQuery.data]);
 
   const logoUrl = content["company.logoUrl"] || undefined;
-  const companyName = content["company.name"] || SITE.name;
+  // The brand name is fixed in code: the CMS still holds the previous name, and the
+  // public site must say NUSAKARYA without a production database change.
+  const companyName = SITE.name;
   const products = productsQuery.data ?? [];
 
   const navItems = [

@@ -1,4 +1,4 @@
-/** About: what Ruang Karya is, what it operates today, verifiable company facts, and working principles. */
+/** About: what NUSAKARYA is, what it operates today, verifiable company facts, and working principles. */
 import { ArrowUpRight, Asterisk, Bot } from "lucide-react";
 import { Link } from "wouter";
 import SiteShell, { BrandMark } from "@/components/SiteShell";

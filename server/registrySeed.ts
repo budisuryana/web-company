@@ -31,7 +31,7 @@ export const siteContentSeed = [
   { key: "contact.intro", label: "Contact — Intro (Pengantar Kontak)", value: "Tertarik menggunakan produk kami, mendiskusikan peluang kemitraan, atau memiliki kebutuhan solusi sistem khusus? Mari diskusikan bersama kami." },
   { key: "contact.city", label: "Contact — City (Lokasi Kantor)", value: "Bandung, Jawa Barat · Indonesia" },
   { key: "contact.email", label: "Contact — Email (Alamat Email)", value: "info@nusakarya.tech" },
-  { key: "company.name", label: "Company — Nama Perusahaan", value: "Ruang Karya" },
+  { key: "company.name", label: "Company — Nama Perusahaan", value: "NUSAKARYA" },
   { key: "company.tagline", label: "Company — Tagline / Slogan Perusahaan", value: "Software bisnis & solusi SaaS untuk operasional yang lebih teratur." },
   { key: "company.logoUrl", label: "Company — Logo Gambar Perusahaan", value: "" },
   { key: "company.footerMotto", label: "Company — Motto Footer", value: "Independent by design." },

@@ -310,7 +310,7 @@ export default function AdminContent() {
             </p>
             <p className="mt-2 max-w-2xl rounded-md bg-[var(--yellow-2)] px-3 py-2 text-xs text-[var(--yellow-50)]">
               Sejak versi bilingual (ID/EN), teks halaman publik, email, dan lokasi dikelola di kode
-              (<code>shared/i18n/messages.ts</code> dan <code>shared/site.ts</code>). Field Home, About, Contact,
+              (<code>shared/i18n/messages.ts</code> dan <code>shared/site.ts</code>). Field Home, About, Contact, nama perusahaan,
               tagline, dan email di sini tidak lagi tampil di situs publik.
             </p>
           </div>

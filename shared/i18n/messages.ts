@@ -16,18 +16,18 @@ export type LegalDoc = { title: string; eyebrow: string; updated: string; intro:
 
 const id = {
   meta: {
-    homeTitle: "Ruang Karya — Software Bisnis & Solusi SaaS",
+    homeTitle: "NUSAKARYA — Software Bisnis & Solusi SaaS",
     homeDescription:
-      "Ruang Karya, pengembang software bisnis dan produk SaaS di Bandung: Reconly untuk rekonsiliasi data dan KaryaPeople, HRIS untuk SDM dan payroll.",
+      "NUSAKARYA, pengembang software bisnis dan produk SaaS di Bandung: Reconly untuk rekonsiliasi data dan KaryaPeople, HRIS untuk SDM dan payroll.",
     productsTitle: "Produk SaaS",
     productsDescription:
       "Reconly dan KaryaPeople — aplikasi SaaS untuk tim keuangan dan SDM yang ingin operasional lebih teratur.",
     aboutTitle: "Tentang Kami",
     aboutDescription:
-      "Ruang Karya adalah perusahaan pengembang software bisnis dan produk SaaS di Bandung yang membangun dan mengoperasikan aplikasi untuk operasional bisnis.",
+      "NUSAKARYA adalah perusahaan pengembang software bisnis dan produk SaaS di Bandung yang membangun dan mengoperasikan aplikasi untuk operasional bisnis.",
     contactTitle: "Kontak",
     contactDescription:
-      "Hubungi Ruang Karya untuk demo produk, pertanyaan seputar Reconly dan KaryaPeople, atau kebutuhan software bisnis.",
+      "Hubungi NUSAKARYA untuk demo produk, pertanyaan seputar Reconly dan KaryaPeople, atau kebutuhan software bisnis.",
     privacyTitle: "Kebijakan Privasi",
     termsTitle: "Ketentuan Layanan",
     notFoundTitle: "Halaman tidak ditemukan",
@@ -71,7 +71,7 @@ const id = {
     eyebrow: "Pengembang Software Bisnis & Produk SaaS",
     title: "Software bisnis yang membuat operasional lebih teratur.",
     lead:
-      "Ruang Karya adalah perusahaan pengembang software bisnis dan produk SaaS di Bandung. Kami membangun dan mengoperasikan Reconly untuk rekonsiliasi data, serta KaryaPeople — HRIS untuk pengelolaan karyawan hingga payroll.",
+      "NUSAKARYA adalah perusahaan pengembang software bisnis dan produk SaaS di Bandung. Kami membangun dan mengoperasikan Reconly untuk rekonsiliasi data, serta KaryaPeople — HRIS untuk pengelolaan karyawan hingga payroll.",
     facts: ["2 produk SaaS aktif", "Keuangan & SDM", "Bandung, Indonesia"],
     productsEyebrow: "Produk",
     productsTitle: "Dua produk SaaS untuk alur kerja operasional.",
@@ -182,10 +182,10 @@ const id = {
     eyebrow: "Tentang Kami",
     title: "Perusahaan pengembang software bisnis dan produk SaaS.",
     lead:
-      "Ruang Karya merancang, membangun, dan mengoperasikan aplikasi SaaS untuk pekerjaan yang membutuhkan ketelitian — keuangan, SDM, dan administrasi operasional.",
+      "NUSAKARYA merancang, membangun, dan mengoperasikan aplikasi SaaS untuk pekerjaan yang membutuhkan ketelitian — keuangan, SDM, dan administrasi operasional.",
     storyTitle: "Apa yang kami kerjakan",
     story: [
-      "Ruang Karya adalah perusahaan pengembang software bisnis dan produk SaaS yang berbasis di Bandung, Indonesia. Kami membangun produk sendiri dan mengoperasikannya sebagai layanan SaaS.",
+      "NUSAKARYA adalah perusahaan pengembang software bisnis dan produk SaaS yang berbasis di Bandung, Indonesia. Kami membangun produk sendiri dan mengoperasikannya sebagai layanan SaaS.",
       "Saat ini kami mengoperasikan dua produk: Reconly untuk rekonsiliasi data dan KaryaPeople untuk pengelolaan karyawan, kehadiran, cuti, rekrutmen, dan payroll. Kami juga terbuka untuk diskusi kebutuhan software bisnis yang lebih spesifik.",
     ],
     factsTitle: "Profil singkat",
@@ -408,18 +408,18 @@ export type Messages = typeof id;
 
 const en: Messages = {
   meta: {
-    homeTitle: "Ruang Karya — Business Software & SaaS Solutions",
+    homeTitle: "NUSAKARYA — Business Software & SaaS Solutions",
     homeDescription:
-      "Ruang Karya is a business software and SaaS product company in Bandung: Reconly for data reconciliation and KaryaPeople, an HRIS for HR and payroll.",
+      "NUSAKARYA is a business software and SaaS product company in Bandung: Reconly for data reconciliation and KaryaPeople, an HRIS for HR and payroll.",
     productsTitle: "SaaS Products",
     productsDescription:
       "Reconly and KaryaPeople — SaaS applications for finance and HR teams who want better-run operations.",
     aboutTitle: "About Us",
     aboutDescription:
-      "Ruang Karya is a business software and SaaS product company in Bandung, Indonesia that builds and operates applications for business operations.",
+      "NUSAKARYA is a business software and SaaS product company in Bandung, Indonesia that builds and operates applications for business operations.",
     contactTitle: "Contact",
     contactDescription:
-      "Contact Ruang Karya for a product demo, questions about Reconly and KaryaPeople, or business software needs.",
+      "Contact NUSAKARYA for a product demo, questions about Reconly and KaryaPeople, or business software needs.",
     privacyTitle: "Privacy Policy",
     termsTitle: "Terms of Service",
     notFoundTitle: "Page not found",
@@ -463,7 +463,7 @@ const en: Messages = {
     eyebrow: "Business Software & SaaS Product Developer",
     title: "Business software that keeps operations in order.",
     lead:
-      "Ruang Karya is a business software and SaaS product company based in Bandung, Indonesia. We build and operate Reconly for data reconciliation, and KaryaPeople — an HRIS for everything from employee records to payroll.",
+      "NUSAKARYA is a business software and SaaS product company based in Bandung, Indonesia. We build and operate Reconly for data reconciliation, and KaryaPeople — an HRIS for everything from employee records to payroll.",
     facts: ["2 live SaaS products", "Finance & HR", "Bandung, Indonesia"],
     productsEyebrow: "Products",
     productsTitle: "Two SaaS products for operational workflows.",
@@ -572,10 +572,10 @@ const en: Messages = {
     eyebrow: "About Us",
     title: "A business software and SaaS product company.",
     lead:
-      "Ruang Karya designs, builds, and operates SaaS applications for work that demands precision — finance, HR, and operational administration.",
+      "NUSAKARYA designs, builds, and operates SaaS applications for work that demands precision — finance, HR, and operational administration.",
     storyTitle: "What we do",
     story: [
-      "Ruang Karya is a business software and SaaS product company based in Bandung, Indonesia. We build our own products and operate them as SaaS.",
+      "NUSAKARYA is a business software and SaaS product company based in Bandung, Indonesia. We build our own products and operate them as SaaS.",
       "We currently operate two products: Reconly for data reconciliation and KaryaPeople for employee records, attendance, leave, recruitment, and payroll. We are also open to discussing more specific business software needs.",
     ],
     factsTitle: "At a glance",
