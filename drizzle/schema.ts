@@ -4,11 +4,29 @@ import { index, integer, jsonb, pgEnum, pgTable, primaryKey, serial, text, times
 export const productStatuses = ["active", "planned", "retired"] as const;
 export const publicationStatuses = ["draft", "published"] as const;
 export const submissionStatuses = ["new", "read", "archived"] as const;
+export const productCtas = ["try", "demo"] as const;
 
 export const userRoleEnum = pgEnum("user_role", ["user", "admin"]);
 export const productStatusEnum = pgEnum("product_status", productStatuses);
 export const publicationStatusEnum = pgEnum("publication_status", publicationStatuses);
 export const submissionStatusEnum = pgEnum("submission_status", submissionStatuses);
+export const productCtaEnum = pgEnum("product_cta", productCtas);
+
+/** Per-language copy that overrides the product's own columns (see shared/i18n/products.ts). */
+export type ProductCopyFields = {
+  name: string;
+  shortDescription: string;
+  fullDescription: string;
+  heroHeadline: string;
+  problem: string;
+  solution: string;
+  outcome: string;
+  category: string;
+  targetUsers: string;
+  capabilities: string[];
+  workflowSteps: Array<{ title: string; copy: string }>;
+};
+export type ProductTranslations = Partial<Record<"en" | "id", Partial<ProductCopyFields>>>;
 
 export const users = pgTable("users", {
   id: serial("id").primaryKey(),
@@ -47,6 +65,10 @@ export const products = pgTable("products", {
   workflowSteps: jsonb("workflowSteps").$type<Array<{ title: string; copy: string }>>().notNull(),
   featured: integer("featured").default(0).notNull(),
   displayOrder: integer("displayOrder").default(0).notNull(),
+  /** CMS copy per language; null/absent fields fall back to the columns above and code presentation. */
+  translations: jsonb("translations").$type<ProductTranslations>(),
+  /** Primary call to action: "try" opens demoUrl, "demo" goes to the contact form. Null = code default. */
+  primaryCta: productCtaEnum("primaryCta"),
   createdAt: timestamp("createdAt", { withTimezone: true }).defaultNow().notNull(),
   updatedAt: timestamp("updatedAt", { withTimezone: true }).defaultNow().notNull(),
 }, (table) => [index("products_public_order_idx").on(table.publicationStatus, table.displayOrder)]);

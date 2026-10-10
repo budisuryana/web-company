@@ -1,11 +1,23 @@
 /** Product Registry service: a single data layer for product records, attached media, ordering, publishing, and site copy. */
-import { and, asc, count, eq, inArray, ne } from "drizzle-orm";
+import { and, asc, count, eq, getTableColumns, inArray, ne, type SQL } from "drizzle-orm";
 import { nanoid } from "nanoid";
-import { productMedia, products, siteContent, type InsertProduct, type Product, type ProductMedia } from "../drizzle/schema";
+import { productMedia, products, siteContent, type InsertProduct, type Product, type ProductMedia, type ProductTranslations } from "../drizzle/schema";
 import { ensureDefaultAdmin, getDb } from "./db";
 import { registryProductSeed, siteContentSeed } from "./registrySeed";
 import { demoSeedAllowed } from "./seedPolicy";
 import { storageRemove } from "./storage";
+import { meaningfulCopy } from "@shared/i18n/products";
+
+/** Stores only meaningful per-language copy; nothing left means no translations at all. */
+function cleanTranslations(input: ProductTranslations | null): ProductTranslations | null {
+  if (!input) return null;
+  const result: ProductTranslations = {};
+  for (const locale of ["en", "id"] as const) {
+    const copy = meaningfulCopy(input[locale]);
+    if (Object.keys(copy).length) result[locale] = copy as ProductTranslations["en"];
+  }
+  return Object.keys(result).length ? result : null;
+}
 
 export type WorkflowStepInput = { title: string; copy: string };
 export type RegistryProductInput = {
@@ -30,6 +42,10 @@ export type RegistryProductInput = {
   workflowSteps: WorkflowStepInput[];
   featured?: boolean;
   displayOrder?: number;
+  /** Per-language CMS copy; omitted = leave as stored. */
+  translations?: ProductTranslations | null;
+  /** "try" | "demo"; null = code default; omitted = leave as stored. */
+  primaryCta?: "try" | "demo" | null;
 };
 
 export type RegistryMedia = ProductMedia;
@@ -80,7 +96,51 @@ function productValues(input: RegistryProductInput): Omit<InsertProduct, "id" | 
     workflowSteps: input.workflowSteps,
     featured: input.featured ? 1 : 0,
     displayOrder: input.displayOrder || 0,
+    // Only written when provided, and never before migration 0004 has added the columns.
+    ...(input.translations !== undefined && !productColumnsMissing() ? { translations: cleanTranslations(input.translations) } : {}),
+    ...(input.primaryCta !== undefined && !productColumnsMissing() ? { primaryCta: input.primaryCta } : {}),
   };
+}
+
+/*
+ * Columns added by migration 0004 (translations, primaryCta). Until that
+ * migration runs, selecting them fails with "undefined column"; product
+ * reads then fall back to the original columns so the public site keeps
+ * working on code defaults. The check is retried every few minutes.
+ */
+const { translations: _translations, primaryCta: _primaryCta, ...LEGACY_PRODUCT_COLUMNS } = getTableColumns(products);
+let missingSince: number | null = null;
+const RECHECK_MS = 5 * 60_000;
+
+function productColumnsMissing() {
+  return missingSince !== null && Date.now() - missingSince < RECHECK_MS;
+}
+
+function isUndefinedColumn(error: unknown): boolean {
+  const code = (error as { code?: string; cause?: { code?: string } })?.code ?? (error as { cause?: { code?: string } })?.cause?.code;
+  return code === "42703";
+}
+
+async function selectProducts(where?: SQL, limit?: number): Promise<Product[]> {
+  const db = await requireDb();
+  const run = (columns: typeof LEGACY_PRODUCT_COLUMNS) => {
+    let query = db.select(columns).from(products).$dynamic();
+    if (where) query = query.where(where);
+    query = query.orderBy(asc(products.displayOrder));
+    if (limit) query = query.limit(limit);
+    return query;
+  };
+  if (!productColumnsMissing()) {
+    try {
+      return (await run(getTableColumns(products) as typeof LEGACY_PRODUCT_COLUMNS)) as Product[];
+    } catch (error) {
+      if (!isUndefinedColumn(error)) throw error;
+      missingSince = Date.now();
+      console.warn("[registry] products.translations/primaryCta missing (migration 0004 not applied); using code defaults.");
+    }
+  }
+  const rows = await run(LEGACY_PRODUCT_COLUMNS);
+  return rows.map((row) => ({ ...row, translations: null, primaryCta: null }));
 }
 
 export async function ensureRegistrySeeded() {
@@ -110,25 +170,21 @@ async function hydrateProducts(rows: Product[]): Promise<RegistryProduct[]> {
 export async function listRegistryProducts(publicOnly = false) {
   await ensureRegistrySeeded();
   const db = await requireDb();
-  const rows = publicOnly
-    ? await db.select().from(products).where(eq(products.publicationStatus, "published")).orderBy(asc(products.displayOrder))
-    : await db.select().from(products).orderBy(asc(products.displayOrder));
+  const rows = await selectProducts(publicOnly ? eq(products.publicationStatus, "published") : undefined);
   return hydrateProducts(rows);
 }
 
 export async function getRegistryProductBySlug(slug: string, publicOnly = false) {
   await ensureRegistrySeeded();
   const db = await requireDb();
-  const rows = publicOnly
-    ? await db.select().from(products).where(and(eq(products.slug, slug), eq(products.publicationStatus, "published"))).limit(1)
-    : await db.select().from(products).where(eq(products.slug, slug)).limit(1);
+  const rows = await selectProducts(publicOnly ? and(eq(products.slug, slug), eq(products.publicationStatus, "published")) : eq(products.slug, slug), 1);
   const hydrated = await hydrateProducts(rows);
   return hydrated[0] ?? null;
 }
 
 export async function getRegistryProductById(id: string) {
   const db = await requireDb();
-  const rows = await db.select().from(products).where(eq(products.id, id)).limit(1);
+  const rows = await selectProducts(eq(products.id, id), 1);
   const hydrated = await hydrateProducts(rows);
   return hydrated[0] ?? null;
 }

@@ -1,13 +1,15 @@
 /**
- * Product presentation that the CMS schema cannot express yet:
- * English copy (the products table is single-language) and how each
- * product's primary call to action behaves.
+ * Product copy per language and the primary call to action.
  *
- * Indonesian copy is the CMS record itself, except where `id` rewords a CMS
- * field in plainer language for business readers (the production record is
- * left untouched). English entries are faithful translations of that record —
- * when the CMS text changes, update these too. A product without an entry
- * here falls back to its CMS text in every locale.
+ * Resolution, most specific first:
+ *   1. the product's CMS translations (products.translations[locale]),
+ *   2. the code presentation below (English copy, Indonesian rewording),
+ *   3. the product's own columns (written in Indonesian).
+ * Blank CMS values never win, so a missing translation shows the next layer.
+ * The CTA follows products.primaryCta when set, else the code default here.
+ *
+ * The code presentation is the starting point the CMS editor shows as
+ * "default"; it is no longer the only place English copy can live.
  */
 import type { Locale } from "../site";
 
@@ -18,7 +20,8 @@ import type { Locale } from "../site";
  */
 export type ProductCtaMode = "app" | "demo";
 
-type ProductCopy = {
+export type ProductCopy = {
+  name?: string;
   category: string;
   shortDescription: string;
   fullDescription: string;
@@ -119,12 +122,72 @@ export const PRODUCT_PRESENTATION: Record<string, ProductPresentation> = {
   },
 };
 
-export function productCtaMode(slug: string): ProductCtaMode {
+export type ProductTranslations = Partial<Record<Locale, Partial<ProductCopy>>>;
+
+/** Copy fields an editor can translate, in display order. */
+export const PRODUCT_COPY_FIELDS = [
+  "name",
+  "category",
+  "shortDescription",
+  "heroHeadline",
+  "fullDescription",
+  "problem",
+  "solution",
+  "outcome",
+  "targetUsers",
+  "capabilities",
+  "workflowSteps",
+] as const satisfies ReadonlyArray<keyof ProductCopy>;
+export type ProductCopyField = (typeof PRODUCT_COPY_FIELDS)[number];
+
+type CtaInput = string | { slug: string; primaryCta?: "try" | "demo" | null };
+
+export function productCtaMode(product: CtaInput): ProductCtaMode {
+  if (typeof product !== "string" && product.primaryCta) return product.primaryCta === "try" ? "app" : "demo";
+  const slug = typeof product === "string" ? product : product.slug;
   return PRODUCT_PRESENTATION[slug]?.cta ?? "app";
 }
 
-/** Returns the product with its copy in `locale`; unknown products use the CMS record as-is. */
-export function localizeProduct<T extends { slug: string } & ProductCopy>(product: T, locale: Locale): T {
-  const copy = PRODUCT_PRESENTATION[product.slug]?.[locale];
-  return copy ? { ...product, ...copy } : product;
+/** A demo URL that points at a development or staging host should not be offered to the public. */
+export function looksLikeDevelopmentUrl(url: string): boolean {
+  try {
+    const host = new URL(url.trim()).hostname;
+    return /^(dev|staging|stage|test|preview)[-.]/i.test(host) || host === "localhost" || /^\d+\.\d+\.\d+\.\d+$/.test(host);
+  } catch {
+    return false;
+  }
+}
+
+/** Drops blank strings, empty lists and incomplete workflow steps, so they fall through to the next layer. */
+export function meaningfulCopy(copy: Partial<ProductCopy> | null | undefined): Partial<ProductCopy> {
+  if (!copy) return {};
+  const result: Record<string, unknown> = {};
+  for (const field of PRODUCT_COPY_FIELDS) {
+    const value = copy[field];
+    if (typeof value === "string") {
+      if (value.trim()) result[field] = value.trim();
+    } else if (field === "capabilities" && Array.isArray(value)) {
+      const items = (value as string[]).map((item) => item.trim()).filter(Boolean);
+      if (items.length) result[field] = items;
+    } else if (field === "workflowSteps" && Array.isArray(value)) {
+      const steps = (value as Array<{ title: string; copy: string }>).filter((step) => step?.title?.trim() && step?.copy?.trim());
+      if (steps.length) result[field] = steps.map((step) => ({ title: step.title.trim(), copy: step.copy.trim() }));
+    }
+  }
+  return result as Partial<ProductCopy>;
+}
+
+type LocalizableProduct = { slug: string; translations?: ProductTranslations | null } & ProductCopy;
+
+/** The copy a language shows when the CMS has no translation for it: the columns plus the code presentation. */
+export function defaultProductCopy<T extends LocalizableProduct>(product: T, locale: Locale): T {
+  const code = PRODUCT_PRESENTATION[product.slug]?.[locale];
+  return code ? { ...product, ...code } : product;
+}
+
+/** Returns the product with its copy in `locale` (CMS translation → code presentation → columns). */
+export function localizeProduct<T extends LocalizableProduct>(product: T, locale: Locale): T {
+  const base = defaultProductCopy(product, locale);
+  const cms = meaningfulCopy(product.translations?.[locale]);
+  return Object.keys(cms).length ? { ...base, ...cms } : base;
 }

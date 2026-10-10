@@ -11,8 +11,28 @@ import { getCmsDashboard } from "../dashboard";
 import { getVisitorAnalytics, recordPageView } from "../analytics";
 import { createSubmission, deleteSubmission, getSubmission, getSubmissionCounts, listSubmissions, setSubmissionStatus, submissionRateLimited } from "../contact";
 
+const copyText = (max: number) => z.string().trim().max(max);
+const productCopyInput = z
+  .object({
+    name: copyText(160),
+    category: copyText(160),
+    shortDescription: copyText(600),
+    heroHeadline: copyText(600),
+    fullDescription: copyText(2000),
+    problem: copyText(2000),
+    solution: copyText(2000),
+    outcome: copyText(2000),
+    targetUsers: copyText(1000),
+    capabilities: z.array(copyText(200)).max(12),
+    workflowSteps: z.array(z.object({ title: copyText(120), copy: copyText(600) })).max(8),
+  })
+  .partial();
+/** Per-language CMS copy. Blank values are allowed and simply fall back to the default. */
+const translationsInput = z.object({ en: productCopyInput.optional(), id: productCopyInput.optional() }).nullable().optional();
+
 const productInput = z.object({
   name: z.string().trim().min(1).max(160), slug: z.string().trim().regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, "Slug must use lowercase letters, numbers, and hyphens."), shortDescription: z.string().trim().min(1), fullDescription: z.string().trim().min(1), heroHeadline: z.string().trim().min(1), problem: z.string().trim().min(1), solution: z.string().trim().min(1), outcome: z.string().trim().min(1), category: z.string().trim().min(1).max(160), productStatus: z.enum(["active", "planned", "retired"]), publicationStatus: z.enum(["draft", "published"]), logoUrl: z.string().nullable().optional(), logoKey: z.string().nullable().optional(), coverUrl: z.string().nullable().optional(), coverKey: z.string().nullable().optional(), capabilities: z.array(z.string().trim().min(1)).max(12), targetUsers: z.string().trim().min(1), demoUrl: z.string().url().nullable().optional().or(z.literal("")), workflowSteps: z.array(z.object({ title: z.string().trim().min(1), copy: z.string().trim().min(1) })).max(8), featured: z.boolean(), displayOrder: z.number().int().min(0),
+  translations: translationsInput, primaryCta: z.enum(["try", "demo"]).nullable().optional(),
 });
 
 async function logAdminActivity(ctx: { user: { openId: string; name: string | null } }, input: { eventType: string; resourceType: string; resourceId?: string | null; summary: string; detail?: Record<string, unknown> | null }) {
@@ -73,7 +93,17 @@ export const registryRouter = router({
     dashboard: adminProcedure.query(() => getCmsDashboard()),
     analytics: adminProcedure.query(() => getVisitorAnalytics()),
     create: adminProcedure.input(productInput).mutation(async ({ ctx, input }) => { let product; try { product = await createRegistryProduct({ ...input, demoUrl: input.demoUrl || null }); } catch (error) { throw mapSlugConflict(error); } if (product) await logAdminActivity(ctx, { eventType: "product.created", resourceType: "product", resourceId: product.id, summary: `Created ${product.name}`, detail: { slug: product.slug, publicationStatus: product.publicationStatus } }); return product; }),
-    update: adminProcedure.input(z.object({ id: z.string().min(1), product: productInput })).mutation(async ({ ctx, input }) => { let product; try { product = await updateRegistryProduct(input.id, { ...input.product, demoUrl: input.product.demoUrl || null }); } catch (error) { throw mapSlugConflict(error); } if (product) await logAdminActivity(ctx, { eventType: "product.updated", resourceType: "product", resourceId: product.id, summary: `Updated ${product.name}`, detail: { publicationStatus: product.publicationStatus, featured: product.featured } }); return product; }),
+    update: adminProcedure.input(z.object({ id: z.string().min(1), product: productInput })).mutation(async ({ ctx, input }) => {
+      const previous = await getRegistryProductById(input.id);
+      let product;
+      try { product = await updateRegistryProduct(input.id, { ...input.product, demoUrl: input.product.demoUrl || null }); } catch (error) { throw mapSlugConflict(error); }
+      if (product) {
+        // Keep what the bilingual copy and CTA were before, so an edit can be undone from the log.
+        const copyChanged = JSON.stringify(previous?.translations ?? null) !== JSON.stringify(product.translations ?? null) || (previous?.primaryCta ?? null) !== (product.primaryCta ?? null);
+        await logAdminActivity(ctx, { eventType: "product.updated", resourceType: "product", resourceId: product.id, summary: `Updated ${product.name}`, detail: { publicationStatus: product.publicationStatus, featured: product.featured, ...(copyChanged ? { previousTranslations: previous?.translations ?? null, previousPrimaryCta: previous?.primaryCta ?? null, primaryCta: product.primaryCta ?? null } : {}) } });
+      }
+      return product;
+    }),
     remove: adminProcedure.input(z.object({ id: z.string().min(1) })).mutation(async ({ ctx, input }) => { const product = await getRegistryProductById(input.id); const result = await deleteRegistryProduct(input.id); if (product) await logAdminActivity(ctx, { eventType: "product.deleted", resourceType: "product", resourceId: product.id, summary: `Deleted ${product.name}`, detail: { slug: product.slug } }); return result; }),
     reorder: adminProcedure.input(z.object({ ids: z.array(z.string().min(1)).min(1) })).mutation(async ({ ctx, input }) => { const result = await reorderRegistryProducts(input.ids); await logAdminActivity(ctx, { eventType: "product.reordered", resourceType: "product", summary: `Reordered ${input.ids.length} products`, detail: { ids: input.ids } }); return result; }),
     submissions: router({

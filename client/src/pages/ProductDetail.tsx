@@ -67,13 +67,13 @@ export default function ProductDetail() {
             <div className="hero-actions">
               <ProductPrimaryCta product={product} />
               {/* When the primary CTA already opens the contact form, a second link to it is noise. */}
-              {productCtaMode(product.slug) === "app" && product.demoUrl && (
+              {productCtaMode(product) === "app" && product.demoUrl && (
                 <Link href="/contact" className="text-link">
                   {t.productDetail.discuss(product.name)} <ArrowUpRight size={15} />
                 </Link>
               )}
             </div>
-            {productCtaMode(product.slug) === "demo" && <p className="cta-note">{t.productDetail.demoNote}</p>}
+            {productCtaMode(product) === "demo" && <p className="cta-note">{t.productDetail.demoNote}</p>}
           </div>
           <div className="detail-hero-visual">
             <RegistryProductVisual product={product} alt={`${product.name} — ${product.shortDescription}`} />
