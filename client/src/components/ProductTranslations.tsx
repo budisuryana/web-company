@@ -3,9 +3,10 @@
  * Indonesian side by side. A value equal to its default is not stored, so the
  * product keeps following its columns and the code presentation until edited.
  */
-import { RotateCcw } from "lucide-react";
+import { Languages, OctagonAlert, RotateCcw, TriangleAlert } from "lucide-react";
 import { translateAdmin, useT, type Translate } from "@/admin/i18n";
 import type { AdminPhrase } from "@/admin/phrases";
+import { Badge, Button, Card, CardHead } from "@/studio/ui";
 import {
   PRODUCT_COPY_FIELDS,
   defaultProductCopy,
@@ -123,77 +124,84 @@ export default function ProductTranslationsPanel({
   };
 
   return (
-    <section className="admin-card border border-[var(--line)] bg-white p-6 shadow-sm">
-      <h2 className="admin-display text-3xl text-[var(--ink)]">{t("Konten EN / ID")}</h2>
-      <p className="mt-1 text-xs text-[var(--ink-soft)]">
-        {t("Teks produk per bahasa. Kolom yang belum diubah memakai teks bawaan (kolom produk dan terjemahan yang sudah ada). Disimpan bersama tombol Save product, dan langsung tampil di website.")}
-      </p>
+    <Card>
+      <CardHead
+        icon={Languages}
+        hue="teal"
+        title={t("Konten EN / ID")}
+        sub={t("Teks produk per bahasa. Kolom yang belum diubah memakai teks bawaan (kolom produk dan terjemahan yang sudah ada). Disimpan bersama tombol Save product, dan langsung tampil di website.")}
+      />
+      <div className="hq-card-body flex flex-col gap-3">
+        <fieldset className="hq-fieldset">
+          <legend>{t("Tombol utama")}</legend>
+          <div className="flex flex-wrap gap-x-5 gap-y-2">
+            {([
+              [null, t("Bawaan ({cta})", { cta: codeCta === "try" ? "Try" : "Request a Demo" })],
+              ["try", t("Try — buka aplikasi (demo URL)")],
+              ["demo", t("Request a Demo — ke formulir kontak")],
+            ] as Array<[ProductCta, string]>).map(([value, label]) => (
+              <label key={String(value)} className="hq-check">
+                <input type="radio" name="primary-cta" checked={primaryCta === value} onChange={() => onCtaChange(value)} />
+                {label}
+              </label>
+            ))}
+          </div>
+          {effectiveCta === "try" && !demoUrl.trim() && (
+            <div className="hq-banner warn mt-2.5">
+              <TriangleAlert aria-hidden="true" />
+              {t("Demo URL masih kosong, jadi website tetap menampilkan Request a Demo sampai URL diisi.")}
+            </div>
+          )}
+          {effectiveCta === "try" && looksLikeDevelopmentUrl(demoUrl) && (
+            <div className="hq-banner err mt-2.5" role="alert">
+              <OctagonAlert aria-hidden="true" />
+              {t("Demo URL ({url}) terlihat seperti URL development. Dengan pilihan Try, URL ini akan tampil di website publik.", { url: demoUrl })}
+            </div>
+          )}
+        </fieldset>
 
-      <fieldset className="mt-6 rounded border border-[var(--line)] bg-[var(--warm-2)] p-4">
-        <legend className="px-1 text-xs font-extrabold text-[var(--ink)]">{t("Tombol utama")}</legend>
-        <div className="mt-1 flex flex-wrap gap-4 text-sm text-[var(--ink)]">
-          {([
-            [null, t("Bawaan ({cta})", { cta: codeCta === "try" ? "Try" : "Request a Demo" })],
-            ["try", t("Try — buka aplikasi (demo URL)")],
-            ["demo", t("Request a Demo — ke formulir kontak")],
-          ] as Array<[ProductCta, string]>).map(([value, label]) => (
-            <label key={String(value)} className="inline-flex items-center gap-2">
-              <input type="radio" name="primary-cta" checked={primaryCta === value} onChange={() => onCtaChange(value)} />
-              {label}
-            </label>
-          ))}
-        </div>
-        {effectiveCta === "try" && !demoUrl.trim() && (
-          <p className="mt-2 text-[11px] font-semibold text-[var(--orange-60)]">
-            {t("Demo URL masih kosong, jadi website tetap menampilkan Request a Demo sampai URL diisi.")}
-          </p>
-        )}
-        {effectiveCta === "try" && looksLikeDevelopmentUrl(demoUrl) && (
-          <p className="mt-2 text-[11px] font-semibold text-red-700" role="alert">
-            {t("Demo URL ({url}) terlihat seperti URL development. Dengan pilihan Try, URL ini akan tampil di website publik.", { url: demoUrl })}
-          </p>
-        )}
-      </fieldset>
-
-      <div className="mt-6 space-y-4">
         {PRODUCT_COPY_FIELDS.map((field) => {
           const meta = FIELD_META[field];
           return (
-            <div key={field} className="rounded border border-[var(--line)] bg-[var(--warm-2)] p-4">
-              <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-                <span className="text-xs font-extrabold text-[var(--ink)]">{t(meta.label)}</span>
-                {meta.hint && <span className="text-[11px] text-[var(--ink-soft)]">{t(meta.hint)}</span>}
+            <div key={field} className="hq-copy-row">
+              <div className="hq-copy-head">
+                <span className="hq-copy-title">{t(meta.label)}</span>
+                {meta.hint && <span className="hq-hint">{t(meta.hint)}</span>}
               </div>
-              <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+              <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
                 {LOCALES.map(({ id: locale, label }) => {
                   const override = translations[locale]?.[field];
                   const value = asText(field, override ?? defaults[locale][field]);
                   const problem = problems[`${locale}:${field}`];
                   const fieldId = `product-${locale}-${field}`;
-                  const className = `w-full border bg-[var(--card)] px-3 py-2 text-sm leading-6 text-[var(--ink)] outline-none focus:border-[var(--accent)] ${
-                    problem ? "border-red-500" : override !== undefined ? "border-[var(--purple-30)]" : "border-[var(--line-strong)]"
-                  }`;
+                  const className = `hq-input ${override !== undefined ? "changed" : ""}`;
                   return (
-                    <div key={locale} className="flex flex-col gap-1.5">
+                    <div key={locale} className="hq-field">
                       <div className="flex flex-wrap items-center justify-between gap-2">
-                        <label htmlFor={fieldId} className="text-[11px] font-bold uppercase tracking-wide text-[var(--ink-soft)]">{t(label)}</label>
+                        <label htmlFor={fieldId} className="hq-label inline-flex items-center gap-1.5">
+                          <span className="hq-lang-tag">{locale.toUpperCase()}</span>
+                          {t(label)}
+                        </label>
                         <span className="flex items-center gap-1.5">
-                          <span className={`rounded px-1.5 py-0.5 text-[9px] font-extrabold uppercase tracking-wide ${override !== undefined ? "bg-[var(--blue-5)] text-[var(--blue-60)]" : "bg-[var(--cool-10)] text-[var(--ink-soft)]"}`}>
-                            {override !== undefined ? t("Diubah") : t("Bawaan")}
-                          </span>
+                          <Badge tone={override !== undefined ? "accent" : "neutral"}>{override !== undefined ? t("Diubah") : t("Bawaan")}</Badge>
                           {override !== undefined && (
-                            <button type="button" onClick={() => setValue(locale, field, "")} className="inline-flex items-center gap-1 text-[11px] font-bold text-[var(--ink-soft)] hover:text-[var(--ink)] hover:underline">
-                              <RotateCcw size={11} /> {t("Reset to Default")}
-                            </button>
+                            <Button variant="ghost" size="sm" icon={RotateCcw} onClick={() => setValue(locale, field, "")}>
+                              {t("Reset to Default")}
+                            </Button>
                           )}
                         </span>
                       </div>
                       {meta.rows === 1 ? (
                         <input id={fieldId} value={value} onChange={(event) => setValue(locale, field, event.target.value)} aria-invalid={Boolean(problem)} className={className} />
                       ) : (
-                        <textarea id={fieldId} rows={meta.rows} value={value} onChange={(event) => setValue(locale, field, event.target.value)} aria-invalid={Boolean(problem)} className={`${className} resize-y`} />
+                        <textarea id={fieldId} rows={meta.rows} value={value} onChange={(event) => setValue(locale, field, event.target.value)} aria-invalid={Boolean(problem)} className={className} />
                       )}
-                      {problem && <span className="text-[11px] text-red-700">{problem}</span>}
+                      {problem && (
+                        <span className="hq-error">
+                          <OctagonAlert aria-hidden="true" />
+                          {problem}
+                        </span>
+                      )}
                     </div>
                   );
                 })}
@@ -202,6 +210,6 @@ export default function ProductTranslationsPanel({
           );
         })}
       </div>
-    </section>
+    </Card>
   );
 }

@@ -1,6 +1,6 @@
 /** Product Registry editor: validates required product content locally before the protected CMS mutation runs. */
 import { useEffect, useMemo, useState, type ChangeEvent } from "react";
-import { ArrowDown, ArrowLeft, ArrowUp, Check, ImagePlus, Loader2, Save, Trash2, UploadCloud } from "lucide-react";
+import { ArrowDown, ArrowLeft, ArrowUp, BadgeCheck, BookOpen, Image as ImageIcon, ImagePlus, Languages, ListChecks, Loader2, OctagonAlert, Save, Star, Trash2, UploadCloud } from "lucide-react";
 import { Link, useLocation, useRoute } from "wouter";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { CMS_BASE_PATH, CMS_ROUTES } from "@/const";
@@ -13,6 +13,7 @@ import ProductTranslationsPanel, { translationProblems, type ProductCta } from "
 import type { ProductTranslations } from "@shared/i18n/products";
 import { useT, type Translate } from "@/admin/i18n";
 import { ADMIN_PHRASES, type AdminPhrase } from "@/admin/phrases";
+import { Badge, Button, Card, CardHead, LoadingState, PageHead, btn } from "@/studio/ui";
 
 type EditorForm = {
   name: string; slug: string; shortDescription: string; fullDescription: string; heroHeadline: string; problem: string; solution: string; outcome: string; category: string;
@@ -23,8 +24,6 @@ type EditorForm = {
 const blankForm: EditorForm = { name: "", slug: "", shortDescription: "", fullDescription: "", heroHeadline: "", problem: "", solution: "", outcome: "", category: "", productStatus: "active", publicationStatus: "draft", capabilitiesText: "", targetUsers: "", demoUrl: "", workflowText: "", featured: false, displayOrder: 99, logoUrl: null, logoKey: null, coverUrl: null, coverKey: null };
 
 const FIELD_TAB: Partial<Record<keyof EditorForm, string>> = { name: "identity", slug: "identity", category: "identity", displayOrder: "identity", productStatus: "identity", publicationStatus: "identity", shortDescription: "story", fullDescription: "story", heroHeadline: "story", problem: "story", solution: "story", outcome: "story", capabilitiesText: "capabilities", targetUsers: "capabilities", demoUrl: "capabilities", workflowText: "capabilities" };
-
-const tabTriggerClass = "admin-tab h-auto flex-none px-1 pb-3 pt-1 text-[11px] font-extrabold uppercase tracking-[.14em] text-[var(--ink-soft)] transition-colors hover:text-[var(--ink)] data-[state=active]:text-[var(--ink)]";
 
 function toForm(product: any): EditorForm {
   return { name: product.name, slug: product.slug, shortDescription: product.shortDescription, fullDescription: product.fullDescription, heroHeadline: product.heroHeadline, problem: product.problem, solution: product.solution, outcome: product.outcome, category: product.category, productStatus: product.productStatus, publicationStatus: product.publicationStatus, capabilitiesText: product.capabilities.join("\n"), targetUsers: product.targetUsers, demoUrl: product.demoUrl ?? "", workflowText: product.workflowSteps.map((step: { title: string; copy: string }) => `${step.title} | ${step.copy}`).join("\n"), featured: product.featured, displayOrder: product.displayOrder, logoUrl: product.logoUrl, logoKey: product.logoKey, coverUrl: product.coverUrl, coverKey: product.coverKey };
@@ -145,30 +144,121 @@ export default function AdminProductEditor() {
   const screenshots = productQuery.data?.screenshots ?? [];
   const moveScreenshot = (index: number, direction: -1 | 1) => { const target = index + direction; if (target < 0 || target >= screenshots.length) return; const next = [...screenshots]; [next[index], next[target]] = [next[target], next[index]]; reorderScreenshots.mutate({ productId: id, ids: next.map((screenshot) => screenshot.id) }); };
 
-  return <><div className="w-full"><div className="mb-7 flex flex-wrap items-end justify-between gap-4"><div><Link href={CMS_ROUTES.products} className="inline-flex items-center gap-2 text-xs font-extrabold text-[var(--ink-soft)]"><ArrowLeft size={14} /> {t("Product Registry")}</Link><span className="mt-5 block text-[10px] font-extrabold uppercase tracking-[.16em] text-[var(--accent)]">{isNew ? t("New product") : t("Editing: {name}", { name: form.name || t("Product") })}</span><h1 className="mt-2 admin-display text-3xl leading-tight tracking-tight text-[var(--ink)]">{isNew ? t("Add New Product") : t("Edit Product Details")}</h1></div>{!isNew && <button disabled={remove.isPending} type="button" onClick={() => {
-    setConfirmModal({
-      open: true,
-      title: t("Hapus Produk?"),
-      description: t('Apakah Anda yakin ingin menghapus produk "{name}" dari Product Registry? Data yang sudah dihapus tidak dapat dipulihkan.', { name: form.name }),
-      confirmLabel: t("Hapus Produk"),
-      onConfirm: () => remove.mutate({ id }),
-    });
-  }} className="inline-flex items-center gap-2 border border-red-300 px-3 py-2 text-xs font-extrabold text-red-700 hover:bg-red-50"><Trash2 size={14} /> {t("Delete product")}</button>}</div>
-    {Object.keys(validationErrors).length > 0 && <div role="alert" className="mb-6 border-l-4 border-[var(--accent)] bg-[var(--purple-5)] px-4 py-3 text-sm text-[var(--purple-70)]"><b className="font-extrabold">{t("Before saving:")}</b> {t("complete the required fields highlighted below. Nothing has been sent to the server yet.")}</div>}
-    {!isNew && productQuery.isLoading ? <div className="flex items-center gap-2 py-16 text-sm text-[var(--ink-soft)]"><Loader2 className="h-4 w-4 animate-spin" /> {t("Loading product…")}</div> : <Tabs value={activeTab} onValueChange={setActiveTab} className="gap-4"><TabsList className="mb-1 h-auto w-full max-w-full justify-start gap-6 overflow-x-auto rounded-none border-b-2 border-[var(--ink)] bg-transparent p-0"><TabsTrigger value="identity" className={tabTriggerClass}>{t("Identity & visibility")}</TabsTrigger><TabsTrigger value="story" className={tabTriggerClass}>{t("Story & positioning")}</TabsTrigger><TabsTrigger value="translations" className={tabTriggerClass}>{t("Konten EN / ID")}</TabsTrigger><TabsTrigger value="capabilities" className={tabTriggerClass}>{t("Capabilities & audience")}</TabsTrigger>{!isNew && <TabsTrigger value="assets" className={tabTriggerClass}>{t("Visual assets")}</TabsTrigger>}</TabsList><TabsContent value="identity"><section className="admin-card border border-[var(--line)] bg-white p-6 shadow-sm"><div className="mb-6 flex items-center justify-between"><div><h2 className="admin-display text-3xl text-[var(--ink)]">{t("Identity & visibility")}</h2><p className="mt-1 text-xs text-[var(--ink-soft)]">{t("Nama publik produk, slug URL, kategori, dan status publikasi.")}</p></div><label className="flex items-center gap-2 text-xs font-extrabold text-[var(--ink)]"><input type="checkbox" checked={form.featured} onChange={(event) => setField("featured", event.target.checked)} /> {t("Featured product")}</label></div><div className="grid gap-5 md:grid-cols-2"><Field required label={t("Product name")} error={validationErrors.name}><input aria-invalid={Boolean(validationErrors.name)} value={form.name} onChange={(event) => { setField("name", event.target.value); if (isNew) setField("slug", event.target.value.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "")); }} placeholder={t("e.g. Operations Hub")} /></Field><Field required label={t("Slug")} error={validationErrors.slug}><input aria-invalid={Boolean(validationErrors.slug)} value={form.slug} onChange={(event) => setField("slug", event.target.value.toLowerCase())} placeholder="operations-hub" /></Field><Field required label={t("Product category")} error={validationErrors.category}><input aria-invalid={Boolean(validationErrors.category)} value={form.category} onChange={(event) => setField("category", event.target.value)} placeholder={t("Work management")} /></Field><Field label={t("Display order")}><input type="number" min="0" value={form.displayOrder} onChange={(event) => setField("displayOrder", Number(event.target.value))} /></Field><Field label={t("Product status")}><select value={form.productStatus} onChange={(event) => setField("productStatus", event.target.value as EditorForm["productStatus"])}><option value="active">{t("Active")}</option><option value="planned">{t("Planned")}</option><option value="retired">{t("Retired")}</option></select></Field><Field label={t("Public visibility")}><select value={form.publicationStatus} onChange={(event) => setField("publicationStatus", event.target.value as EditorForm["publicationStatus"])}><option value="draft">{t("Draft — private")}</option><option value="published">{t("Published — public")}</option></select></Field></div></section></TabsContent>
-      <TabsContent value="story"><section className="admin-card border border-[var(--line)] bg-white p-6 shadow-sm"><h2 className="admin-display text-3xl text-[var(--ink)]">{t("Story & positioning")}</h2><p className="mt-1 text-xs text-[var(--ink-soft)]">{t("Copy dan narasi produk yang tampil pada portofolio dan halaman detail.")}</p><div className="mt-6 grid gap-5"><Field required label={t("Short description")} error={validationErrors.shortDescription}><textarea aria-invalid={Boolean(validationErrors.shortDescription)} rows={2} value={form.shortDescription} onChange={(event) => setField("shortDescription", event.target.value)} /></Field><Field required label={t("Full description")} error={validationErrors.fullDescription}><textarea aria-invalid={Boolean(validationErrors.fullDescription)} rows={3} value={form.fullDescription} onChange={(event) => setField("fullDescription", event.target.value)} /></Field><Field required label={t("Hero headline")} error={validationErrors.heroHeadline}><textarea aria-invalid={Boolean(validationErrors.heroHeadline)} rows={2} value={form.heroHeadline} onChange={(event) => setField("heroHeadline", event.target.value)} /></Field><div className="grid gap-5 md:grid-cols-2"><Field required label={t("Problem")} error={validationErrors.problem}><textarea aria-invalid={Boolean(validationErrors.problem)} rows={5} value={form.problem} onChange={(event) => setField("problem", event.target.value)} /></Field><Field required label={t("Solution")} error={validationErrors.solution}><textarea aria-invalid={Boolean(validationErrors.solution)} rows={5} value={form.solution} onChange={(event) => setField("solution", event.target.value)} /></Field></div><Field required label={t("Outcome")} error={validationErrors.outcome}><textarea aria-invalid={Boolean(validationErrors.outcome)} rows={2} value={form.outcome} onChange={(event) => setField("outcome", event.target.value)} /></Field></div></section></TabsContent>
+  const requestDelete = () => setConfirmModal({
+    open: true,
+    title: t("Hapus Produk?"),
+    description: t('Apakah Anda yakin ingin menghapus produk "{name}" dari Product Registry? Data yang sudah dihapus tidak dapat dipulihkan.', { name: form.name }),
+    confirmLabel: t("Hapus Produk"),
+    onConfirm: () => remove.mutate({ id }),
+  });
+  const requestScreenshotDelete = (screenshotId: string) => setConfirmModal({
+    open: true,
+    title: t("Hapus Screenshot?"),
+    description: t("Apakah Anda yakin ingin menghapus screenshot ini dari galeri produk?"),
+    confirmLabel: t("Hapus Screenshot"),
+    onConfirm: () => deleteScreenshot.mutate({ id: screenshotId }),
+  });
+  const statusBadges = !isNew && (
+    <>
+      <Badge tone={form.publicationStatus === "published" ? "success" : "neutral"} dot>{form.publicationStatus === "published" ? t("Published") : t("Draft")}</Badge>
+      {form.featured && <Badge tone="warning" icon={Star}>{t("Featured")}</Badge>}
+    </>
+  );
+
+  return <>
+    <PageHead
+      title={isNew ? t("Add New Product") : t("Edit Product Details")}
+      description={isNew ? t("New product") : t("Editing: {name}", { name: form.name || t("Product") })}
+      actions={<>
+        {statusBadges}
+        <Link href={CMS_ROUTES.products} className={btn("ghost")}><ArrowLeft aria-hidden="true" /> {t("Product Registry")}</Link>
+        {!isNew && <Button variant="danger" icon={Trash2} disabled={remove.isPending} onClick={requestDelete}>{t("Delete product")}</Button>}
+      </>}
+    />
+    {Object.keys(validationErrors).length > 0 && <div role="alert" className="hq-banner err mb-4"><OctagonAlert aria-hidden="true" /><span><b className="font-semibold">{t("Before saving:")}</b> {t("complete the required fields highlighted below. Nothing has been sent to the server yet.")}</span></div>}
+    {!isNew && productQuery.isLoading ? <Card><LoadingState>{t("Loading product…")}</LoadingState></Card> : <Tabs value={activeTab} onValueChange={setActiveTab} className="gap-0">
+      <TabsList className="hq-tabs">
+        <TabsTrigger value="identity" className="hq-tab"><BadgeCheck aria-hidden="true" className="size-4" />{t("Identity & visibility")}</TabsTrigger>
+        <TabsTrigger value="story" className="hq-tab"><BookOpen aria-hidden="true" className="size-4" />{t("Story & positioning")}</TabsTrigger>
+        <TabsTrigger value="translations" className="hq-tab"><Languages aria-hidden="true" className="size-4" />{t("Konten EN / ID")}</TabsTrigger>
+        <TabsTrigger value="capabilities" className="hq-tab"><ListChecks aria-hidden="true" className="size-4" />{t("Capabilities & audience")}</TabsTrigger>
+        {!isNew && <TabsTrigger value="assets" className="hq-tab"><ImageIcon aria-hidden="true" className="size-4" />{t("Visual assets")}</TabsTrigger>}
+      </TabsList>
+
+      <TabsContent value="identity">
+        <Card>
+          <CardHead icon={BadgeCheck} hue="blue" title={t("Identity & visibility")} sub={t("Nama publik produk, slug URL, kategori, dan status publikasi.")}
+            right={<label className="hq-check"><input type="checkbox" checked={form.featured} onChange={(event) => setField("featured", event.target.checked)} /> {t("Featured product")}</label>} />
+          <div className="hq-card-body grid gap-4 md:grid-cols-2">
+            <Field required label={t("Product name")} error={validationErrors.name}><input className="hq-input" aria-invalid={Boolean(validationErrors.name)} value={form.name} onChange={(event) => { setField("name", event.target.value); if (isNew) setField("slug", event.target.value.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "")); }} placeholder={t("e.g. Operations Hub")} /></Field>
+            <Field required label={t("Slug")} error={validationErrors.slug}><input className="hq-input hq-mono" aria-invalid={Boolean(validationErrors.slug)} value={form.slug} onChange={(event) => setField("slug", event.target.value.toLowerCase())} placeholder="operations-hub" /></Field>
+            <Field required label={t("Product category")} error={validationErrors.category}><input className="hq-input" aria-invalid={Boolean(validationErrors.category)} value={form.category} onChange={(event) => setField("category", event.target.value)} placeholder={t("Work management")} /></Field>
+            <Field label={t("Display order")}><input className="hq-input hq-tnum" type="number" min="0" value={form.displayOrder} onChange={(event) => setField("displayOrder", Number(event.target.value))} /></Field>
+            <Field label={t("Product status")}><select className="hq-select" value={form.productStatus} onChange={(event) => setField("productStatus", event.target.value as EditorForm["productStatus"])}><option value="active">{t("Active")}</option><option value="planned">{t("Planned")}</option><option value="retired">{t("Retired")}</option></select></Field>
+            <Field label={t("Public visibility")}><select className="hq-select" value={form.publicationStatus} onChange={(event) => setField("publicationStatus", event.target.value as EditorForm["publicationStatus"])}><option value="draft">{t("Draft — private")}</option><option value="published">{t("Published — public")}</option></select></Field>
+          </div>
+        </Card>
+      </TabsContent>
+
+      <TabsContent value="story">
+        <Card>
+          <CardHead icon={BookOpen} hue="teal" title={t("Story & positioning")} sub={t("Copy dan narasi produk yang tampil pada portofolio dan halaman detail.")} />
+          <div className="hq-card-body grid gap-4">
+            <Field required label={t("Short description")} error={validationErrors.shortDescription}><textarea className="hq-input" aria-invalid={Boolean(validationErrors.shortDescription)} rows={2} value={form.shortDescription} onChange={(event) => setField("shortDescription", event.target.value)} /></Field>
+            <Field required label={t("Full description")} error={validationErrors.fullDescription}><textarea className="hq-input" aria-invalid={Boolean(validationErrors.fullDescription)} rows={3} value={form.fullDescription} onChange={(event) => setField("fullDescription", event.target.value)} /></Field>
+            <Field required label={t("Hero headline")} error={validationErrors.heroHeadline}><textarea className="hq-input" aria-invalid={Boolean(validationErrors.heroHeadline)} rows={2} value={form.heroHeadline} onChange={(event) => setField("heroHeadline", event.target.value)} /></Field>
+            <div className="grid gap-4 md:grid-cols-2">
+              <Field required label={t("Problem")} error={validationErrors.problem}><textarea className="hq-input" aria-invalid={Boolean(validationErrors.problem)} rows={5} value={form.problem} onChange={(event) => setField("problem", event.target.value)} /></Field>
+              <Field required label={t("Solution")} error={validationErrors.solution}><textarea className="hq-input" aria-invalid={Boolean(validationErrors.solution)} rows={5} value={form.solution} onChange={(event) => setField("solution", event.target.value)} /></Field>
+            </div>
+            <Field required label={t("Outcome")} error={validationErrors.outcome}><textarea className="hq-input" aria-invalid={Boolean(validationErrors.outcome)} rows={2} value={form.outcome} onChange={(event) => setField("outcome", event.target.value)} /></Field>
+          </div>
+        </Card>
+      </TabsContent>
+
       <TabsContent value="translations"><ProductTranslationsPanel source={{ slug: payload.slug, name: payload.name, category: payload.category, shortDescription: payload.shortDescription, fullDescription: payload.fullDescription, heroHeadline: payload.heroHeadline, problem: payload.problem, solution: payload.solution, outcome: payload.outcome, targetUsers: payload.targetUsers, capabilities: payload.capabilities, workflowSteps: payload.workflowSteps }} demoUrl={form.demoUrl} translations={translations} primaryCta={primaryCta} onChange={setTranslations} onCtaChange={setPrimaryCta} /></TabsContent>
-      <TabsContent value="capabilities"><section className="admin-card border border-[var(--line)] bg-white p-6 shadow-sm"><h2 className="admin-display text-3xl text-[var(--ink)]">{t("Capabilities & audience")}</h2><p className="mt-1 text-xs text-[var(--ink-soft)]">{t("Daftar kapabilitas utama, target audiens, alur workflow, dan URL aplikasi produk.")}</p><div className="mt-6 grid gap-5 md:grid-cols-2"><Field required label={t("Key capabilities — one per line")} error={validationErrors.capabilitiesText}><textarea aria-invalid={Boolean(validationErrors.capabilitiesText)} rows={7} value={form.capabilitiesText} onChange={(event) => setField("capabilitiesText", event.target.value)} placeholder={t(`Reusable templates\nStructured fields`)} /></Field><Field required label={t("Who it is for")} error={validationErrors.targetUsers}><textarea aria-invalid={Boolean(validationErrors.targetUsers)} rows={7} value={form.targetUsers} onChange={(event) => setField("targetUsers", event.target.value)} /></Field></div><Field label={t('URL aplikasi produk — dipakai tombol "Coba [produk]"')} error={validationErrors.demoUrl}><input aria-invalid={Boolean(validationErrors.demoUrl)} value={form.demoUrl} onChange={(event) => setField("demoUrl", event.target.value)} placeholder="https://…" /></Field><Field required label={t("How it works — one step per line: Title | Explanation")} error={validationErrors.workflowText}><textarea aria-invalid={Boolean(validationErrors.workflowText)} rows={7} value={form.workflowText} onChange={(event) => setField("workflowText", event.target.value)} placeholder={t(`Plan | Set the direction.\nBuild | Move the work forward.`)} /></Field></section></TabsContent>
-      <TabsContent value="assets">{!isNew && <section className="admin-card border border-[var(--line)] bg-white p-6 shadow-sm"><h2 className="admin-display text-3xl text-[var(--ink)]">{t("Visual assets")}</h2><p className="mt-1 text-xs text-[var(--ink-soft)]">{t("File logo, cover, dan screenshot disimpan dengan aman dan terhubung ke produk ini.")}</p><div className="mt-6 grid gap-5 md:grid-cols-2"><AssetUpload label={t("Product logo")} preview={productQuery.data?.logoUrl ?? null} onChange={(event) => void handleUpload(event, "logo")} /><AssetUpload label={t("Cover image")} preview={productQuery.data?.coverUrl ?? null} onChange={(event) => void handleUpload(event, "cover")} /></div><div className="mt-6"><label className="inline-flex cursor-pointer items-center gap-2 bg-[var(--green-5)] px-4 py-3 text-xs font-extrabold text-[var(--ink)]"><ImagePlus size={15} /> {t("Add screenshot")}<input className="hidden" type="file" accept="image/*" onChange={(event) => void handleUpload(event, "screenshot")} /></label><div className="mt-4 grid gap-3 md:grid-cols-2">{screenshots.map((screenshot, index) => <div key={screenshot.id} className="overflow-hidden admin-card border border-[var(--line)] bg-[var(--warm-2)]"><img src={screenshot.url} alt={screenshot.alt || t("Product screenshot")} className="h-40 w-full object-cover" /><div className="flex items-center justify-between gap-2 p-3"><span className="text-xs font-bold text-[var(--ink-soft)]">{t("Screenshot {number}", { number: index + 1 })}</span><div className="flex gap-1"><button disabled={index === 0} type="button" onClick={() => moveScreenshot(index, -1)} className="grid h-7 w-7 place-items-center admin-card border border-[var(--line)] disabled:opacity-30"><ArrowUp size={13} /></button><button disabled={index === screenshots.length - 1} type="button" onClick={() => moveScreenshot(index, 1)} className="grid h-7 w-7 place-items-center admin-card border border-[var(--line)] disabled:opacity-30"><ArrowDown size={13} /></button><button type="button" onClick={() => {
-        setConfirmModal({
-          open: true,
-          title: t("Hapus Screenshot?"),
-          description: t("Apakah Anda yakin ingin menghapus screenshot ini dari galeri produk?"),
-          confirmLabel: t("Hapus Screenshot"),
-          onConfirm: () => deleteScreenshot.mutate({ id: screenshot.id }),
-        });
-      }} className="grid h-7 w-7 place-items-center border border-red-200 text-red-700 hover:bg-red-50"><Trash2 size={13} /></button></div></div></div>)}</div></div></section>}</TabsContent>
-      <div className="mt-2 flex justify-end gap-3 admin-card border border-[var(--line)] bg-[var(--paper)] p-3"><Link href={CMS_ROUTES.products} className="px-4 py-3 text-xs font-extrabold text-[var(--ink)]">{t("Cancel")}</Link><button disabled={busy} type="button" onClick={save} className="inline-flex items-center gap-2 bg-[var(--ink)] px-5 py-3 text-xs font-extrabold text-[var(--lightest)] disabled:opacity-60">{busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save size={15} />}{isNew ? t("Create product") : t("Save product")}</button></div>
+
+      <TabsContent value="capabilities">
+        <Card>
+          <CardHead icon={ListChecks} hue="violet" title={t("Capabilities & audience")} sub={t("Daftar kapabilitas utama, target audiens, alur workflow, dan URL aplikasi produk.")} />
+          <div className="hq-card-body grid gap-4">
+            <div className="grid gap-4 md:grid-cols-2">
+              <Field required label={t("Key capabilities — one per line")} error={validationErrors.capabilitiesText}><textarea className="hq-input" aria-invalid={Boolean(validationErrors.capabilitiesText)} rows={7} value={form.capabilitiesText} onChange={(event) => setField("capabilitiesText", event.target.value)} placeholder={t(`Reusable templates\nStructured fields`)} /></Field>
+              <Field required label={t("Who it is for")} error={validationErrors.targetUsers}><textarea className="hq-input" aria-invalid={Boolean(validationErrors.targetUsers)} rows={7} value={form.targetUsers} onChange={(event) => setField("targetUsers", event.target.value)} /></Field>
+            </div>
+            <Field label={t('URL aplikasi produk — dipakai tombol "Coba [produk]"')} error={validationErrors.demoUrl}><input className="hq-input hq-mono" aria-invalid={Boolean(validationErrors.demoUrl)} value={form.demoUrl} onChange={(event) => setField("demoUrl", event.target.value)} placeholder="https://…" /></Field>
+            <Field required label={t("How it works — one step per line: Title | Explanation")} error={validationErrors.workflowText}><textarea className="hq-input" aria-invalid={Boolean(validationErrors.workflowText)} rows={7} value={form.workflowText} onChange={(event) => setField("workflowText", event.target.value)} placeholder={t(`Plan | Set the direction.\nBuild | Move the work forward.`)} /></Field>
+          </div>
+        </Card>
+      </TabsContent>
+
+      <TabsContent value="assets">{!isNew && <Card>
+        <CardHead icon={ImageIcon} hue="amber" title={t("Visual assets")} sub={t("File logo, cover, dan screenshot disimpan dengan aman dan terhubung ke produk ini.")}
+          right={<label className={btn("default", "sm")}><ImagePlus aria-hidden="true" /> {t("Add screenshot")}<input type="file" accept="image/*" onChange={(event) => void handleUpload(event, "screenshot")} /></label>} />
+        <div className="hq-card-body">
+          <div className="grid gap-4 md:grid-cols-2">
+            <AssetUpload label={t("Product logo")} preview={productQuery.data?.logoUrl ?? null} onChange={(event) => void handleUpload(event, "logo")} />
+            <AssetUpload label={t("Cover image")} preview={productQuery.data?.coverUrl ?? null} onChange={(event) => void handleUpload(event, "cover")} />
+          </div>
+          {screenshots.length > 0 && <div className="mt-4 grid gap-3 md:grid-cols-2">{screenshots.map((screenshot, index) => <div key={screenshot.id} className="hq-shot">
+            <img src={screenshot.url} alt={screenshot.alt || t("Product screenshot")} />
+            <div className="flex items-center justify-between gap-2 px-3 py-2">
+              <span className="hq-faint text-[12px]">{t("Screenshot {number}", { number: index + 1 })}</span>
+              <div className="flex gap-1">
+                <Button size="sm" iconOnly icon={ArrowUp} disabled={index === 0} onClick={() => moveScreenshot(index, -1)} aria-label={t("Move up")} />
+                <Button size="sm" iconOnly icon={ArrowDown} disabled={index === screenshots.length - 1} onClick={() => moveScreenshot(index, 1)} aria-label={t("Move down")} />
+                <Button size="sm" iconOnly variant="danger" icon={Trash2} onClick={() => requestScreenshotDelete(screenshot.id)} aria-label={t("Hapus Screenshot")} />
+              </div>
+            </div>
+          </div>)}</div>}
+        </div>
+      </Card>}</TabsContent>
+
+      <div className="hq-savebar">
+        <span className="hq-faint hidden text-[12px] sm:inline">{isNew ? t("New product") : t("Editing: {name}", { name: form.name || t("Product") })}</span>
+        <Link href={CMS_ROUTES.products} className={btn("ghost", "md", "ml-auto")}>{t("Cancel")}</Link>
+        <Button variant="primary" disabled={busy} onClick={save}>{busy ? <Loader2 className="hq-spin" aria-hidden="true" /> : <Save aria-hidden="true" />}{isNew ? t("Create product") : t("Save product")}</Button>
+      </div>
     </Tabs>}
 
     <ConfirmModal
@@ -182,15 +272,15 @@ export default function AdminProductEditor() {
       isPending={busy}
       onConfirm={confirmModal.onConfirm}
     />
-  </div></>;
+  </>;
 }
 
 function Field({ label, children, error, required = false }: { label: string; children: React.ReactNode; error?: string; required?: boolean }) {
   const t = useT();
-  return <label className="block text-xs font-extrabold text-[var(--ink)]"><span className="mb-2 block">{label}{required && <span className="ml-1 text-[var(--purple-60)]" aria-hidden="true">*</span>}</span><div className={`${error ? "[&_input]:border-[var(--purple-60)] [&_textarea]:border-[var(--purple-60)]" : ""} [&_input]:w-full [&_input]:border [&_input]:border-[var(--line-strong)] [&_input]:bg-[var(--card)] [&_input]:px-3 [&_input]:py-2.5 [&_input]:text-sm [&_select]:w-full [&_select]:border [&_select]:border-[var(--line-strong)] [&_select]:bg-[var(--card)] [&_select]:px-3 [&_select]:py-2.5 [&_select]:text-sm [&_textarea]:w-full [&_textarea]:resize-y [&_textarea]:border [&_textarea]:border-[var(--line-strong)] [&_textarea]:bg-[var(--card)] [&_textarea]:px-3 [&_textarea]:py-2.5 [&_textarea]:text-sm`}>{children}</div>{error && <p className="mt-1.5 text-xs font-semibold text-[var(--purple-70)]">{translateMessage(t, error)}</p>}</label>;
+  return <label className="hq-field"><span className="hq-label">{label}{required && <span className="hq-req" aria-hidden="true">*</span>}</span>{children}{error && <span className="hq-error"><OctagonAlert aria-hidden="true" />{translateMessage(t, error)}</span>}</label>;
 }
 
 function AssetUpload({ label, preview, onChange }: { label: string; preview: string | null; onChange: (event: ChangeEvent<HTMLInputElement>) => void }) {
   const t = useT();
-  return <div className="border border-dashed border-[var(--line-strong)] bg-[var(--warm-2)] p-4"><span className="text-xs font-extrabold text-[var(--ink)]">{label}</span>{preview ? <img src={preview} alt={label} className="mt-3 h-36 w-full object-cover" /> : <p className="mt-2 text-xs leading-5 text-[var(--ink-soft)]">{t("No file has been uploaded.")}</p>}<label className="mt-3 inline-flex cursor-pointer items-center gap-2 border border-[var(--ink)] px-3 py-2 text-xs font-extrabold text-[var(--ink)]"><UploadCloud size={14} /> {t("Upload image")}<input className="hidden" type="file" accept="image/*" onChange={onChange} /></label></div>;
+  return <div className="hq-asset"><span className="hq-label">{label}</span>{preview ? <img src={preview} alt={label} /> : <p className="hq-hint">{t("No file has been uploaded.")}</p>}<label className={btn("default", "sm")}><UploadCloud aria-hidden="true" /> {t("Upload image")}<input type="file" accept="image/*" onChange={onChange} /></label></div>;
 }
