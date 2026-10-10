@@ -7,16 +7,16 @@ import { ProductPrimaryCta, ProductStatus } from "@/components/ProductCta";
 import RegistryProductVisual from "@/components/RegistryProductVisual";
 import SiteShell from "@/components/SiteShell";
 import UpcomingProducts from "@/components/UpcomingProducts";
-import { useDocumentTitle, useLocale, useMessages } from "@/i18n";
+import { useCompany, useDocumentTitle, useLocale, useMessages } from "@/i18n";
 import { trpc } from "@/lib/trpc";
 import { localizeProduct } from "@shared/i18n/products";
-import { SITE } from "@shared/site";
 
 const AI_ICONS = [Bot, Workflow, GitBranch, ListChecks];
 
 export default function Home() {
   const locale = useLocale();
   const t = useMessages();
+  const company = useCompany();
   useDocumentTitle(t.meta.homeTitle);
   const productsQuery = trpc.registry.public.list.useQuery();
   const products = (productsQuery.data ?? []).map((product) => localizeProduct(product, locale));
@@ -178,7 +178,7 @@ export default function Home() {
         <section className="closing-cta">
           <ConfettiBits className="decor-confetti-a" />
           <span className="section-label">
-            <i /> {SITE.name}
+            <i /> {company.name}
           </span>
           <h2>{t.home.ctaTitle}</h2>
           <p className="cta-lead">{t.home.ctaLead}</p>
@@ -186,8 +186,8 @@ export default function Home() {
             <Link href="/contact" className="button button-ink">
               {t.common.contactUs} <ArrowUpRight size={17} />
             </Link>
-            <a href={`mailto:${SITE.email}`} className="text-link">
-              {SITE.email}
+            <a href={`mailto:${company.email}`} className="text-link">
+              {company.email}
             </a>
           </div>
         </section>

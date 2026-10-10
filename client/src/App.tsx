@@ -14,7 +14,7 @@ import AdminProductEditor from "./pages/AdminProductEditor";
 import AdminProducts from "./pages/AdminProducts";
 import AdminUsers from "./pages/AdminUsers";
 import Contact from "./pages/Contact";
-import { LocaleProvider } from "./i18n";
+import { ContentProvider, LocaleProvider } from "./i18n";
 import Home from "./pages/Home";
 import Legal from "./pages/Legal";
 import NotFound from "./pages/NotFound";
@@ -110,7 +110,9 @@ function App() {
         <TooltipProvider>
           <Toaster />
           <ScrollToTop />
-          <Router />
+          <ContentProvider>
+            <Router />
+          </ContentProvider>
         </TooltipProvider>
       </ThemeProvider>
     </ErrorBoundary>

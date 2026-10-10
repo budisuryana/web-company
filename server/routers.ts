@@ -10,10 +10,12 @@ import { verifyPassword } from "./_core/password";
 import { sdk } from "./_core/sdk";
 import { systemRouter } from "./_core/systemRouter";
 import { publicProcedure, router } from "./_core/trpc";
+import { contentRouter } from "./routers/content";
 import { registryRouter } from "./routers/registry";
 
 export const appRouter = router({
   system: systemRouter,
+  content: contentRouter,
   auth: router({
     me: publicProcedure.query(({ ctx }) => ctx.user),
     login: publicProcedure

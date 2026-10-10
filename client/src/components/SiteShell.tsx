@@ -5,7 +5,7 @@ import { Link, useLocation } from "wouter";
 import { BrandLockup, BrandSymbol } from "@/components/BrandLockup";
 import { trpc } from "@/lib/trpc";
 import { CMS_BASE_PATH } from "@/const";
-import { alternateHref, useLocale, useMessages } from "@/i18n";
+import { alternateHref, useCompany, useLocale, useMessages } from "@/i18n";
 import { SITE } from "@shared/site";
 
 type SiteShellProps = { children: ReactNode };
@@ -81,7 +81,8 @@ export default function SiteShell({ children }: SiteShellProps) {
   const logoUrl = content["company.logoUrl"] || undefined;
   // The brand name is fixed in code: the CMS still holds the previous name, and the
   // public site must say NUSAKARYA without a production database change.
-  const companyName = SITE.name;
+  const company = useCompany();
+  const companyName = company.name;
   const products = productsQuery.data ?? [];
 
   const navItems = [
@@ -190,8 +191,8 @@ export default function SiteShell({ children }: SiteShellProps) {
           </nav>
           <div className="footer-col">
             <h2>{t.footer.contact}</h2>
-            <a href={`mailto:${SITE.email}`}>
-              <Mail size={14} aria-hidden="true" /> {SITE.email}
+            <a href={`mailto:${company.email}`}>
+              <Mail size={14} aria-hidden="true" /> {company.email}
             </a>
             <span>
               <MapPin size={14} aria-hidden="true" /> {t.common.location}

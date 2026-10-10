@@ -3,12 +3,12 @@ import { useState, type FormEvent } from "react";
 import { AlertCircle, ArrowUpRight, Check, Loader2, Mail, MapPin } from "lucide-react";
 import { Link, useSearch } from "wouter";
 import SiteShell from "@/components/SiteShell";
-import { useDocumentTitle, useMessages } from "@/i18n";
+import { useCompany, useDocumentTitle, useMessages } from "@/i18n";
 import { trpc } from "@/lib/trpc";
-import { SITE } from "@shared/site";
 
 export default function Contact() {
   const t = useMessages();
+  const company = useCompany();
   useDocumentTitle(t.meta.contactTitle);
   const search = useSearch();
   const productsQuery = trpc.registry.public.list.useQuery();
@@ -51,8 +51,8 @@ export default function Contact() {
           <aside className="contact-aside">
             <div>
               <span>{t.contact.emailLabel}</span>
-              <a href={`mailto:${SITE.email}`}>
-                <Mail size={16} aria-hidden="true" /> {SITE.email} <ArrowUpRight size={14} aria-hidden="true" />
+              <a href={`mailto:${company.email}`}>
+                <Mail size={16} aria-hidden="true" /> {company.email} <ArrowUpRight size={14} aria-hidden="true" />
               </a>
             </div>
             <div>

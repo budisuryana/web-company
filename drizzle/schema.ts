@@ -1,5 +1,5 @@
 /** Product Registry schema: durable, editor-friendly records for the public portfolio and core site copy. */
-import { index, integer, jsonb, pgEnum, pgTable, serial, text, timestamp, varchar } from "drizzle-orm/pg-core";
+import { index, integer, jsonb, pgEnum, pgTable, primaryKey, serial, text, timestamp, varchar } from "drizzle-orm/pg-core";
 
 export const productStatuses = ["active", "planned", "retired"] as const;
 export const publicationStatuses = ["draft", "published"] as const;
@@ -60,6 +60,23 @@ export const productMedia = pgTable("product_media", {
   displayOrder: integer("displayOrder").default(0).notNull(),
   createdAt: timestamp("createdAt", { withTimezone: true }).defaultNow().notNull(),
 }, (table) => [index("product_media_order_idx").on(table.productId, table.displayOrder)]);
+
+export const contentLocales = ["en", "id"] as const;
+export const contentLocaleEnum = pgEnum("content_locale", contentLocales);
+
+/**
+ * Bilingual page copy edited in the CMS. Each row overrides one editable key
+ * (see shared/i18n/editable.ts) in one language; anything without a row falls
+ * back to the dictionary in shared/i18n/messages.ts. Language-independent
+ * fields (company name, email) are stored under locale "en".
+ */
+export const pageContent = pgTable("page_content", {
+  key: varchar("key", { length: 160 }).notNull(),
+  locale: contentLocaleEnum("locale").notNull(),
+  value: text("value").notNull(),
+  updatedAt: timestamp("updatedAt", { withTimezone: true }).defaultNow().notNull(),
+  updatedBy: varchar("updatedBy", { length: 64 }),
+}, (table) => [primaryKey({ columns: [table.key, table.locale] })]);
 
 export const siteContent = pgTable("site_content", {
   key: varchar("key", { length: 100 }).primaryKey(),
@@ -125,6 +142,8 @@ export type Product = typeof products.$inferSelect;
 export type InsertProduct = typeof products.$inferInsert;
 export type ProductMedia = typeof productMedia.$inferSelect;
 export type SiteContent = typeof siteContent.$inferSelect;
+export type PageContent = typeof pageContent.$inferSelect;
+export type ContentLocale = (typeof contentLocales)[number];
 export type ActivityLog = typeof activityLogs.$inferSelect;
 export type PageView = typeof pageViews.$inferSelect;
 export type InsertPageView = typeof pageViews.$inferInsert;

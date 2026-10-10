@@ -16,6 +16,7 @@
  * Everything here is pure — no database, no Express — so the string handling is
  * testable on its own. The data lookups live in `server/seoRoutes.ts`.
  */
+import { CONTENT_ELEMENT_ID } from "@shared/i18n/editable";
 
 export interface JsonLd {
   "@context": string;
@@ -45,6 +46,11 @@ export interface PageMeta {
   alternates?: Array<{ hreflang: string; href: string }>;
   /** The route does not exist: the server answers 404 instead of 200. */
   notFound?: boolean;
+  /**
+   * CMS content overrides embedded for the browser, so its first render uses
+   * the same resolved copy as this metadata (no flash of the code defaults).
+   */
+  content?: Record<string, Record<string, string> | undefined>;
 }
 
 export interface SitemapEntry {
@@ -171,7 +177,15 @@ function headTags(meta: PageMeta): string {
     );
   }
 
+  if (meta.content) lines.push(contentBlock(meta.content));
+
   return [...lines, ...jsonLdBlock(meta.jsonLd)].join("\n");
+}
+
+/** Inline JSON data block; "<" is escaped so CMS text can never close the tag. */
+function contentBlock(content: NonNullable<PageMeta["content"]>): string {
+  const json = JSON.stringify(content).replace(/</g, "\\u003c");
+  return `    <script type="application/json" id="${CONTENT_ELEMENT_ID}">${json}</script>`;
 }
 
 /** The text a scraper reads, replaced by React the moment the bundle runs. */

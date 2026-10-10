@@ -19,6 +19,8 @@ import {
 } from "./seo";
 import { getRegistryProductBySlug, listRegistryProducts, listSiteContent } from "./registry";
 import { MESSAGES } from "@shared/i18n/messages";
+import { resolveCompany, resolveMessages, type CompanyProfile, type ContentOverrides } from "@shared/i18n/editable";
+import { loadContentOverrides } from "./content";
 import { localizeProduct } from "@shared/i18n/products";
 import {
   DEFAULT_LOCALE,
@@ -84,7 +86,7 @@ async function siteContentMap(): Promise<Content> {
   }
 }
 
-function organization(content: Content, origin: string, locale: Locale): JsonLd {
+function organization(content: Content, origin: string, locale: Locale, company: CompanyProfile): JsonLd {
   const sameAs = ["company.instagramUrl", "company.linkedinUrl", "company.githubUrl"]
     .map((key) => content[key]?.trim())
     .filter((value): value is string => Boolean(value));
@@ -94,10 +96,10 @@ function organization(content: Content, origin: string, locale: Locale): JsonLd 
   return {
     "@context": "https://schema.org",
     "@type": "Organization",
-    name: SITE.name,
+    name: company.name,
     url: origin,
-    description: MESSAGES[locale].common.tagline,
-    email: SITE.email,
+    description: company.tagline,
+    email: company.email,
     address: {
       "@type": "PostalAddress",
       addressLocality: SITE.city,
@@ -147,8 +149,10 @@ export async function resolvePageMeta(url: string, req?: Request): Promise<PageM
   const origin = siteUrl(req);
   const pathname = pathOf(url);
   const content = await siteContentMap();
-  // Brand name comes from code, not the CMS (which still holds the previous name).
-  const companyName = SITE.name;
+  // Copy and company profile: CMS overrides (page_content) over the code dictionary.
+  // The legacy site_content company.* rows are not read: they still hold the previous brand.
+  const overrides: ContentOverrides = await loadContentOverrides();
+  const companyName = resolveCompany("en", overrides).name;
 
   // The CMS is a private workspace; it must never reach an index.
   if (pathname === cmsPath() || pathname.startsWith(`${cmsPath()}/`) || pathname.startsWith("/admin")) {
@@ -166,7 +170,8 @@ export async function resolvePageMeta(url: string, req?: Request): Promise<PageM
   }
 
   const { locale, path } = splitLocale(pathname);
-  const t = MESSAGES[locale];
+  const t = resolveMessages(locale, overrides);
+  const company = resolveCompany(locale, overrides);
   const localized = localizePath(path, locale);
   const canonical = localized === "/" ? origin : `${origin}${localized}`;
   const base = {
@@ -175,6 +180,7 @@ export async function resolvePageMeta(url: string, req?: Request): Promise<PageM
     siteName: companyName,
     ogType: "website" as const,
     canonical,
+    content: overrides,
   };
   const titled = (title: string) => `${title} — ${companyName}`;
   const notFound: PageMeta = {
@@ -211,7 +217,7 @@ export async function resolvePageMeta(url: string, req?: Request): Promise<PageM
           url: canonical,
           inLanguage: HTML_LANG[locale],
           ...(product.coverUrl ? { image: absoluteUrl(origin, product.coverUrl) } : {}),
-          publisher: organization(content, origin, locale),
+          publisher: organization(content, origin, locale, company),
         },
         {
           "@context": "https://schema.org",
@@ -234,7 +240,7 @@ export async function resolvePageMeta(url: string, req?: Request): Promise<PageM
     heading,
     body,
     alternates: alternatesFor(origin, path),
-    jsonLd: [organization(content, origin, locale)],
+    jsonLd: [organization(content, origin, locale, company)],
     ...extra,
   });
 
