@@ -71,16 +71,16 @@ function Router() {
       <Route path={`${CMS_BASE_PATH}/users`} component={AdminUsers} />
       <Route path={CMS_BASE_PATH} component={AdminDashboard} />
 
-      {/* English: the same public tree nested under /en, so relative links stay in English. */}
-      <Route path="/en" nest>
-        <LocaleProvider locale="en">
+      {/* Indonesian: the same public tree nested under /id, so relative links stay in Indonesian. */}
+      <Route path="/id" nest>
+        <LocaleProvider locale="id">
           <PublicRoutes />
         </LocaleProvider>
       </Route>
 
-      {/* Indonesian (default), including the 404 catch-all. */}
+      {/* English (default), including the 404 catch-all. */}
       <Route>
-        <LocaleProvider locale="id">
+        <LocaleProvider locale="en">
           <PublicRoutes />
         </LocaleProvider>
       </Route>

@@ -4,8 +4,8 @@
  *
  * Copy comes from the same bilingual dictionary the client renders
  * (shared/i18n), so the title a crawler sees is the title a visitor sees.
- * Indonesian lives at "/", English at "/en"; every public page advertises
- * both through hreflang.
+ * English (the default) lives at "/", Indonesian at "/id"; every public page
+ * advertises both through hreflang, and legacy "/en" URLs 301 to English.
  */
 import type { Express, Request, Response } from "express";
 import {
@@ -21,8 +21,10 @@ import { getRegistryProductBySlug, listRegistryProducts, listSiteContent } from 
 import { MESSAGES } from "@shared/i18n/messages";
 import { localizeProduct } from "@shared/i18n/products";
 import {
+  DEFAULT_LOCALE,
   HTML_LANG,
   LEGAL_PAGES_DRAFT,
+  legacyEnglishTarget,
   LOCALES,
   OG_LOCALE,
   SITE,
@@ -122,7 +124,7 @@ function pathOf(url: string): string {
   return pathname.replace(/\/+$/, "") || "/";
 }
 
-/** hreflang set for a page that exists in every locale; x-default points at Indonesian. */
+/** hreflang set for a page that exists in every locale; x-default points at the default (English). */
 function alternatesFor(origin: string, path: string): PageMeta["alternates"] {
   const href = (locale: Locale) => {
     const localized = localizePath(path, locale);
@@ -130,7 +132,7 @@ function alternatesFor(origin: string, path: string): PageMeta["alternates"] {
   };
   return [
     ...LOCALES.map((locale) => ({ hreflang: HTML_LANG[locale], href: href(locale) })),
-    { hreflang: "x-default", href: href("id") },
+    { hreflang: "x-default", href: href(DEFAULT_LOCALE) },
   ];
 }
 
@@ -264,12 +266,19 @@ async function safeProduct(slug: string) {
 function localizedEntries(path: string, lastModified?: Date | string | null): SitemapEntry[] {
   const alternates = [
     ...LOCALES.map((locale) => ({ hreflang: HTML_LANG[locale], path: localizePath(path, locale) })),
-    { hreflang: "x-default", path: localizePath(path, "id") },
+    { hreflang: "x-default", path: localizePath(path, DEFAULT_LOCALE) },
   ];
   return LOCALES.map((locale) => ({ path: localizePath(path, locale), lastModified, alternates }));
 }
 
 export function registerSeoRoutes(app: Express) {
+  // English moved from "/en" to "/": keep old links and index entries working.
+  app.get(/^\/en(\/.*)?$/, (req: Request, res: Response) => {
+    const target = legacyEnglishTarget(req.path) ?? "/";
+    const query = req.originalUrl.slice(req.path.length);
+    res.redirect(301, `${target}${query}`);
+  });
+
   app.get("/robots.txt", (req: Request, res: Response) => {
     res.type("text/plain").send(robotsTxt(siteUrl(req), cmsPath()));
   });

@@ -26,23 +26,41 @@ export const LEGAL_PAGES_DRAFT = true;
 
 export const LOCALES = ["id", "en"] as const;
 export type Locale = (typeof LOCALES)[number];
-export const DEFAULT_LOCALE: Locale = "id";
+export const DEFAULT_LOCALE: Locale = "en";
 
 export const HTML_LANG: Record<Locale, string> = { id: "id", en: "en" };
 export const OG_LOCALE: Record<Locale, string> = { id: "id_ID", en: "en_US" };
 
-/** Splits "/en/products" into { locale: "en", path: "/products" }. Indonesian has no prefix. */
+/** English (the default) has no prefix; Indonesian lives under "/id". */
+const PREFIXED_LOCALE: Locale = "id";
+
+function underPrefix(pathname: string, prefix: string): boolean {
+  return pathname === prefix || pathname.startsWith(`${prefix}/`);
+}
+
+/** Splits "/id/products" into { locale: "id", path: "/products" }. Unprefixed paths are English. */
 export function splitLocale(pathname: string): { locale: Locale; path: string } {
   const clean = pathname.split(/[?#]/)[0] || "/";
-  if (clean === "/en" || clean.startsWith("/en/")) {
-    return { locale: "en", path: clean.slice(3) || "/" };
+  const prefix = `/${PREFIXED_LOCALE}`;
+  if (underPrefix(clean, prefix)) {
+    return { locale: PREFIXED_LOCALE, path: clean.slice(prefix.length) || "/" };
   }
-  return { locale: "id", path: clean };
+  return { locale: DEFAULT_LOCALE, path: clean };
 }
 
 /** The public URL path of `path` in `locale`. */
 export function localizePath(path: string, locale: Locale): string {
   const normalized = path.startsWith("/") ? path : `/${path}`;
-  if (locale === "id") return normalized;
-  return normalized === "/" ? "/en" : `/en${normalized}`;
+  if (locale === DEFAULT_LOCALE) return normalized;
+  return normalized === "/" ? `/${locale}` : `/${locale}${normalized}`;
+}
+
+/**
+ * English used to live under "/en" (production 1fe71b7). Those URLs may already
+ * be shared or indexed, so they permanently redirect to the unprefixed English
+ * page. Returns the target path, or null when `pathname` is not a legacy URL.
+ */
+export function legacyEnglishTarget(pathname: string): string | null {
+  if (!underPrefix(pathname, "/en")) return null;
+  return pathname.slice(3) || "/";
 }

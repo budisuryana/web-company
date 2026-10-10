@@ -1,13 +1,13 @@
 /**
- * Locale plumbing for the public site. Indonesian is served at "/", English is
- * the same route tree nested under "/en" (see App.tsx), so wouter's relative
- * <Link href="/about"> already resolves to "/en/about" inside the English tree.
+ * Locale plumbing for the public site. English is served at "/", Indonesian is
+ * the same route tree nested under "/id" (see App.tsx), so wouter's relative
+ * <Link href="/about"> already resolves to "/id/about" inside the Indonesian tree.
  */
 import { createContext, useContext, useEffect, type ReactNode } from "react";
 import { MESSAGES, type Messages } from "@shared/i18n/messages";
-import { HTML_LANG, SITE, localizePath, splitLocale, type Locale } from "@shared/site";
+import { DEFAULT_LOCALE, HTML_LANG, SITE, localizePath, splitLocale, type Locale } from "@shared/site";
 
-const LocaleContext = createContext<Locale>("id");
+const LocaleContext = createContext<Locale>(DEFAULT_LOCALE);
 
 export function LocaleProvider({ locale, children }: { locale: Locale; children: ReactNode }) {
   useEffect(() => {
@@ -26,7 +26,7 @@ export function useMessages(): Messages {
 
 /**
  * Absolute href for the current page in the other language. The "~" prefix
- * tells wouter to ignore the nested "/en" base.
+ * tells wouter to ignore the nested "/id" base.
  */
 export function alternateHref(locale: Locale): string {
   const { path } = splitLocale(window.location.pathname);

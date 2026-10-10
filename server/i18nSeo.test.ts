@@ -2,7 +2,7 @@
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { MESSAGES } from "@shared/i18n/messages";
 import { PRODUCT_PRESENTATION, localizeProduct, productCtaMode } from "@shared/i18n/products";
-import { localizePath, splitLocale } from "@shared/site";
+import { DEFAULT_LOCALE, legacyEnglishTarget, localizePath, splitLocale } from "@shared/site";
 import { injectMeta, sitemapXml } from "./seo";
 import { resolvePageMeta } from "./seoRoutes";
 
@@ -19,57 +19,76 @@ afterEach(() => {
 });
 
 describe("locale paths", () => {
-  it("treats unprefixed paths as Indonesian and /en as English", () => {
-    expect(splitLocale("/")).toEqual({ locale: "id", path: "/" });
-    expect(splitLocale("/about")).toEqual({ locale: "id", path: "/about" });
-    expect(splitLocale("/en")).toEqual({ locale: "en", path: "/" });
-    expect(splitLocale("/en/products/reconly?x=1")).toEqual({ locale: "en", path: "/products/reconly" });
+  it("defaults to English: unprefixed paths are English and /id is Indonesian", () => {
+    expect(DEFAULT_LOCALE).toBe("en");
+    expect(splitLocale("/")).toEqual({ locale: "en", path: "/" });
+    expect(splitLocale("/about")).toEqual({ locale: "en", path: "/about" });
+    expect(splitLocale("/id")).toEqual({ locale: "id", path: "/" });
+    expect(splitLocale("/id/products/reconly?x=1")).toEqual({ locale: "id", path: "/products/reconly" });
   });
 
-  it("does not mistake look-alike prefixes for the English tree", () => {
-    expect(splitLocale("/english")).toEqual({ locale: "id", path: "/english" });
+  it("does not mistake look-alike prefixes for the Indonesian tree", () => {
+    expect(splitLocale("/identity")).toEqual({ locale: "en", path: "/identity" });
   });
 
   it("builds localized paths", () => {
-    expect(localizePath("/", "id")).toBe("/");
-    expect(localizePath("/", "en")).toBe("/en");
-    expect(localizePath("/contact", "en")).toBe("/en/contact");
+    expect(localizePath("/", "en")).toBe("/");
+    expect(localizePath("/", "id")).toBe("/id");
+    expect(localizePath("/contact", "id")).toBe("/id/contact");
+    expect(localizePath("/contact", "en")).toBe("/contact");
+  });
+
+  it("maps legacy /en URLs to their unprefixed English page", () => {
+    expect(legacyEnglishTarget("/en")).toBe("/");
+    expect(legacyEnglishTarget("/en/products/reconly")).toBe("/products/reconly");
+    expect(legacyEnglishTarget("/english")).toBeNull();
+    expect(legacyEnglishTarget("/products")).toBeNull();
   });
 });
 
 describe("page metadata", () => {
-  it("serves English copy, lang and canonical under /en", async () => {
-    const meta = await resolvePageMeta("/en/about");
+  it("serves English copy, lang and canonical at the unprefixed path", async () => {
+    const meta = await resolvePageMeta("/about");
     expect(meta.htmlLang).toBe("en");
     expect(meta.locale).toBe("en_US");
-    expect(meta.canonical).toBe(`${ORIGIN}/en/about`);
+    expect(meta.canonical).toBe(`${ORIGIN}/about`);
     expect(meta.title).toContain(MESSAGES.en.meta.aboutTitle);
     expect(meta.notFound).toBeFalsy();
+  });
+
+  it("serves Indonesian copy, lang and canonical under /id", async () => {
+    const meta = await resolvePageMeta("/id/about");
+    expect(meta.htmlLang).toBe("id");
+    expect(meta.locale).toBe("id_ID");
+    expect(meta.canonical).toBe(`${ORIGIN}/id/about`);
+    expect(meta.title).toContain(MESSAGES.id.meta.aboutTitle);
   });
 
   it("advertises every language version plus x-default", async () => {
     const meta = await resolvePageMeta("/contact");
     expect(meta.alternates).toEqual([
-      { hreflang: "id", href: `${ORIGIN}/contact` },
-      { hreflang: "en", href: `${ORIGIN}/en/contact` },
+      { hreflang: "id", href: `${ORIGIN}/id/contact` },
+      { hreflang: "en", href: `${ORIGIN}/contact` },
       { hreflang: "x-default", href: `${ORIGIN}/contact` },
     ]);
   });
 
-  it("gives the homepage a real title, description and hreflang", async () => {
+  it("gives the homepage English copy, with Indonesian at /id and x-default on /", async () => {
     const meta = await resolvePageMeta("/");
-    expect(meta.title).toBe(MESSAGES.id.meta.homeTitle);
+    expect(meta.title).toBe(MESSAGES.en.meta.homeTitle);
+    expect(meta.htmlLang).toBe("en");
     expect(meta.canonical).toBe(ORIGIN);
-    expect(meta.alternates?.find((a) => a.hreflang === "en")?.href).toBe(`${ORIGIN}/en`);
+    expect(meta.alternates?.find((a) => a.hreflang === "id")?.href).toBe(`${ORIGIN}/id`);
+    expect(meta.alternates?.find((a) => a.hreflang === "x-default")?.href).toBe(ORIGIN);
   });
 
   it("flags unknown routes in both languages as 404", async () => {
     expect((await resolvePageMeta("/does-not-exist")).notFound).toBe(true);
-    expect((await resolvePageMeta("/en/does-not-exist")).notFound).toBe(true);
+    expect((await resolvePageMeta("/id/does-not-exist")).notFound).toBe(true);
   });
 
   it("keeps draft legal pages out of the index", async () => {
-    const meta = await resolvePageMeta("/en/privacy");
+    const meta = await resolvePageMeta("/id/privacy");
     expect(meta.notFound).toBeFalsy();
     expect(meta.noindex).toBe(true);
   });
@@ -93,10 +112,10 @@ describe("html rendering", () => {
   });
 
   it("declares the xhtml namespace when sitemap entries carry alternates", () => {
-    const xml = sitemapXml(ORIGIN, [{ path: "/en", alternates: [{ hreflang: "id", path: "/" }] }]);
+    const xml = sitemapXml(ORIGIN, [{ path: "/id", alternates: [{ hreflang: "en", path: "/" }] }]);
     expect(xml).toContain('xmlns:xhtml="http://www.w3.org/1999/xhtml"');
-    expect(xml).toContain(`<loc>${ORIGIN}/en</loc>`);
-    expect(xml).toContain(`hreflang="id" href="${ORIGIN}"`);
+    expect(xml).toContain(`<loc>${ORIGIN}/id</loc>`);
+    expect(xml).toContain(`hreflang="en" href="${ORIGIN}"`);
   });
 });
 
