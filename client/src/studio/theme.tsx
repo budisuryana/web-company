@@ -102,6 +102,7 @@ export function StudioThemeProvider({ children }: { children: ReactNode }) {
   }, [sidebar]);
 
   // Geist 400–700 and Geist Mono are only needed by the CMS, so they load here rather than on every public page.
+  // The link goes again on leaving: its Geist faces would otherwise replace the public wordmark's Geist 600 file.
   useEffect(() => {
     if (document.getElementById(FONT_LINK_ID)) return;
     const link = document.createElement("link");
@@ -109,6 +110,7 @@ export function StudioThemeProvider({ children }: { children: ReactNode }) {
     link.rel = "stylesheet";
     link.href = FONT_HREF;
     document.head.appendChild(link);
+    return () => link.remove();
   }, []);
 
   const value = useMemo(() => ({ theme, setTheme, sidebar, setSidebar }), [theme, setTheme, sidebar, setSidebar]);
