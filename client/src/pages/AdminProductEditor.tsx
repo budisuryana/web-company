@@ -2,7 +2,6 @@
 import { useEffect, useMemo, useState, type ChangeEvent } from "react";
 import { ArrowDown, ArrowLeft, ArrowUp, Check, ImagePlus, Loader2, Save, Trash2, UploadCloud } from "lucide-react";
 import { Link, useLocation, useRoute } from "wouter";
-import AdminGuard from "@/pages/AdminGuard";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { CMS_BASE_PATH, CMS_ROUTES } from "@/const";
 import { trpc } from "@/lib/trpc";
@@ -146,7 +145,7 @@ export default function AdminProductEditor() {
   const screenshots = productQuery.data?.screenshots ?? [];
   const moveScreenshot = (index: number, direction: -1 | 1) => { const target = index + direction; if (target < 0 || target >= screenshots.length) return; const next = [...screenshots]; [next[index], next[target]] = [next[target], next[index]]; reorderScreenshots.mutate({ productId: id, ids: next.map((screenshot) => screenshot.id) }); };
 
-  return <AdminGuard><div className="w-full"><div className="mb-7 flex flex-wrap items-end justify-between gap-4"><div><Link href={CMS_ROUTES.products} className="inline-flex items-center gap-2 text-xs font-extrabold text-[var(--ink-soft)]"><ArrowLeft size={14} /> {t("Product Registry")}</Link><span className="mt-5 block text-[10px] font-extrabold uppercase tracking-[.16em] text-[var(--accent)]">{isNew ? t("New product") : t("Editing: {name}", { name: form.name || t("Product") })}</span><h1 className="mt-2 admin-display text-3xl leading-tight tracking-tight text-[var(--ink)]">{isNew ? t("Add New Product") : t("Edit Product Details")}</h1></div>{!isNew && <button disabled={remove.isPending} type="button" onClick={() => {
+  return <><div className="w-full"><div className="mb-7 flex flex-wrap items-end justify-between gap-4"><div><Link href={CMS_ROUTES.products} className="inline-flex items-center gap-2 text-xs font-extrabold text-[var(--ink-soft)]"><ArrowLeft size={14} /> {t("Product Registry")}</Link><span className="mt-5 block text-[10px] font-extrabold uppercase tracking-[.16em] text-[var(--accent)]">{isNew ? t("New product") : t("Editing: {name}", { name: form.name || t("Product") })}</span><h1 className="mt-2 admin-display text-3xl leading-tight tracking-tight text-[var(--ink)]">{isNew ? t("Add New Product") : t("Edit Product Details")}</h1></div>{!isNew && <button disabled={remove.isPending} type="button" onClick={() => {
     setConfirmModal({
       open: true,
       title: t("Hapus Produk?"),
@@ -183,7 +182,7 @@ export default function AdminProductEditor() {
       isPending={busy}
       onConfirm={confirmModal.onConfirm}
     />
-  </div></AdminGuard>;
+  </div></>;
 }
 
 function Field({ label, children, error, required = false }: { label: string; children: React.ReactNode; error?: string; required?: boolean }) {

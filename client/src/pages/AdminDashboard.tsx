@@ -26,7 +26,6 @@ import {
   UsersRound,
 } from "lucide-react";
 import { Link } from "wouter";
-import AdminGuard from "@/pages/AdminGuard";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { CMS_ROUTES } from "@/const";
 import { trpc } from "@/lib/trpc";
@@ -125,7 +124,7 @@ export default function AdminDashboard() {
   }, [visitorAnalytics]);
 
   return (
-    <AdminGuard>
+    <>
       <div className="w-full">
         {/* Header Section */}
         <section className="mb-8 grid gap-6 border-b-2 border-[var(--ink)] pb-8 lg:grid-cols-[1.2fr_.8fr]">
@@ -740,7 +739,7 @@ export default function AdminDashboard() {
           </>
         )}
       </div>
-    </AdminGuard>
+    </>
   );
 }
 

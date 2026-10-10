@@ -2,7 +2,6 @@
 import { ChangeEvent, useMemo, useState, type ReactNode } from "react";
 import type { inferRouterOutputs } from "@trpc/server";
 import { FileText, Globe, Loader2, RotateCcw, Save, Search, Trash2, Undo2, UploadCloud } from "lucide-react";
-import AdminGuard from "@/pages/AdminGuard";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { BrandMark } from "@/components/SiteShell";
@@ -305,7 +304,7 @@ export default function AdminContent() {
   const groups = activeTab === "all" ? CONTENT_SECTIONS.map((section) => ({ ...section, title: adminLocale === "en" ? section.titleEn : section.title, items: visibleEntries.filter((entry) => entry.section === section.id) })).filter((group) => group.items.length) : [{ id: activeTab, title: "", items: visibleEntries }];
 
   return (
-    <AdminGuard>
+    <>
       <div className="min-w-0 max-w-full space-y-6">
         <div className="flex flex-wrap items-end justify-between gap-4 border-b border-[var(--line)] pb-6">
           <div>
@@ -497,7 +496,7 @@ export default function AdminContent() {
           )}
         </Tabs>
       </div>
-    </AdminGuard>
+    </>
   );
 }
 

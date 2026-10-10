@@ -1,41 +1,62 @@
-/** CMS shell: preserve the provided authenticated sidebar structure while presenting focused Product Registry and site-copy destinations. */
+/** CMS shell in the NUSAKARYA HQ layout: coloured sidebar with grouped navigation, top bar with breadcrumb, and a bottom tab bar on phones. */
 import { useAuth } from "@/_core/hooks/useAuth";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarInset, SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarProvider, SidebarTrigger, useSidebar } from "@/components/ui/sidebar";
-import { CMS_BASE_PATH, CMS_ROUTES, startLogin } from "@/const";
-import { useIsMobile } from "@/hooks/useMobile";
-import { Boxes, ExternalLink, FileText, Inbox, LayoutDashboard, LogOut, PanelLeft, UsersRound } from "lucide-react";
-import { CSSProperties, useEffect, useRef, useState } from "react";
-import { useLocation } from "wouter";
-import { DashboardLayoutSkeleton } from "./DashboardLayoutSkeleton";
+import { BrandSymbol } from "@/components/BrandLockup";
+import { CMS_BASE_PATH, CMS_ROUTES } from "@/const";
+import { trpc } from "@/lib/trpc";
 import { AdminLanguageSwitch, useAdminDocumentLang, useT } from "@/admin/i18n";
 import type { AdminPhrase } from "@/admin/phrases";
-import { Button } from "./ui/button";
+import { useStudioAppearance } from "@/studio/theme";
+import { SIDEBAR_PRESETS, isHex, normalizeHex } from "@/studio/sidebarPalette";
+import { Button, Segmented } from "@/studio/ui";
+import { SITE } from "@shared/site";
+import { Boxes, ChevronRight, Ellipsis, ExternalLink, FileText, Inbox, LayoutDashboard, LogOut, Menu, Moon, Sun, UsersRound, X } from "lucide-react";
+import { useEffect, useState, type ReactNode } from "react";
+import { Link, useLocation } from "wouter";
 
-const menuItems: Array<{ icon: typeof Boxes; label: AdminPhrase; path: string }> = [
-  { icon: LayoutDashboard, label: "Ringkasan", path: CMS_ROUTES.dashboard },
-  { icon: Boxes, label: "Katalog Produk", path: CMS_ROUTES.products },
-  { icon: Inbox, label: "Kotak Masuk", path: CMS_ROUTES.inbox },
-  { icon: FileText, label: "Profil & Konten", path: CMS_ROUTES.content },
-  { icon: UsersRound, label: "Manajemen Pengguna", path: CMS_ROUTES.users },
-  { icon: ExternalLink, label: "Lihat Situs Publik", path: "/" },
+type NavItem = { icon: typeof Boxes; label: AdminPhrase; short: AdminPhrase; path: string };
+
+const NAV_GROUPS: Array<{ label: AdminPhrase; items: NavItem[] }> = [
+  { label: "Ikhtisar", items: [{ icon: LayoutDashboard, label: "Ringkasan", short: "Ringkasan", path: CMS_ROUTES.dashboard }] },
+  {
+    label: "Konten",
+    items: [
+      { icon: Boxes, label: "Katalog Produk", short: "Products", path: CMS_ROUTES.products },
+      { icon: FileText, label: "Profil & Konten", short: "Konten", path: CMS_ROUTES.content },
+    ],
+  },
+  { label: "Komunikasi", items: [{ icon: Inbox, label: "Kotak Masuk", short: "Kotak Masuk", path: CMS_ROUTES.inbox }] },
+  { label: "Organisasi", items: [{ icon: UsersRound, label: "Manajemen Pengguna", short: "Manajemen Pengguna", path: CMS_ROUTES.users }] },
 ];
-const SIDEBAR_WIDTH_KEY = "workshop-cms-sidebar-width"; const DEFAULT_WIDTH = 270; const MIN_WIDTH = 220; const MAX_WIDTH = 380;
+const NAV_ITEMS = NAV_GROUPS.flatMap((group) => group.items);
+/** Bottom tab bar on phones; everything else stays one tap away under "More". */
+const MOBILE_TABS = [CMS_ROUTES.dashboard, CMS_ROUTES.products, CMS_ROUTES.inbox, CMS_ROUTES.content];
 
-export default function DashboardLayout({ children }: { children: React.ReactNode }) { const t = useT(); useAdminDocumentLang(); const [sidebarWidth, setSidebarWidth] = useState(() => Number(localStorage.getItem(SIDEBAR_WIDTH_KEY)) || DEFAULT_WIDTH); const { loading, user } = useAuth(); useEffect(() => localStorage.setItem(SIDEBAR_WIDTH_KEY, String(sidebarWidth)), [sidebarWidth]); if (loading) return <DashboardLayoutSkeleton />; if (!user) return <div className="flex min-h-screen items-center justify-center"><div className="max-w-md p-8 text-center"><h1 className="text-2xl font-semibold">{t("Sign in to continue")}</h1><p className="mt-3 text-sm text-muted-foreground">{t("Access to this workspace requires authentication.")}</p><Button onClick={() => startLogin()} size="lg" className="mt-6 w-full">{t("Sign in")}</Button></div></div>; return <SidebarProvider style={{ "--sidebar-width": `${sidebarWidth}px` } as CSSProperties}><DashboardLayoutContent setSidebarWidth={setSidebarWidth}>{children}</DashboardLayoutContent></SidebarProvider>; }
-function DashboardLayoutContent({ children, setSidebarWidth }: { children: React.ReactNode; setSidebarWidth: (width: number) => void }) {
+const isActive = (item: NavItem, location: string) =>
+  item.path === location || (item.path === CMS_ROUTES.products && location.startsWith(`${CMS_ROUTES.products}/`));
+
+const initialOf = (name?: string | null) => name?.trim().charAt(0).toUpperCase() || "A";
+
+export default function DashboardLayout({ children }: { children: ReactNode }) {
   const { user, logout } = useAuth();
   const t = useT();
-  const [location, setLocation] = useLocation();
-  const { state, toggleSidebar } = useSidebar();
-  const isCollapsed = state === "collapsed";
-  const [isResizing, setIsResizing] = useState(false);
-  const sidebarRef = useRef<HTMLDivElement>(null);
-  const isMobile = useIsMobile();
-  const activeMenuItem = menuItems.find(
-    (item) => item.path === location || (item.path === CMS_ROUTES.products && location.startsWith(CMS_ROUTES.products))
-  );
+  useAdminDocumentLang();
+  const [location] = useLocation();
+  const [menuOpen, setMenuOpen] = useState(false);
+  const { theme, setTheme } = useStudioAppearance();
+  // The same query (and cache entry) the dashboard and inbox read, so the badge follows every triage action.
+  const inboxCounts = trpc.registry.admin.submissions.counts.useQuery(undefined, { enabled: user?.role === "admin" });
+  const unread = inboxCounts.data?.unread ?? 0;
+  const active = NAV_ITEMS.find((item) => isActive(item, location));
+
+  // Close the phone slide-over after navigating, and on Escape.
+  useEffect(() => setMenuOpen(false), [location]);
+  useEffect(() => {
+    if (!menuOpen) return;
+    const onKey = (event: KeyboardEvent) => event.key === "Escape" && setMenuOpen(false);
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [menuOpen]);
 
   const handleLogout = async () => {
     try {
@@ -45,89 +66,183 @@ function DashboardLayoutContent({ children, setSidebarWidth }: { children: React
     }
   };
 
-  useEffect(() => {
-    const move = (event: MouseEvent) => {
-      if (!isResizing) return;
-      const left = sidebarRef.current?.getBoundingClientRect().left ?? 0;
-      const width = event.clientX - left;
-      if (width >= MIN_WIDTH && width <= MAX_WIDTH) setSidebarWidth(width);
-    };
-    const up = () => setIsResizing(false);
-    if (isResizing) {
-      document.addEventListener("mousemove", move);
-      document.addEventListener("mouseup", up);
-      document.body.style.cursor = "col-resize";
-    }
-    return () => {
-      document.removeEventListener("mousemove", move);
-      document.removeEventListener("mouseup", up);
-      document.body.style.cursor = "";
-    };
-  }, [isResizing, setSidebarWidth]);
+  const editorCrumb = location.startsWith(`${CMS_ROUTES.products}/`) ? (location === CMS_ROUTES.productNew ? t("New product") : t("Edit")) : null;
 
-  return <>
-    <div className="relative" ref={sidebarRef}>
-      <Sidebar collapsible="icon" className="border-r-0">
-        <SidebarHeader className="h-20 justify-center">
-          <div className="flex items-center gap-3 px-3">
-            <button onClick={toggleSidebar} className="grid h-8 w-8 place-items-center rounded-lg hover:bg-accent" aria-label={t("Toggle navigation")}>
-              <PanelLeft className="h-4 w-4 text-muted-foreground" />
-            </button>
-            {!isCollapsed && (
-              <div>
-                <span className="block admin-display text-lg leading-none tracking-tight">Workshop CMS</span>
-                <span className="mt-1 block text-[9px] font-extrabold uppercase tracking-[.14em] text-muted-foreground">{t("Product publishing")}</span>
-              </div>
-            )}
-          </div>
-        </SidebarHeader>
-        <SidebarContent>
-          <SidebarMenu className="px-2 py-2">
-            {menuItems.map((item) => (
-              <SidebarMenuItem key={item.path}>
-                <SidebarMenuButton isActive={activeMenuItem?.path === item.path} onClick={() => setLocation(item.path)} tooltip={t(item.label)} className="h-11">
-                  <item.icon className="h-4 w-4" />
-                  <span>{t(item.label)}</span>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-            ))}
-          </SidebarMenu>
-        </SidebarContent>
-        <SidebarFooter className="p-3">
-          {!isCollapsed && <AdminLanguageSwitch className="mb-2 px-1" />}
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <button className="flex w-full items-center gap-3 rounded-lg px-1 py-1 text-left hover:bg-accent/50">
-                <Avatar className="h-9 w-9 border">
-                  <AvatarFallback className="text-xs font-medium">{user?.name?.charAt(0).toUpperCase() || "A"}</AvatarFallback>
-                </Avatar>
-                {!isCollapsed && (
-                  <div className="min-w-0 flex-1">
-                    <p className="truncate text-sm font-medium">{user?.name || "Admin"}</p>
-                    <p className="mt-1 truncate text-xs text-muted-foreground">{user?.email || t("Project owner")}</p>
-                  </div>
-                )}
-              </button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-48">
-              <DropdownMenuItem onClick={handleLogout} className="text-destructive cursor-pointer">
-                <LogOut className="mr-2 h-4 w-4" />{t("Sign out")}
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </SidebarFooter>
-      </Sidebar>
-      <div className={`absolute right-0 top-0 h-full w-1 cursor-col-resize hover:bg-primary/20 ${isCollapsed ? "hidden" : ""}`} onMouseDown={() => setIsResizing(true)} style={{ zIndex: 50 }} />
-    </div>
-    <SidebarInset className="min-w-0 bg-[var(--paper)]">
-      {isMobile && (
-        <div className="sticky top-0 z-40 flex h-14 items-center border-b bg-[rgba(252,249,245,.95)] px-2 backdrop-blur">
-          <SidebarTrigger className="h-9 w-9 rounded-lg" />
-          <span className="ml-2 text-sm font-bold">{activeMenuItem ? t(activeMenuItem.label) : "CMS"}</span>
-          <AdminLanguageSwitch compact className="ml-auto pr-1" />
+  return (
+    <div className="hq-app">
+      <aside className={`hq-sidebar ${menuOpen ? "open" : ""}`} aria-label={t("Navigasi utama")}>
+        <div className="flex items-center">
+          <Link href={CMS_ROUTES.dashboard} className="hq-brand min-w-0 flex-1">
+            <span className="hq-brand-mark">
+              <BrandSymbol />
+            </span>
+            <span className="min-w-0">
+              <span className="hq-brand-name block">Workshop CMS</span>
+              <span className="hq-brand-sub block truncate">
+                {SITE.name} · {t("Product publishing")}
+              </span>
+            </span>
+          </Link>
+          <Button variant="ghost" size="sm" iconOnly icon={X} className="hq-mob-only mr-2" aria-label={t("Tutup menu")} onClick={() => setMenuOpen(false)} />
         </div>
-      )}
-      <main className="min-h-screen min-w-0 flex-1 p-5 md:px-6 md:py-8">{children}</main>
-    </SidebarInset>
-  </>;
+
+        <nav className="hq-nav">
+          {NAV_GROUPS.map((group) => (
+            <div key={group.label}>
+              <div className="hq-nav-label">{t(group.label)}</div>
+              {group.items.map((item) => (
+                <Link key={item.path} href={item.path} className="hq-nav-item" aria-current={isActive(item, location) ? "page" : undefined}>
+                  <item.icon aria-hidden="true" />
+                  <span className="truncate">{t(item.label)}</span>
+                  {item.path === CMS_ROUTES.inbox && unread > 0 && (
+                    <span className="hq-count warn" aria-label={t("{count} belum dibaca", { count: unread })}>
+                      {unread}
+                    </span>
+                  )}
+                </Link>
+              ))}
+            </div>
+          ))}
+        </nav>
+
+        <div className="hq-side-foot">
+          <span className="hq-avatar" aria-hidden="true">
+            {initialOf(user?.name)}
+          </span>
+          <div className="hq-who">
+            <b>{user?.name || "Admin"}</b>
+            <span>{user?.email || t("Project owner")}</span>
+          </div>
+          <AccountMenu onLogout={handleLogout} />
+        </div>
+      </aside>
+      {menuOpen && <div className="hq-scrim hq-mob-only" aria-hidden="true" onClick={() => setMenuOpen(false)} />}
+
+      <div className="hq-main">
+        <header className="hq-topbar">
+          <Button variant="ghost" iconOnly icon={Menu} className="hq-mob-only" aria-label={t("Buka menu")} aria-expanded={menuOpen} data-testid="studio-menu-button" onClick={() => setMenuOpen(true)} />
+          <nav className="hq-crumbs" aria-label={t("Navigasi jejak")}>
+            <span className="hq-crumb-trail flex items-center gap-1.5">
+              <Link href={CMS_ROUTES.dashboard}>Workshop CMS</Link>
+              <ChevronRight aria-hidden="true" />
+            </span>
+            {editorCrumb ? (
+              <>
+                <Link href={CMS_ROUTES.products} className="hq-crumb-trail">
+                  {t("Katalog Produk")}
+                </Link>
+                <ChevronRight aria-hidden="true" className="hq-crumb-trail" />
+                <span aria-current="page">{editorCrumb}</span>
+              </>
+            ) : (
+              <span aria-current="page">{active ? t(active.label) : "CMS"}</span>
+            )}
+          </nav>
+          <div className="hq-spacer" />
+          <Link href="/" className="hq-btn ghost sm hq-desk-only">
+            <ExternalLink aria-hidden="true" />
+            {t("Lihat Situs Publik")}
+          </Link>
+          <AdminLanguageSwitch compact />
+          <Button
+            variant="ghost"
+            iconOnly
+            icon={theme === "dark" ? Sun : Moon}
+            aria-label={theme === "dark" ? t("Mode terang") : t("Mode gelap")}
+            title={theme === "dark" ? t("Mode terang") : t("Mode gelap")}
+            onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+          />
+        </header>
+        <main className="hq-content">
+          <div className="hq-page">{children}</div>
+        </main>
+      </div>
+
+      <nav className="hq-mob-tabs" aria-label={t("Navigasi seluler")}>
+        {MOBILE_TABS.map((path) => {
+          const item = NAV_ITEMS.find((entry) => entry.path === path)!;
+          return (
+            <Link key={path} href={path} aria-current={isActive(item, location) ? "page" : undefined}>
+              <item.icon aria-hidden="true" />
+              <span className="max-w-full truncate px-1">{t(item.short)}</span>
+              {path === CMS_ROUTES.inbox && unread > 0 && <span className="hq-bdg">{unread}</span>}
+            </Link>
+          );
+        })}
+        <button type="button" onClick={() => setMenuOpen(true)} aria-expanded={menuOpen}>
+          <Menu aria-hidden="true" />
+          {t("Lainnya")}
+        </button>
+      </nav>
+    </div>
+  );
+}
+
+/** Account menu: appearance (mode and sidebar colour), admin language, sign out. */
+function AccountMenu({ onLogout }: { onLogout: () => void }) {
+  const t = useT();
+  const { theme, setTheme, sidebar, setSidebar } = useStudioAppearance();
+  const [custom, setCustom] = useState(sidebar.custom);
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button variant="ghost" size="sm" iconOnly icon={Ellipsis} aria-label={t("Menu akun")} />
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end" side="top" sideOffset={8} className="hq-menu">
+        <div className="hq-menu-label">{t("Tampilan")}</div>
+        <div className="hq-menu-row">
+          <Segmented
+            label={t("Tampilan")}
+            value={theme}
+            onChange={setTheme}
+            options={[
+              { value: "light", label: t("Terang"), icon: Sun },
+              { value: "dark", label: t("Gelap"), icon: Moon },
+            ]}
+          />
+        </div>
+        <div className="hq-menu-label">{t("Warna sidebar")}</div>
+        <div className="hq-swatches" role="group" aria-label={t("Warna sidebar")}>
+          {SIDEBAR_PRESETS.map((preset) => (
+            <button
+              key={preset.id}
+              type="button"
+              className="hq-swatch"
+              style={{ background: preset.bg }}
+              title={preset.name}
+              aria-label={preset.name}
+              aria-pressed={sidebar.preset === preset.id}
+              onClick={() => setSidebar({ ...sidebar, preset: preset.id })}
+            />
+          ))}
+          <label className="hq-swatch custom" title={t("Warna kustom")} aria-pressed={sidebar.preset === "custom"}>
+            <span className="sr-only">{t("Warna kustom")}</span>
+            <input
+              type="color"
+              value={custom}
+              onChange={(event) => {
+                setCustom(event.target.value);
+                if (isHex(event.target.value)) setSidebar({ preset: "custom", custom: normalizeHex(event.target.value) });
+              }}
+            />
+          </label>
+        </div>
+        <div className="hq-menu-sep" />
+        <div className="hq-menu-row">
+          <AdminLanguageSwitch className="w-full" />
+        </div>
+        <div className="hq-menu-sep" />
+        <DropdownMenuItem asChild className="hq-menu-item">
+          <Link href="/">
+            <ExternalLink aria-hidden="true" />
+            {t("Lihat Situs Publik")}
+          </Link>
+        </DropdownMenuItem>
+        <DropdownMenuItem onClick={onLogout} className="hq-menu-item danger">
+          <LogOut aria-hidden="true" />
+          {t("Sign out")}
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
 }

@@ -12,7 +12,6 @@ import {
   UserRoundPlus,
   UsersRound,
 } from "lucide-react";
-import AdminGuard from "@/pages/AdminGuard";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { trpc } from "@/lib/trpc";
 import { toast } from "sonner";
@@ -135,7 +134,7 @@ export default function AdminUsers() {
   };
 
   return (
-    <AdminGuard>
+    <>
       <div className="w-full">
         {/* Header */}
         <div className="mb-9 grid gap-6 border-b-2 border-[var(--ink)] pb-8 lg:grid-cols-[1.2fr_.8fr]">
@@ -335,7 +334,7 @@ export default function AdminUsers() {
           }}
         />
       </div>
-    </AdminGuard>
+    </>
   );
 }
 

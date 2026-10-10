@@ -2,7 +2,7 @@
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { useEffect, useRef } from "react";
-import { Route, Switch, useLocation } from "wouter";
+import { Route, Switch, matchRoute, useLocation, useRouter } from "wouter";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { CMS_BASE_PATH } from "./const";
 import { ThemeProvider } from "./contexts/ThemeContext";
@@ -16,6 +16,7 @@ import AdminUsers from "./pages/AdminUsers";
 import Contact from "./pages/Contact";
 import { ContentProvider, LocaleProvider } from "./i18n";
 import { AdminLocaleProvider } from "./admin/i18n";
+import StudioLayout from "./studio/StudioLayout";
 import Home from "./pages/Home";
 import Legal from "./pages/Legal";
 import NotFound from "./pages/NotFound";
@@ -61,17 +62,36 @@ function ScrollToTop() {
   return null;
 }
 
+/** Configurable CMS routes (default: /studio/...), in match order. */
+const CMS_PAGES = [
+  { path: `${CMS_BASE_PATH}/products/:id`, component: AdminProductEditor },
+  { path: `${CMS_BASE_PATH}/products`, component: AdminProducts },
+  { path: `${CMS_BASE_PATH}/inbox`, component: AdminInbox },
+  { path: `${CMS_BASE_PATH}/content`, component: AdminContent },
+  { path: `${CMS_BASE_PATH}/users`, component: AdminUsers },
+  { path: CMS_BASE_PATH, component: AdminDashboard },
+];
+
 function Router() {
+  const [location] = useLocation();
+  const { parser } = useRouter();
+
+  // One layout route for the CMS: StudioLayout (access gate + shell) stays mounted while only the
+  // page changes. Any other path — including unknown /studio/... ones — goes to the public site, as before.
+  if (CMS_PAGES.some((page) => matchRoute(parser, page.path, location)[0])) {
+    return (
+      <StudioLayout>
+        <Switch>
+          {CMS_PAGES.map((page) => (
+            <Route key={page.path} path={page.path} component={page.component} />
+          ))}
+        </Switch>
+      </StudioLayout>
+    );
+  }
+
   return (
     <Switch>
-      {/* Configurable CMS Routes (Default: /studio/...) */}
-      <Route path={`${CMS_BASE_PATH}/products/:id`} component={AdminProductEditor} />
-      <Route path={`${CMS_BASE_PATH}/products`} component={AdminProducts} />
-      <Route path={`${CMS_BASE_PATH}/inbox`} component={AdminInbox} />
-      <Route path={`${CMS_BASE_PATH}/content`} component={AdminContent} />
-      <Route path={`${CMS_BASE_PATH}/users`} component={AdminUsers} />
-      <Route path={CMS_BASE_PATH} component={AdminDashboard} />
-
       {/* Indonesian: the same public tree nested under /id, so relative links stay in Indonesian. */}
       <Route path="/id" nest>
         <LocaleProvider locale="id">

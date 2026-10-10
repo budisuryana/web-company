@@ -2,7 +2,6 @@
 import { useMemo, useState } from "react";
 import { ArrowDown, ArrowUp, ArrowUpRight, Boxes, Loader2, Pencil, Plus, RotateCw, Search, Star, TriangleAlert, X } from "lucide-react";
 import { Link } from "wouter";
-import AdminGuard from "@/pages/AdminGuard";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { CMS_ROUTES } from "@/const";
 import { trpc } from "@/lib/trpc";
@@ -64,7 +63,7 @@ export default function AdminProducts() {
     reorder.mutate({ ids });
   };
 
-  return <AdminGuard><div className="w-full">
+  return <><div className="w-full">
     <div className="mb-4 flex flex-wrap items-end justify-between gap-x-6 gap-y-3">
       <div>
         <span className="text-[10px] font-extrabold uppercase tracking-[.16em] text-[var(--accent)]">{t("Product Registry")}</span>
@@ -128,5 +127,5 @@ export default function AdminProducts() {
         <Link href="/products" className="inline-flex items-center gap-1 font-extrabold text-[var(--ink)]">{t("View public collection")} <ArrowUpRight size={13} /></Link>
       </div>
     </div>
-  </div></AdminGuard>;
+  </div></>;
 }

@@ -2,7 +2,6 @@
 import { useState, type FormEvent, type ReactNode } from "react";
 import { ArrowRight, ChevronRight, Eye, EyeOff, KeyRound, Loader2, Lock, LockKeyhole, LogOut, Mail, ShieldAlert, ShieldCheck, Sparkles, User } from "lucide-react";
 import { Link } from "wouter";
-import DashboardLayout from "@/components/DashboardLayout";
 import { BrandLockup } from "@/components/BrandLockup";
 import CmsIllustration from "@/components/CmsIllustration";
 import { useAuth } from "@/_core/hooks/useAuth";
@@ -11,7 +10,6 @@ import { trpc } from "@/lib/trpc";
 import { SITE } from "@shared/site";
 import { toast } from "sonner";
 import { AdminLanguageSwitch, useAdminDocumentLang, useT } from "@/admin/i18n";
-import { StudioThemeProvider } from "@/studio/theme";
 
 function AccessFrame({ eyebrow, title, body, children, denied = false }: { eyebrow: string; title: ReactNode; body: string; children: ReactNode; denied?: boolean }) {
   const companyName = SITE.name;
@@ -218,11 +216,8 @@ function LoginForm() {
   );
 }
 
+/** The CMS access gate, mounted once by StudioLayout: session check, sign-in, admin-role check, then the CMS. */
 export default function AdminGuard({ children }: { children: ReactNode }) {
-  return <StudioThemeProvider><AdminGate>{children}</AdminGate></StudioThemeProvider>;
-}
-
-function AdminGate({ children }: { children: ReactNode }) {
   const { user, loading, logout } = useAuth();
   const companyName = SITE.name;
   const t = useT();
@@ -289,5 +284,5 @@ function AdminGate({ children }: { children: ReactNode }) {
     );
   }
 
-  return <DashboardLayout>{children}</DashboardLayout>;
+  return <>{children}</>;
 }

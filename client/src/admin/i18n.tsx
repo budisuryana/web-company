@@ -77,20 +77,17 @@ export function AdminLanguageSwitch({ compact = false, className = "" }: { compa
   const { locale, setLocale } = useAdminLocale();
   const t = useT();
   return (
-    <div className={`flex items-center gap-2 ${className}`} role="group" aria-label={t("Bahasa admin")} title={t("Hanya mengubah bahasa panel admin. Bahasa website diatur terpisah.")}>
-      {!compact && <Languages className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden="true" />}
-      {!compact && <span className="text-xs font-semibold text-muted-foreground">{t("Bahasa admin")}</span>}
-      <div className="ml-auto inline-flex rounded-md border border-[var(--line-strong)] p-0.5">
+    <div className={`hq-lang ${className}`} role="group" aria-label={t("Bahasa admin")} title={t("Hanya mengubah bahasa panel admin. Bahasa website diatur terpisah.")}>
+      {!compact && (
+        <span className="hq-lang-label">
+          <Languages aria-hidden="true" />
+          {t("Bahasa admin")}
+        </span>
+      )}
+      <div className="hq-seg">
         {(["id", "en"] as const).map((option) => (
-          <button
-            key={option}
-            type="button"
-            onClick={() => setLocale(option)}
-            aria-pressed={locale === option}
-            lang={option}
-            className={`rounded px-2 py-0.5 font-mono text-[11px] font-bold uppercase ${locale === option ? "bg-[var(--ink)] text-[var(--lightest)]" : "text-muted-foreground hover:text-[var(--ink)]"}`}
-          >
-            {option}
+          <button key={option} type="button" onClick={() => setLocale(option)} aria-pressed={locale === option} lang={option}>
+            {option.toUpperCase()}
           </button>
         ))}
       </div>

@@ -1,7 +1,6 @@
 /** CMS inbox: enquiries submitted from the public contact form, with triage and reply-by-email. */
 import { useMemo, useState } from "react";
 import { Archive, Inbox, Loader2, Mail, MailOpen, RotateCcw, Search, Trash2 } from "lucide-react";
-import AdminGuard from "@/pages/AdminGuard";
 import ConfirmModal from "@/components/ConfirmModal";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { trpc } from "@/lib/trpc";
@@ -75,7 +74,7 @@ export default function AdminInbox() {
   const counts = countsQuery.data;
 
   return (
-    <AdminGuard>
+    <>
       <div className="w-full">
         <div className="mb-4 flex flex-wrap items-end justify-between gap-x-6 gap-y-3">
           <div>
@@ -214,6 +213,6 @@ export default function AdminInbox() {
         isPending={remove.isPending}
         onConfirm={() => pendingDelete && remove.mutate({ id: pendingDelete.id })}
       />
-    </AdminGuard>
+    </>
   );
 }
